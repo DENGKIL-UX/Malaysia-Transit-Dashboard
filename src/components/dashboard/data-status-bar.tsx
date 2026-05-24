@@ -75,7 +75,7 @@ export function DataStatusBar() {
   if (!sources.length) return null;
 
   return (
-    <div className="relative w-full px-4 sm:px-6 md:px-10 py-3 flex items-center gap-4 sm:gap-6 overflow-x-auto">
+    <div className="relative w-full px-4 sm:px-6 md:px-10 py-2.5 flex items-center gap-4 sm:gap-6 overflow-x-auto">
       {sources.map((s) => (
         <div
           key={s.label}
