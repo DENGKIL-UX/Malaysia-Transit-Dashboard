@@ -381,24 +381,24 @@ export default function Home() {
         {/* ═══ DASHBOARD SECTION ═══ */}
         <div id="dashboard" className="scroll-mt-20">
           {/* Hero — honest, centered, no fake live elements */}
-          <div className="relative w-full h-[300px] sm:h-[340px] md:h-[360px] overflow-hidden">
+          <div className="relative w-full h-[420px] sm:h-[460px] md:h-[480px] overflow-hidden">
             <CinematicTrain />
 
-            <div className="relative z-10 flex flex-col items-center justify-end h-full px-4 sm:px-6 md:px-10 pb-8 sm:pb-12">
+            <div className="relative z-10 flex flex-col items-center justify-end h-full px-4 sm:px-6 md:px-10 pb-10 sm:pb-14">
               <div className="max-w-2xl mx-auto text-center animate-fade-in-up" style={{ opacity: 0 }}>
                 {/* Coverage line */}
                 <p className="text-[10px] sm:text-[11px] text-[var(--text-faint)] tracking-wide uppercase mb-4">
-                  <span className="text-[#85AB8B]/60">SBK</span>
+                  <span className="text-[#85AB8B]/70">SBK</span>
                   <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
-                  <span className="text-sky-400/50">SSP</span>
+                  <span className="text-sky-400/60">SSP</span>
                   <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
-                  <span className="text-[var(--text-faint)]">Ampang</span>
+                  <span className="text-[var(--text-muted)]">Ampang</span>
                   <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
-                  <span className="text-[var(--text-faint)]">Kelana Jaya</span>
+                  <span className="text-[var(--text-muted)]">Kelana Jaya</span>
                   <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
-                  <span className="text-[var(--text-faint)]">Monorail</span>
+                  <span className="text-[var(--text-muted)]">Monorail</span>
                   <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
-                  <span className="text-orange-400/50">Rapid Bus KL</span>
+                  <span className="text-orange-400/60">Rapid Bus KL</span>
                 </p>
 
                 <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold text-[var(--text-primary)] leading-[1.02] tracking-tight">

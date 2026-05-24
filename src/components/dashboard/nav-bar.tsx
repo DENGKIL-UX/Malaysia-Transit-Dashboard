@@ -67,7 +67,7 @@ export function NavBar() {
 
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-4 sm:px-6 md:px-10 py-4 sm:py-5">
+      <nav className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-4 sm:px-6 md:px-10 py-4 sm:py-5 bg-[var(--bg-base)]/70 backdrop-blur-md">
         {/* Logo */}
         <button
           onClick={() => scrollTo('dashboard')}
