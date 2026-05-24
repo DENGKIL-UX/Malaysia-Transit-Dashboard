@@ -371,7 +371,7 @@ export default function Home() {
       <NavBar />
 
       {/* ═══ HONEST DATA STATUS BAR ═══ */}
-      <div className="fixed top-[60px] sm:top-[68px] left-0 right-0 z-20 bg-[var(--bg-elevated)] backdrop-blur-xl border-b border-[var(--border-ghost)]">
+      <div className="fixed top-[52px] sm:top-[56px] left-0 right-0 z-20 bg-[var(--bg-elevated)] backdrop-blur-xl border-b border-[var(--border-ghost)]">
         <div className="px-4 sm:px-6 md:px-10">
           <DataStatusBar />
         </div>
