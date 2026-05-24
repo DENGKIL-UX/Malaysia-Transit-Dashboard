@@ -36,8 +36,7 @@ async function fetchMyCal(
   state: string
 ): Promise<DayClassification[]> {
   const res = await fetch(
-    `https://mycal-api.huijun00100101.workers.dev/v1/holidays?year=${year}&state=${state}`,
-    { next: { revalidate: 86400 } } // Cache for 24h
+    `https://mycal-api.huijun00100101.workers.dev/v1/holidays?year=${year}&state=${state}`
   );
 
   if (!res.ok) throw new Error(`MyCal API returned ${res.status}`);
@@ -124,8 +123,7 @@ async function fetchNager(
   year: number
 ): Promise<DayClassification[]> {
   const res = await fetch(
-    `https://date.nager.at/api/v3/PublicHolidays/${year}/MY`,
-    { next: { revalidate: 86400 } }
+    `https://date.nager.at/api/v3/PublicHolidays/${year}/MY`
   );
 
   if (!res.ok) throw new Error(`Nager API returned ${res.status}`);

@@ -136,9 +136,5 @@ export async function GET() {
     // Silently fail
   }
 
-  return NextResponse.json(results, {
-    headers: {
-      'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
-    },
-  });
+  return NextResponse.json(results);
 }
