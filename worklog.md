@@ -195,3 +195,44 @@ Stage Summary:
 - DataStatusBar expanded from 2 to 3 sources (KTMB OD added)
 - Metadata API returns freshest_date + freshest_source for easy consumption
 - Users can immediately see when data was last updated (e.g., "2026-05-24 (KTMB OD · 1d ago)")
+
+---
+Task ID: 7
+Agent: Main
+Task: Build dynamic notification system with ML-powered analytics insights
+
+Work Log:
+- Created `src/lib/store.ts` — First Zustand store with full notification/freshness/analytics state + actions
+- Created `src/app/api/notifications/route.ts` — Core ML engine API:
+  - Reads ktmb-daily.json and prasarana-daily.json from public/
+  - Z-Score anomaly detection (30-day rolling window, 2σ/3σ thresholds) on totals + sub-fields
+  - Linear regression trend analysis (14-day) with weekly growth rate
+  - Weekly pattern mining (day-of-week averages, weekend/weekday ratio)
+  - Exponential smoothing forecast (α=0.3, 3-day, ±1σ confidence interval)
+  - Generates notifications: data_update, anomaly, insight, forecast, system
+  - Computes DataFreshness from all 3 sources
+- Created `src/hooks/use-notifications.ts` — Hook that fetches /api/notifications on mount, syncs to Zustand, auto-refreshes every 5 min
+- Rebuilt `src/components/dashboard/notification-bell.tsx`:
+  - Red badge with unread count (hidden when 0)
+  - Full dropdown panel (not just menu) with scrollable list, max-h-[400px]
+  - Header with unread count + "Mark all read" button
+  - Time-grouped notifications: "Just now", "Today", "Earlier"
+  - Per-notification: icon by type, title + description, relative timestamp, source badge, severity dot, unread indicator
+  - Click to mark as read, close on outside click / Escape
+  - Footer: "Last synced: {relative time}"
+- Enhanced `src/components/dashboard/analytics-table.tsx`:
+  - Added ML Insights Panel above existing Day-Type Analytics table
+  - 4 summary metric cards: Trend Direction, Growth Rate, Anomaly Count, Forecast
+  - Weekly Pattern section: Peak day, Lowest day, Weekend/weekday ratio
+  - Anomaly list with severity indicators (critical red, warning amber)
+  - Dynamic "Last computed" timestamp from store
+- Updated `src/app/page.tsx`: Added `useNotifications()` hook call to trigger initial fetch + auto-refresh
+- Lint passes clean (0 errors)
+
+Stage Summary:
+- First Zustand store created — global state for notifications, freshness, analytics
+- Notification bell fully rebuilt with dynamic panel, badge, time grouping, mark-as-read
+- ML engine runs server-side with 4 algorithms: z-score anomaly, linear regression trend, weekly pattern mining, exponential smoothing forecast
+- Analytics table now shows ML Insights Panel with 4 metric cards + weekly pattern + anomaly list
+- Hook auto-refreshes every 5 minutes, syncing all data to Zustand store
+- 4 files created, 2 files modified

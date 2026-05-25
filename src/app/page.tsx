@@ -33,6 +33,7 @@ import { TopRoutesRapidRail, TopRoutesKTMB } from '@/components/dashboard/top-ro
 import { OfflineBanner } from '@/components/dashboard/offline-banner';
 import { useRidership } from '@/hooks/use-ridership';
 import { useAnalytics } from '@/hooks/use-analytics';
+import { useNotifications } from '@/hooks/use-notifications';
 
 interface DataMetadata {
   headline: {
@@ -414,6 +415,7 @@ function AboutSection() {
 export default function Home() {
   const { data, loading } = useRidership();
   const meta = useDataMetadata();
+  useNotifications(); // triggers initial fetch + auto-refresh, syncs to Zustand store
   const {
     ridership: analyticsData,
     analytics,
