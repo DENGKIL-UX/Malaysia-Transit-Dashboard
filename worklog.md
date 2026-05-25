@@ -345,3 +345,25 @@ Stage Summary:
 - ML Insights Panel is independent from day-type analytics data availability
 - All API routes are Cloudflare-compatible (no filesystem dependencies)
 - Files modified: analytics-table.tsx, notifications/route.ts, metadata/route.ts
+---
+Task ID: 2
+Agent: main
+Task: Rebuild 30-Day Rail Ridership chart with all rail services and proper total alignment
+
+Work Log:
+- Diagnosed: chart only showed 5 Rapid Rail lines + a "total" that incorrectly included bus data
+- Added `totalRail` field to `useRidership` hook — sums all 10 rail services only (excludes bus)
+- Rebuilt `ridership-chart.tsx` with stacked area chart showing all 10 rail services:
+  - Rapid Rail: MRT Kajang, MRT Putrajaya, LRT Kelana Jaya, LRT Ampang, Monorail
+  - KTMB: Komuter, ETS, Intercity, Komuter Utara, Tebrau
+- Stacked areas ensure the top edge of the stack = sum of all rails = totalRail
+- Legend grouped by operator (Rapid Rail | KTMB)
+- Tooltip shows grouped breakdown with Total Rail at top
+- Average daily total badge in header
+- Verified: Total Rail ~1.2M/day (10 services), Bus ~298K excluded
+
+Stage Summary:
+- Chart now shows complete rail picture with all 10 services
+- Stacked areas visually prove alignment (stack top = total rail)
+- Total Rail no longer includes bus data
+- Files modified: use-ridership.ts, ridership-chart.tsx

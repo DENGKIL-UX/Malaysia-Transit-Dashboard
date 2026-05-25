@@ -18,6 +18,7 @@ export interface RidershipDay {
   busKuantan: number;
   busRpn: number;
   total: number;
+  totalRail: number;
 }
 
 /**
@@ -101,6 +102,7 @@ export function useRidership() {
           const busKl = Number(r['bus_rkl'] ?? 0);
           const busKuantan = Number(r['bus_rkn'] ?? 0);
           const busRpn = Number(r['bus_rpn'] ?? 0);
+          // Total = all services (rail + bus)
           const total =
             mrtKajang +
             mrtPutrajaya +
@@ -115,6 +117,18 @@ export function useRidership() {
             busKl +
             busKuantan +
             busRpn;
+          // Total Rail = rail services only (no bus) for chart alignment
+          const totalRail =
+            mrtKajang +
+            mrtPutrajaya +
+            lrtKelanaJaya +
+            lrtAmpang +
+            monorail +
+            komuter +
+            ets +
+            intercity +
+            komuterUtara +
+            tebrau;
 
           return {
             date: r.date as string,
@@ -132,6 +146,7 @@ export function useRidership() {
             busKuantan,
             busRpn,
             total,
+            totalRail,
           };
         })
         .sort(
