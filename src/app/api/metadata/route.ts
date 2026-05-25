@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
 interface MetaResult {
   headline: {
@@ -13,6 +15,16 @@ interface MetaResult {
     next_update: string;
     source: string;
   };
+  ktmb: {
+    latest_date: string;
+    lag_days: number;
+  };
+  prasarana_od: {
+    latest_date: string;
+    lag_days: number;
+  };
+  freshest_date: string;
+  freshest_source: string;
 }
 
 async function fetchWithTimeout(
@@ -31,6 +43,28 @@ async function fetchWithTimeout(
   }
 }
 
+/**
+ * Read the last `date` field from a local JSON file in public/.
+ * Returns null if file doesn't exist or parse fails.
+ */
+function getLatestDateFromLocalJson(filename: string): string | null {
+  try {
+    const filePath = join(process.cwd(), 'public', filename);
+    const raw = readFileSync(filePath, 'utf-8');
+    const arr = JSON.parse(raw) as Array<{ date: string }>;
+    if (Array.isArray(arr) && arr.length > 0) {
+      const dates = arr
+        .map((r) => r.date)
+        .filter(Boolean)
+        .sort();
+      return dates[dates.length - 1] ?? null;
+    }
+  } catch {
+    // File not found or parse error — silently return null
+  }
+  return null;
+}
+
 export async function GET() {
   const results: MetaResult = {
     headline: {
@@ -45,11 +79,40 @@ export async function GET() {
       next_update: '',
       source: '',
     },
+    ktmb: {
+      latest_date: '',
+      lag_days: 0,
+    },
+    prasarana_od: {
+      latest_date: '',
+      lag_days: 0,
+    },
+    freshest_date: '',
+    freshest_source: '',
   };
+
+  const today = new Date().toISOString().split('T')[0];
+  const todayMs = new Date(today + 'T00:00:00').getTime();
+
+  // ── 0. Scan local Parquet-derived JSON files ──
+  const ktmbLocalDate = getLatestDateFromLocalJson('ktmb-daily.json');
+  if (ktmbLocalDate) {
+    results.ktmb.latest_date = ktmbLocalDate.split(' ')[0];
+    results.ktmb.lag_days = Math.round(
+      (todayMs - new Date(ktmbLocalDate.split(' ')[0] + 'T00:00:00').getTime()) / 864e5
+    );
+  }
+
+  const prasaranaLocalDate = getLatestDateFromLocalJson('prasarana-daily.json');
+  if (prasaranaLocalDate) {
+    results.prasarana_od.latest_date = prasaranaLocalDate;
+    results.prasarana_od.lag_days = Math.round(
+      (todayMs - new Date(prasaranaLocalDate + 'T00:00:00').getTime()) / 864e5
+    );
+  }
 
   // 1. Check actual headline data — probe the API for latest available date
   try {
-    const today = new Date().toISOString().split('T')[0];
     const threeMonthsAgo = new Date(Date.now() - 90 * 864e5)
       .toISOString()
       .split('T')[0];
@@ -69,7 +132,6 @@ export async function GET() {
 
         // Compute lag in days
         const latestMs = new Date(latestDate + 'T00:00:00').getTime();
-        const todayMs = new Date(today + 'T00:00:00').getTime();
         results.headline.lag_days = Math.round(
           (todayMs - latestMs) / 864e5
         );
@@ -134,6 +196,21 @@ export async function GET() {
     }
   } catch {
     // Silently fail
+  }
+
+  // ── Compute freshest date across all sources ──
+  const candidates: Array<{ date: string; source: string }> = [];
+  if (results.ktmb.latest_date) candidates.push({ date: results.ktmb.latest_date, source: 'KTMB OD' });
+  if (results.prasarana_od.latest_date) candidates.push({ date: results.prasarana_od.latest_date, source: 'Rapid Rail OD' });
+  if (results.headline.latest_date) candidates.push({ date: results.headline.latest_date, source: 'Headline Audit' });
+  if (results.prasarana.data_as_of) {
+    const prasDate = results.prasarana.data_as_of.split(' ')[0];
+    candidates.push({ date: prasDate, source: 'Prasarana Meta' });
+  }
+  candidates.sort((a, b) => b.date.localeCompare(a.date));
+  if (candidates.length > 0) {
+    results.freshest_date = candidates[0].date;
+    results.freshest_source = candidates[0].source;
   }
 
   return NextResponse.json(results);

@@ -10,6 +10,24 @@ interface SourceStatus {
   hoursAgo: number;
 }
 
+interface Metadata {
+  headline: {
+    latest_date: string;
+    lag_days: number;
+  };
+  ktmb: {
+    latest_date: string;
+    lag_days: number;
+  };
+  prasarana_od: {
+    latest_date: string;
+    lag_days: number;
+  };
+  prasarana: {
+    data_as_of: string;
+  };
+}
+
 export function DataStatusBar() {
   const [sources, setSources] = useState<SourceStatus[]>([]);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -18,49 +36,51 @@ export function DataStatusBar() {
   useEffect(() => {
     fetch('/api/metadata')
       .then((r) => r.json())
-      .then((data) => {
+      .then((data: Metadata) => {
         const nowMs = Date.now();
 
-        // Headline audit — computed from latest_date
-        const headlineDate = data.headline.latest_date;
-        const headlineMs = headlineDate
-          ? new Date(headlineDate + 'T00:00:00').getTime()
-          : 0;
-        const headlineHours = Math.round((nowMs - headlineMs) / 36e5);
+        const buildSource = (
+          label: string,
+          dateStr: string,
+          isAudit = false
+        ): SourceStatus | null => {
+          if (!dateStr) return null;
+          const dateMs = new Date(dateStr + 'T00:00:00').getTime();
+          const hours = Math.round((nowMs - dateMs) / 36e5);
+          return {
+            label,
+            lastDate: dateStr,
+            freshness: isAudit ? 'audit-lag' : hours < 72 ? 'fresh' : 'audit-lag',
+            hoursAgo: hours,
+          };
+        };
 
-        // Prasarana OD — computed from data_as_of
-        const prasaranaDate = data.prasarana.data_as_of?.split(' ')[0];
-        const prasaranaMs = prasaranaDate
-          ? new Date(prasaranaDate + 'T00:00:00').getTime()
-          : 0;
-        const prasaranaHours = Math.round((nowMs - prasaranaMs) / 36e5);
+        const srcs: SourceStatus[] = [];
 
-        setSources([
-          {
-            label: 'Rapid Rail OD',
-            lastDate: prasaranaDate || '—',
-            freshness: prasaranaHours < 48 ? 'fresh' : 'audit-lag',
-            hoursAgo: prasaranaHours,
-          },
-          {
-            label: 'Headline Audit',
-            lastDate: headlineDate || '—',
-            freshness: 'audit-lag',
-            hoursAgo: headlineHours,
-          },
-        ]);
+        // KTMB OD (Parquet)
+        const ktmb = buildSource('KTMB OD', data.ktmb?.latest_date);
+        if (ktmb) srcs.push(ktmb);
+
+        // Rapid Rail OD (Parquet)
+        const pras = buildSource('Rapid Rail OD', data.prasarana_od?.latest_date);
+        if (pras) srcs.push(pras);
+
+        // Headline audit
+        const headline = buildSource('Headline Audit', data.headline?.latest_date, true);
+        if (headline) srcs.push(headline);
+
+        setSources(srcs);
       })
       .catch(() => {
-        // Fallback — no status shown if metadata fails
         setSources([]);
       })
       .finally(() => setLoading(false));
   }, []);
 
   const formatLag = (hours: number) => {
-    if (hours < 24) return `Data recorded ${hours}h ago`;
+    if (hours < 24) return `${hours}h ago`;
     const days = Math.round(hours / 24);
-    return `Data recorded ${days}d ago`;
+    return `${days}d ago`;
   };
 
   if (loading) {
@@ -113,17 +133,17 @@ export function DataStatusBar() {
       >
         <HelpCircle className="w-3.5 h-3.5" />
         <span className="text-[10px] sm:text-[11px] hidden sm:inline font-medium">
-          Why two sources?
+          Why three sources?
         </span>
       </button>
 
       {/* Tooltip dropdown */}
       {showTooltip && (
-        <div className="absolute top-full left-4 sm:left-6 md:left-10 mt-2 w-[340px] sm:w-[380px] z-50">
+        <div className="absolute top-full left-4 sm:left-6 md:left-10 mt-2 w-[340px] sm:w-[420px] z-50">
           <div className="rounded-xl bg-[var(--bg-tooltip)] backdrop-blur-xl border border-[var(--border-subtle)] shadow-2xl p-5">
             <div className="flex items-center justify-between mb-3">
               <h4 className="text-sm font-semibold text-[var(--text-primary)]">
-                Why two data sources?
+                Three data pipelines
               </h4>
               <button
                 onClick={() => setShowTooltip(false)}
@@ -137,10 +157,20 @@ export function DataStatusBar() {
               <div className="rounded-lg bg-[#85AB8B]/5 border border-[#85AB8B]/10 p-3">
                 <div className="flex items-center gap-2 mb-1">
                   <CheckCircle2 className="w-3.5 h-3.5 text-[#85AB8B]" />
-                  <span className="text-xs font-semibold text-[#85AB8B]">Rapid Rail OD</span>
+                  <span className="text-xs font-semibold text-[#85AB8B]">KTMB OD (Parquet)</span>
                 </div>
                 <p className="text-[11px] text-[var(--text-muted)] leading-relaxed">
-                  Station-to-station tap-in/tap-out data. Updated daily with ~18h lag.
+                  KTM Berhad origin-destination data. 5 services (ETS, Intercity, Komuter, Komuter Utara, Shuttle Tebrau). Updated daily with ~1-day lag.
+                </p>
+              </div>
+
+              <div className="rounded-lg bg-[#85AB8B]/5 border border-[#85AB8B]/10 p-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#85AB8B]" />
+                  <span className="text-xs font-semibold text-[#85AB8B]">Rapid Rail OD (Parquet)</span>
+                </div>
+                <p className="text-[11px] text-[var(--text-muted)] leading-relaxed">
+                  Prasarana tap-in/tap-out data. MRT, LRT, Monorail + BRT Sunway. Updated daily with ~1-day lag.
                 </p>
               </div>
 
@@ -150,13 +180,13 @@ export function DataStatusBar() {
                   <span className="text-xs font-semibold text-orange-300">Headline Audit</span>
                 </div>
                 <p className="text-[11px] text-[var(--text-muted)] leading-relaxed">
-                  Monthly quality review before publication (~12-day lag). Used by this dashboard.
+                  Monthly quality review covering all 13 transit lines (rail + bus). Published ~12 days after month-end. Used by KPI cards and comparison chart.
                 </p>
               </div>
             </div>
 
             <p className="text-[10px] text-[var(--text-faint)] leading-relaxed mt-3 pt-3 border-t border-[var(--border-faint)]">
-              This dashboard uses <span className="text-orange-300 font-medium">headline data</span> for audited accuracy. The OD timeseries (Parquet) is fresher but requires server-side processing.
+              The hero &quot;Last update&quot; badge always shows the <span className="text-[#85AB8B] font-medium">freshest date</span> across all three sources.
             </p>
           </div>
         </div>

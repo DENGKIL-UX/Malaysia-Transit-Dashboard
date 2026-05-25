@@ -12,8 +12,9 @@ import {
   Code,
   Clock,
   AlertCircle,
+  RefreshCw,
 } from 'lucide-react';
-import { format, isYesterday, isSameDay } from 'date-fns';
+import { format, isYesterday, isSameDay, differenceInHours } from 'date-fns';
 import { NavBar } from '@/components/dashboard/nav-bar';
 import { KpiCards } from '@/components/dashboard/kpi-cards';
 import { RidershipChart } from '@/components/dashboard/ridership-chart';
@@ -46,6 +47,16 @@ interface DataMetadata {
     next_update: string;
     source: string;
   };
+  ktmb: {
+    latest_date: string;
+    lag_days: number;
+  };
+  prasarana_od: {
+    latest_date: string;
+    lag_days: number;
+  };
+  freshest_date: string;
+  freshest_source: string;
 }
 
 function useDataMetadata() {
@@ -57,6 +68,73 @@ function useDataMetadata() {
       .catch(() => {});
   }, []);
   return meta;
+}
+
+/**
+ * Dynamic update badge — shows the freshest date across ALL data sources,
+ * with a live indicator and lag label. Falls back to headline date if
+ * metadata hasn't loaded yet.
+ */
+function DynamicUpdateBadge({
+  meta,
+  headlineLatest,
+}: {
+  meta: DataMetadata | null;
+  headlineLatest?: string;
+}) {
+  // Determine what to show
+  const freshestDate = meta?.freshest_date || headlineLatest || '';
+  const freshestSource = meta?.freshest_source || '';
+
+  if (!freshestDate) return null;
+
+  // Compute lag
+  let lagLabel = '';
+  let lagColor = 'text-[var(--text-faint)]';
+  try {
+    const dateMs = new Date(freshestDate + 'T00:00:00').getTime();
+    const nowMs = Date.now();
+    const hoursAgo = differenceInHours(nowMs, dateMs);
+    if (hoursAgo < 24) {
+      lagLabel = `${hoursAgo}h ago`;
+      lagColor = 'text-[#85AB8B]';
+    } else if (hoursAgo < 48) {
+      lagLabel = `${Math.round(hoursAgo / 24)}d ago`;
+      lagColor = 'text-[#85AB8B]';
+    } else {
+      const days = Math.round(hoursAgo / 24);
+      lagLabel = `${days}d ago`;
+      lagColor = days > 15 ? 'text-orange-400' : 'text-amber-400';
+    }
+  } catch {
+    lagLabel = freshestDate;
+  }
+
+  return (
+    <p className="mt-2 text-[10px] sm:text-[11px] text-[var(--text-ghost)] flex items-center justify-center gap-2 flex-wrap">
+      <span className="flex items-center gap-1.5">
+        <span className="relative flex h-2 w-2">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#85AB8B] opacity-60" />
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-[#85AB8B]" />
+        </span>
+        <span className="text-[var(--text-faint)]">
+          Data via <span className="text-[var(--text-muted)]">data.gov.my</span>
+        </span>
+      </span>
+      <span className="text-[var(--text-ghost)]">·</span>
+      <span className="flex items-center gap-1.5">
+        <RefreshCw className="w-3 h-3 text-[var(--text-ghost)]" />
+        <span className={`font-medium tabular-nums ${lagColor}`}>
+          {freshestDate}
+        </span>
+        {freshestSource && (
+          <span className="text-[var(--text-ghost)]">
+            ({freshestSource} · {lagLabel})
+          </span>
+        )}
+      </span>
+    </p>
+  );
 }
 
 function AboutSection() {
@@ -335,6 +413,7 @@ function AboutSection() {
 
 export default function Home() {
   const { data, loading } = useRidership();
+  const meta = useDataMetadata();
   const {
     ridership: analyticsData,
     analytics,
@@ -462,18 +541,7 @@ export default function Home() {
                 </p>
 
                 {/* Source attribution */}
-                <p className="mt-2 text-[10px] sm:text-[11px] text-[var(--text-ghost)]">
-                  Data via{' '}
-                  <span className="text-[var(--text-faint)]">data.gov.my</span>
-                  {latest && (
-                    <>
-                      <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
-                      <span className="text-[var(--text-faint)]">
-                        Last update: {latest.date}
-                      </span>
-                    </>
-                  )}
-                </p>
+                <DynamicUpdateBadge meta={meta} headlineLatest={latest?.date} />
               </div>
             </div>
           </div>

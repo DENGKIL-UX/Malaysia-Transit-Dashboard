@@ -163,3 +163,35 @@ Stage Summary:
 - Prasarana component shows per-line station distribution and line-colored progress bars
 - All data sourced from Parquet files via Python/pandas processing pipeline
 - 7 new files: 2 hooks, 3 components, updated Python script, updated Bun server
+
+---
+Task ID: 6
+Agent: Main
+Task: Make update announcement dynamic — show freshest date across all data sources
+
+Work Log:
+- Analyzed current state: Hero showed static "Last update: 2026-04-30" (headline audit date)
+- Parquet data is much fresher: KTMB OD → 2026-05-24, Rapid Rail OD → 2026-05-23
+- Updated `/api/metadata/route.ts`:
+  - Added `getLatestDateFromLocalJson()` helper to scan local JSON files in public/
+  - Added `ktmb` and `prasarana_od` sections to metadata response with latest_date + lag_days
+  - Added `freshest_date` and `freshest_source` fields — computed by sorting all source dates
+- Updated `src/app/page.tsx`:
+  - Added `DynamicUpdateBadge` component replacing static "Last update" text
+  - Badge shows: pulsing green dot → "Data via data.gov.my" → refresh icon → freshest date → (source name · lag)
+  - Lag color-coded: green (<48h), amber (<15d), orange (>15d)
+  - Falls back to headline date while metadata loads
+  - Added `useDataMetadata()` hook call to Home component
+  - Updated `DataMetadata` interface with ktmb, prasarana_od, freshest_date, freshest_source
+- Updated `src/components/dashboard/data-status-bar.tsx`:
+  - Now shows 3 sources: KTMB OD, Rapid Rail OD, Headline Audit (was 2 before)
+  - Reads all 3 source dates from metadata API
+  - Updated tooltip: "Why two sources?" → "Why three sources?" with KTMB OD description
+  - Explains each source: KTMB OD (5 services), Rapid Rail OD (MRT+LRT+Monorail+BRT), Headline Audit (all 13 lines)
+- Lint passes clean, API verified: freshest_date=2026-05-24 from KTMB OD ✅
+
+Stage Summary:
+- Hero "Last update" badge is now dynamic — always shows the freshest date across all 3 data sources
+- DataStatusBar expanded from 2 to 3 sources (KTMB OD added)
+- Metadata API returns freshest_date + freshest_source for easy consumption
+- Users can immediately see when data was last updated (e.g., "2026-05-24 (KTMB OD · 1d ago)")
