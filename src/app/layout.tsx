@@ -46,7 +46,7 @@ export const metadata: Metadata = {
     icon: '/icon-192x192.png',
     apple: '/icon-192x192.png',
   },
-  manifest: '/manifest.webmanifest',
+  manifest: '/manifest.json',
   openGraph: {
     title: 'RapidStats MY — Malaysia Transit Dashboard',
     description: 'Live ridership data for Klang Valley rail & bus networks',
@@ -66,7 +66,13 @@ function ServiceWorkerRegistration() {
         __html: `
           if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-              navigator.serviceWorker.register('/sw.js');
+              navigator.serviceWorker.register('/sw.js', { scope: '/' })
+                .then(function(reg) {
+                  console.log('[RapidStats] SW registered, scope:', reg.scope);
+                })
+                .catch(function(err) {
+                  console.error('[RapidStats] SW registration failed:', err);
+                });
             });
           }
         `,
