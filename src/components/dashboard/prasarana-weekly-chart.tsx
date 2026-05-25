@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import {
   BarChart,
   Bar,
@@ -13,7 +13,7 @@ import {
 } from 'recharts';
 import { format, startOfWeek, subWeeks, endOfWeek, isSameWeek, parseISO } from 'date-fns';
 import { usePrasaranaDaily } from '@/hooks/use-prasarana-daily';
-import { TrendingUp, TrendingDown, Bus } from 'lucide-react';
+import { TrendingUp, TrendingDown, Bus, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const DAY_FULL = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -86,24 +86,66 @@ function StackedTooltip({ active, payload, label }: { active?: boolean; payload?
 
 export function PrasaranaWeeklyChart() {
   const { data, loading, error } = usePrasaranaDaily();
+  const [weekOffset, setWeekOffset] = useState(0);
 
-  const { chartData, currentWeekTotal, previousWeekTotal, weekDates, dailyAvg, weekDelta, brtWeekTotal } = useMemo(() => {
-    if (!data.length) {
-      return {
-        chartData: [], currentWeekTotal: 0, previousWeekTotal: 0,
-        weekDates: { current: '', previous: '' }, dailyAvg: 0, weekDelta: 0, brtWeekTotal: 0,
-      };
-    }
+  // Compute all available week boundaries from the data
+  const { weeks, currentWeekIndex } = useMemo(() => {
+    if (!data.length) return { weeks: [] as Date[], currentWeekIndex: 0 };
 
     const latestDate = data[data.length - 1].date;
     const latest = parseISO(latestDate);
     const currentMonday = startOfWeek(latest, { weekStartsOn: 1 });
-    const prevMonday = subWeeks(currentMonday, 1);
-    const currentSunday = endOfWeek(currentMonday, { weekStartsOn: 1 });
-    const prevSunday = endOfWeek(prevMonday, { weekStartsOn: 1 });
 
-    // Build per-line maps for both weeks
+    const weekMondays: Date[] = [];
+    const seen = new Set<string>();
+
+    for (const d of data) {
+      const dt = parseISO(d.date);
+      const monday = startOfWeek(dt, { weekStartsOn: 1 });
+      const key = format(monday, 'yyyy-MM-dd');
+      if (!seen.has(key)) {
+        seen.add(key);
+        weekMondays.push(monday);
+      }
+    }
+
+    weekMondays.sort((a, b) => b.getTime() - a.getTime());
+
+    const currentKey = format(currentMonday, 'yyyy-MM-dd');
+    const idx = weekMondays.findIndex((w) => format(w, 'yyyy-MM-dd') === currentKey);
+
+    return { weeks: weekMondays, currentWeekIndex: idx >= 0 ? idx : 0 };
+  }, [data]);
+
+  // Clamp offset to available weeks
+  const safeOffset = Math.min(weekOffset, Math.max(0, weeks.length - 1));
+  const activeMonday = weeks[safeOffset] ?? weeks[0];
+
+  const canGoPrev = safeOffset < weeks.length - 1;
+  const canGoNext = safeOffset > 0;
+
+  const goPrev = useCallback(() => {
+    if (canGoPrev) setWeekOffset((o) => o + 1);
+  }, [canGoPrev]);
+
+  const goNext = useCallback(() => {
+    if (canGoNext) setWeekOffset((o) => o - 1);
+  }, [canGoNext]);
+
+  // Build chart data for the active week and the previous week
+  const { chartData, weekTotal, prevWeekTotal, dailyAvg, weekDelta, brtWeekTotal, weekLabel, prevWeekLabel } = useMemo(() => {
+    if (!activeMonday || !data.length) {
+      return {
+        chartData: [], weekTotal: 0, prevWeekTotal: 0, dailyAvg: 0,
+        weekDelta: 0, brtWeekTotal: 0, weekLabel: '', prevWeekLabel: '',
+      };
+    }
+
     type LineKey = 'mrt_pjy' | 'lrt_kj' | 'lrt_ampang' | 'monorail' | 'brt';
+
+    const currentSunday = endOfWeek(activeMonday, { weekStartsOn: 1 });
+    const prevMonday = subWeeks(activeMonday, 1);
+    const prevSunday = endOfWeek(prevMonday, { weekStartsOn: 1 });
 
     const currentMap = new Map<number, Record<LineKey, number>>();
     const prevMap = new Map<number, Record<LineKey, number>>();
@@ -122,7 +164,7 @@ export function PrasaranaWeeklyChart() {
         brt: d.brt,
       };
 
-      if (isSameWeek(dt, currentMonday, { weekStartsOn: 1 })) {
+      if (isSameWeek(dt, activeMonday, { weekStartsOn: 1 })) {
         currentMap.set(dow, entry);
         currentTotals.push(d.total);
         brtCurrent.push(d.brt);
@@ -132,16 +174,15 @@ export function PrasaranaWeeklyChart() {
       }
     }
 
-    // Build stacked bar data
     const bars = DAY_NAMES.map((day, i) => {
       const cur = currentMap.get(i);
-      const dt = new Date(currentMonday.getTime() + i * 864e5);
+      const dt = new Date(activeMonday.getTime() + i * 864e5);
       const dateStr = format(dt, 'dd MMM');
 
       return {
         day,
         dayLabel: `${DAY_FULL[i]}, ${dateStr}`,
-        weekLabel: `${format(currentMonday, 'dd MMM')} – ${format(currentSunday, 'dd MMM')}`,
+        weekLabel: `${format(activeMonday, 'dd MMM')} – ${format(currentSunday, 'dd MMM yyyy')}`,
         mrt_pjy: cur?.mrt_pjy ?? 0,
         lrt_kj: cur?.lrt_kj ?? 0,
         lrt_ampang: cur?.lrt_ampang ?? 0,
@@ -152,21 +193,23 @@ export function PrasaranaWeeklyChart() {
       };
     });
 
-    const currentWeekTotal = currentTotals.reduce((a, b) => a + b, 0);
-    const previousWeekTotal = prevTotals.reduce((a, b) => a + b, 0);
-    const dailyAvg = currentTotals.length > 0 ? Math.round(currentWeekTotal / currentTotals.length) : 0;
-    const weekDelta = previousWeekTotal > 0 ? ((currentWeekTotal - previousWeekTotal) / previousWeekTotal) * 100 : 0;
-    const brtWeekTotal = brtCurrent.reduce((a, b) => a + b, 0);
+    const wTotal = currentTotals.reduce((a, b) => a + b, 0);
+    const pTotal = prevTotals.reduce((a, b) => a + b, 0);
+    const avg = currentTotals.length > 0 ? Math.round(wTotal / currentTotals.length) : 0;
+    const delta = pTotal > 0 ? ((wTotal - pTotal) / pTotal) * 100 : 0;
+    const brtTotal = brtCurrent.reduce((a, b) => a + b, 0);
 
     return {
-      chartData: bars, currentWeekTotal, previousWeekTotal,
-      weekDates: {
-        current: `${format(currentMonday, 'dd MMM')} – ${format(currentSunday, 'dd MMM')}`,
-        previous: `${format(prevMonday, 'dd MMM')} – ${format(prevSunday, 'dd MMM')}`,
-      },
-      dailyAvg, weekDelta, brtWeekTotal,
+      chartData: bars,
+      weekTotal: wTotal,
+      prevWeekTotal: pTotal,
+      dailyAvg: avg,
+      weekDelta: delta,
+      brtWeekTotal: brtTotal,
+      weekLabel: `${format(activeMonday, 'dd MMM')} – ${format(currentSunday, 'dd MMM yyyy')}`,
+      prevWeekLabel: `${format(prevMonday, 'dd MMM')} – ${format(prevSunday, 'dd MMM yyyy')}`,
     };
-  }, [data]);
+  }, [activeMonday, data]);
 
   if (loading) return <ChartSkeleton />;
   if (error || !chartData.length) {
@@ -187,17 +230,44 @@ export function PrasaranaWeeklyChart() {
     <div data-chart className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 shadow-lg animate-fade-in-up">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-5">
-        <div>
+        <div className="flex-1">
           <h3 className="text-sm font-semibold text-[var(--text-primary)]">
             Rapid Rail & BRT Daily Ridership — By Line
           </h3>
           <p className="text-[10px] text-[var(--text-faint)] mt-0.5">
-            Stacked Mon – Sun · {weekDates.current}
+            Stacked Mon – Sun · {weekLabel}
           </p>
         </div>
-        <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-amber-400/10 border border-amber-400/20">
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-          <span className="text-[9px] text-amber-400 font-medium">real-time · ~1 day lag</span>
+        <div className="flex items-center gap-2">
+          {/* Pagination */}
+          <div className="flex items-center rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] overflow-hidden">
+            <button
+              onClick={goPrev}
+              disabled={!canGoPrev}
+              className="flex items-center justify-center w-8 h-8 transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[var(--surface-active)] active:bg-[var(--border-subtle)]"
+              aria-label="Previous week"
+            >
+              <ChevronLeft className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+            </button>
+            <div className="flex items-center px-2.5 min-w-[120px] justify-center">
+              <span className="text-[10px] font-medium text-[var(--text-secondary)] tabular-nums">
+                {safeOffset === 0 ? 'This Week' : `${weeks.length - safeOffset} / ${weeks.length}`}
+              </span>
+            </div>
+            <button
+              onClick={goNext}
+              disabled={!canGoNext}
+              className="flex items-center justify-center w-8 h-8 transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[var(--surface-active)] active:bg-[var(--border-subtle)]"
+              aria-label="Next week"
+            >
+              <ChevronRight className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+            </button>
+          </div>
+          {/* Status badge */}
+          <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-amber-400/10 border border-amber-400/20">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+            <span className="text-[9px] text-amber-400 font-medium">~1 day lag</span>
+          </div>
         </div>
       </div>
 
@@ -206,7 +276,7 @@ export function PrasaranaWeeklyChart() {
         <div className="rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-faint)] p-3">
           <span className="text-[9px] text-[var(--text-faint)] uppercase tracking-widest font-medium">Weekly Total</span>
           <div className="text-lg font-semibold text-[var(--text-primary)] tabular-nums tracking-tight mt-0.5">
-            {currentWeekTotal.toLocaleString()}
+            {weekTotal.toLocaleString()}
           </div>
         </div>
         <div className="rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-faint)] p-3">
@@ -223,6 +293,11 @@ export function PrasaranaWeeklyChart() {
             {isPositive ? <TrendingUp className="w-4 h-4" /> : isNegative ? <TrendingDown className="w-4 h-4" /> : null}
             {Math.abs(weekDelta).toFixed(1)}%
           </div>
+          {prevWeekLabel && (
+            <span className="text-[9px] text-[var(--text-faint)]">
+              {prevWeekLabel}
+            </span>
+          )}
         </div>
         <div className="rounded-xl bg-orange-400/5 border border-orange-400/10 p-3">
           <div className="flex items-center gap-1 mb-1">
@@ -286,13 +361,20 @@ export function PrasaranaWeeklyChart() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mt-4 pt-3 border-t border-[var(--border-faint)]">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
           <span className="text-[10px] text-[var(--text-faint)]">
-            <span className="text-[var(--text-muted)] font-medium">This week:</span> {weekDates.current}
+            <span className="text-[var(--text-muted)] font-medium">Showing:</span> {weekLabel}
           </span>
-          <span className="text-[10px] text-[var(--text-faint)]">
-            <span className="text-[var(--text-muted)] font-medium">Prev week:</span> {weekDates.previous} · <span className="text-emerald-400">{previousWeekTotal.toLocaleString()}</span>
-          </span>
+          {prevWeekTotal > 0 && (
+            <span className="text-[10px] text-[var(--text-faint)]">
+              <span className="text-[var(--text-muted)] font-medium">Prev:</span> {prevWeekLabel} · <span className="text-emerald-400">{prevWeekTotal.toLocaleString()}</span>
+            </span>
+          )}
         </div>
-        <span className="text-[9px] text-[var(--text-faint)] uppercase tracking-widest">Source: data.gov.my · parquet</span>
+        <div className="flex items-center gap-3">
+          <span className="text-[9px] text-[var(--text-faint)] uppercase tracking-widest">
+            {weeks.length} weeks available
+          </span>
+          <span className="text-[9px] text-[var(--text-faint)] uppercase tracking-widest">Source: data.gov.my · parquet</span>
+        </div>
       </div>
     </div>
   );
