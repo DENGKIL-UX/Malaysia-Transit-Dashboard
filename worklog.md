@@ -367,3 +367,22 @@ Stage Summary:
 - Stacked areas visually prove alignment (stack top = total rail)
 - Total Rail no longer includes bus data
 - Files modified: use-ridership.ts, ridership-chart.tsx
+---
+Task ID: 3
+Agent: main
+Task: Fix 30-Day Rail Ridership chart showing only until April 30 — use local JSON data
+
+Work Log:
+- Root cause: `/api/ridership` proxied external `data.gov.my/ridership_headline` API which only has data up to 2026-04-30
+- Local JSON files have much fresher data: ktmb-daily.json up to 2026-05-24, prasarana-daily.json up to 2026-05-23
+- Rebuilt `/api/ridership` to merge local ktmb-daily.json + prasarana-daily.json into the same field format the frontend expects
+- Uses fetch() (not readFileSync) for Cloudflare compatibility
+- Date parsing handles KTMB's "2026-05-24 00:00:00" format and Prasarana's "2026-05-23" format
+- Filters by start_date/end_date query params, returns merged rows sorted by date
+- Result: 30 days of data now showing April 25 → May 24 (all available dates)
+
+Stage Summary:
+- Chart now shows up-to-date data through May 24 (vs. stopping at April 30)
+- API returns 30 rows spanning both April and May
+- Total Rail ~1.2-1.7M/day with all 10 services visible
+- File modified: src/app/api/ridership/route.ts
