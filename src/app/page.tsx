@@ -35,42 +35,8 @@ import { OfflineBanner } from '@/components/dashboard/offline-banner';
 import { useRidership } from '@/hooks/use-ridership';
 import { useAnalytics } from '@/hooks/use-analytics';
 import { useNotifications } from '@/hooks/use-notifications';
-
-interface DataMetadata {
-  headline: {
-    data_as_of: string;
-    latest_date: string;
-    next_update_approx: string;
-    lag_days: number;
-  };
-  prasarana: {
-    data_as_of: string;
-    last_updated: string;
-    next_update: string;
-    source: string;
-  };
-  ktmb: {
-    latest_date: string;
-    lag_days: number;
-  };
-  prasarana_od: {
-    latest_date: string;
-    lag_days: number;
-  };
-  freshest_date: string;
-  freshest_source: string;
-}
-
-function useDataMetadata() {
-  const [meta, setMeta] = useState<DataMetadata | null>(null);
-  useEffect(() => {
-    fetch('/api/metadata')
-      .then((r) => r.json())
-      .then(setMeta)
-      .catch(() => {});
-  }, []);
-  return meta;
-}
+import { useDataMetadata } from '@/hooks/use-data-metadata';
+import type { DataMetadata } from '@/hooks/use-data-metadata';
 
 /**
  * Dynamic update badge — shows the freshest date across ALL data sources,
@@ -140,7 +106,7 @@ function DynamicUpdateBadge({
 }
 
 function AboutSection() {
-  const meta = useDataMetadata();
+  const { metadata: meta } = useDataMetadata();
   return (
     <div id="about" className="scroll-mt-20 pt-8 pb-16">
       {/* Section header */}
@@ -415,7 +381,7 @@ function AboutSection() {
 
 export default function Home() {
   const { data, loading } = useRidership();
-  const meta = useDataMetadata();
+  const { metadata: meta } = useDataMetadata();
   useNotifications(); // triggers initial fetch + auto-refresh, syncs to Zustand store
   const {
     ridership: analyticsData,
@@ -602,9 +568,9 @@ export default function Home() {
                 ))}
               </div>
 
-              {/* KPI Cards */}
+              {/* KPI Cards — data passed as props to avoid duplicate fetch */}
               <div className="mb-6">
-                <KpiCards />
+                <KpiCards data={data} loading={loading} />
               </div>
 
               {/* Main Grid */}

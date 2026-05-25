@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import type { DataMetadata } from '@/hooks/use-data-metadata';
 
 export interface NotificationItem {
   id: string;
@@ -53,6 +54,9 @@ interface AppState {
   freshness: DataFreshness | null;
   // Analytics
   analyticsState: AnalyticsState | null;
+  // Centralized metadata (eliminates 3 independent /api/metadata fetches)
+  metadata: DataMetadata | null;
+  metadataLoading: boolean;
   // UI
   lastSynced: string | null;
   loadingNotifications: boolean;
@@ -63,6 +67,8 @@ interface AppState {
   markAllRead: () => void;
   setFreshness: (data: DataFreshness) => void;
   setAnalyticsState: (state: AnalyticsState) => void;
+  setMetadata: (data: DataMetadata) => void;
+  setMetadataLoading: (loading: boolean) => void;
   setLastSynced: (ts: string) => void;
   setLoadingNotifications: (loading: boolean) => void;
 }
@@ -72,6 +78,8 @@ export const useAppStore = create<AppState>((set) => ({
   unreadCount: 0,
   freshness: null,
   analyticsState: null,
+  metadata: null,
+  metadataLoading: false,
   lastSynced: null,
   loadingNotifications: false,
 
@@ -112,6 +120,10 @@ export const useAppStore = create<AppState>((set) => ({
   setFreshness: (data) => set({ freshness: data }),
 
   setAnalyticsState: (analytics) => set({ analyticsState: analytics }),
+
+  setMetadata: (data) => set({ metadata: data }),
+
+  setMetadataLoading: (loading) => set({ metadataLoading: loading }),
 
   setLastSynced: (ts) => set({ lastSynced: ts }),
 

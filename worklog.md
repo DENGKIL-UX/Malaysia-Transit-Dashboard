@@ -304,3 +304,24 @@ Stage Summary:
 - Found 4 over-engineering concerns
 - Found 2 missing implementations
 - Report compiled as DOCX
+---
+Task ID: 1
+Agent: main
+Task: Execute P1-P3 audit remediation for Malaysia Transit Dashboard
+
+Work Log:
+- **P1 BUG 1 (weekendWeekdayRatio)**: Verified the audit's claim was FALSE — the code at line 377 correctly divides `overallWeekendAvg / overallWeekdayAvg` (two different variables). Added clarifying comment documenting the ratio formula and DOW convention.
+- **P1 BUG 2 (weekdayAvg baseline)**: Refactored `computeDayTypeAverages()` in `day-type-analytics.tsx` from per-service-then-sum approach to daily-total-first approach. Now computes daily totals before grouping by DOW, making the baseline robust to partial/missing service data.
+- **P2 KPI Cards**: Refactored `kpi-cards.tsx` to accept `data` and `loading` as props instead of independently calling `useRidership()`. Updated `page.tsx` to pass data down. Eliminated duplicate network request.
+- **P2 Metadata Centralization**: Created `src/hooks/use-data-metadata.ts` as centralized hook backed by Zustand store. Added `metadata` and `metadataLoading` state to `useAppStore`. Updated all 3 consumers (page.tsx, data-status-bar.tsx, day-type-analytics.tsx) to use centralized store instead of independent fetches. Reduced `/api/metadata` calls from 3 to 1.
+- **P2 Dependency Purge**: Removed 10 dead dependencies from package.json: `@tanstack/react-query`, `apache-arrow`, `parquetjs`, `@prisma/client`, `prisma`, `next-auth`, `next-intl`, `@mdxeditor/editor`, `react-markdown`, `react-syntax-highlighter`. Removed unused db scripts from package.json scripts section. Bumped version to 0.2.1.
+- **P3 Prisma Exorcism**: Deleted `prisma/schema.prisma`, `src/lib/db.ts`, `db/custom.db`, and their parent directories.
+- **P3 DOW Convention**: Added explicit documentation in both `notifications/route.ts` and `day-type-analytics.tsx` about the JS `getDay()` convention (Sunday=0) and the chart remapping (Monday=0).
+
+Stage Summary:
+- **Audit FALSE ALARM confirmed**: weekendWeekdayRatio was never broken
+- **Real bug fixed**: weekdayAvg baseline now uses daily-total-first approach
+- **3 redundant network calls eliminated** (1 KPI duplicate + 2 metadata fetches)
+- **10 dead packages removed** (~50MB+ node_modules savings)
+- **Prisma fully excised** (schema, client, DB file)
+- All changes compile cleanly, dev server running, zero lint errors in app code

@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { CheckCircle2, Clock, HelpCircle, X } from 'lucide-react';
+import { useAppStore } from '@/lib/store';
 
 interface SourceStatus {
   label: string;
@@ -10,72 +11,48 @@ interface SourceStatus {
   hoursAgo: number;
 }
 
-interface Metadata {
-  headline: {
-    latest_date: string;
-    lag_days: number;
-  };
-  ktmb: {
-    latest_date: string;
-    lag_days: number;
-  };
-  prasarana_od: {
-    latest_date: string;
-    lag_days: number;
-  };
-  prasarana: {
-    data_as_of: string;
-  };
-}
-
 export function DataStatusBar() {
-  const [sources, setSources] = useState<SourceStatus[]>([]);
   const [showTooltip, setShowTooltip] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const metadata = useAppStore((s) => s.metadata);
+  const metadataLoading = useAppStore((s) => s.metadataLoading);
 
-  useEffect(() => {
-    fetch('/api/metadata')
-      .then((r) => r.json())
-      .then((data: Metadata) => {
-        const nowMs = Date.now();
+  const sources = useMemo<SourceStatus[]>(() => {
+    if (!metadata) return [];
 
-        const buildSource = (
-          label: string,
-          dateStr: string,
-          isAudit = false
-        ): SourceStatus | null => {
-          if (!dateStr) return null;
-          const dateMs = new Date(dateStr + 'T00:00:00').getTime();
-          const hours = Math.round((nowMs - dateMs) / 36e5);
-          return {
-            label,
-            lastDate: dateStr,
-            freshness: isAudit ? 'audit-lag' : hours < 72 ? 'fresh' : 'audit-lag',
-            hoursAgo: hours,
-          };
-        };
+    const nowMs = Date.now();
 
-        const srcs: SourceStatus[] = [];
+    const buildSource = (
+      label: string,
+      dateStr: string,
+      isAudit = false
+    ): SourceStatus | null => {
+      if (!dateStr) return null;
+      const dateMs = new Date(dateStr + 'T00:00:00').getTime();
+      const hours = Math.round((nowMs - dateMs) / 36e5);
+      return {
+        label,
+        lastDate: dateStr,
+        freshness: isAudit ? 'audit-lag' : hours < 72 ? 'fresh' : 'audit-lag',
+        hoursAgo: hours,
+      };
+    };
 
-        // KTMB OD (Parquet)
-        const ktmb = buildSource('KTMB OD', data.ktmb?.latest_date);
-        if (ktmb) srcs.push(ktmb);
+    const srcs: SourceStatus[] = [];
 
-        // Rapid Rail OD (Parquet)
-        const pras = buildSource('Rapid Rail OD', data.prasarana_od?.latest_date);
-        if (pras) srcs.push(pras);
+    // KTMB OD (Parquet)
+    const ktmb = buildSource('KTMB OD', metadata.ktmb?.latest_date);
+    if (ktmb) srcs.push(ktmb);
 
-        // Headline audit
-        const headline = buildSource('Headline Audit', data.headline?.latest_date, true);
-        if (headline) srcs.push(headline);
+    // Rapid Rail OD (Parquet)
+    const pras = buildSource('Rapid Rail OD', metadata.prasarana_od?.latest_date);
+    if (pras) srcs.push(pras);
 
-        setSources(srcs);
-      })
-      .catch(() => {
-        setSources([]);
-      })
-      .finally(() => setLoading(false));
-  }, []);
+    // Headline audit
+    const headline = buildSource('Headline Audit', metadata.headline?.latest_date, true);
+    if (headline) srcs.push(headline);
+
+    return srcs;
+  }, [metadata]);
 
   const formatLag = (hours: number) => {
     if (hours < 24) return `${hours}h ago`;
@@ -83,7 +60,7 @@ export function DataStatusBar() {
     return `${days}d ago`;
   };
 
-  if (loading) {
+  if (metadataLoading) {
     return (
       <div className="w-full px-4 sm:px-6 md:px-10 py-2 flex items-center gap-3 animate-pulse">
         <div className="h-3 w-32 bg-[var(--skeleton-bg)] rounded" />

@@ -1,7 +1,7 @@
 'use client';
 
 import { Train, Users, Bus, TramFront } from 'lucide-react';
-import { useRidership } from '@/hooks/use-ridership';
+import type { RidershipDay } from '@/hooks/use-ridership';
 import { cn } from '@/lib/utils';
 
 function DeltaBadge({ value }: { value: string }) {
@@ -31,8 +31,13 @@ function SkeletonPulse() {
   );
 }
 
-export function KpiCards() {
-  const { data, loading } = useRidership();
+interface KpiCardsProps {
+  /** Ridership data array — passed from parent to avoid duplicate fetching */
+  data: RidershipDay[];
+  loading: boolean;
+}
+
+export function KpiCards({ data, loading }: KpiCardsProps) {
   const latest = data[data.length - 1];
   const prev = data[data.length - 2];
 

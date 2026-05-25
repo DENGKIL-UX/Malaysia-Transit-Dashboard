@@ -13,6 +13,7 @@ import {
   Cell,
 } from 'recharts';
 import { format, subDays, parseISO } from 'date-fns';
+import { useAppStore } from '@/lib/store';
 import {
   BarChart3,
   TrendingDown,
@@ -43,14 +44,6 @@ interface PrasaranaRow {
   monorail: number;
   mrt_pjy: number;
   total: number;
-}
-
-interface Metadata {
-  ktmb: { latest_date: string; lag_days: number };
-  prasarana_od: { latest_date: string; lag_days: number };
-  headline: { latest_date: string; lag_days: number };
-  freshest_date: string;
-  freshest_source: string;
 }
 
 interface SeriesDef {
@@ -152,66 +145,116 @@ function computeDayTypeAverages<T extends { date: string }>(
     return dt >= cutoff;
   });
 
-  // Group by day-of-week (Mon=0, Sun=6)
-  const buckets: Array<{
-    day: number;
-    values: Record<string, number[]>;
-  }> = DAY_NAMES.map((_, i) => ({
-    day: i,
-    values: Object.fromEntries(keys.map((k) => [k, [] as number[]])),
-  }));
+  // ── Daily-total-first approach ──
+  // For each day, compute the daily total first, then group by DOW.
+  // This is robust to partial data (missing services on some days),
+  // whereas averaging per-service-then-summing drifts with incomplete records.
+  //
+  // DOW convention: Mon=0 … Sun=6 (chart axis order).
+  // NOTE: JS getDay() returns Sun=0 … Sat=6; we remap below.
 
+  interface DayRow {
+    dow: number; // Mon=0, Sun=6
+    dailyTotal: number;
+    perService: Record<string, number>;
+  }
+
+  const dayRows: DayRow[] = [];
   for (const row of filtered) {
     const dateStr = row.date.split(' ')[0];
     const dt = new Date(dateStr + 'T00:00:00');
-    let dow = dt.getDay() - 1;
-    if (dow < 0) dow = 6;
+    let dow = dt.getDay() - 1; // JS getDay(): Sun=0 → Mon=-1, so remap
+    if (dow < 0) dow = 6;      // Sunday → index 6
 
+    const perService: Record<string, number> = {};
+    let dailyTotal = 0;
     for (const key of keys) {
       const val = (row as unknown as Record<string, unknown>)[key];
       if (typeof val === 'number') {
-        buckets[dow].values[key].push(val);
+        perService[key] = val;
+        dailyTotal += val;
+      }
+    }
+    dayRows.push({ dow, dailyTotal, perService });
+  }
+
+  // Group daily totals by DOW for accurate statistics
+  const dowTotals: number[][] = Array.from({ length: 7 }, () => []);
+
+  // Group per-service values by DOW for stacked bar averages
+  const dowServiceBuckets: Record<number, Record<string, number[]>> = {};
+  for (let i = 0; i < 7; i++) {
+    dowServiceBuckets[i] = Object.fromEntries(keys.map((k) => [k, [] as number[]]));
+  }
+
+  for (const dr of dayRows) {
+    dowTotals[dr.dow].push(dr.dailyTotal);
+    for (const key of keys) {
+      if (dr.perService[key] !== undefined) {
+        dowServiceBuckets[dr.dow][key].push(dr.perService[key]);
       }
     }
   }
 
-  // Compute averages per day
+  // Compute chart data: per-service averages for stacked bars,
+  // daily-total average for the `total` field used in stats.
   const chartData = DAY_NAMES.map((day, i) => {
     const entry: Record<string, number | string> = {
       day,
       dayLabel: DAY_FULL[i],
     };
+
+    // Per-service averages (for stacked bar visualization)
     for (const key of keys) {
-      const vals = buckets[i].values[key];
+      const vals = dowServiceBuckets[i][key];
       entry[key] =
         vals.length > 0 ? Math.round(vals.reduce((s, v) => s + v, 0) / vals.length) : 0;
     }
-    entry.total = keys.reduce((s, k) => s + (entry[k] as number), 0);
+
+    // Daily-total-first average (statistically correct baseline)
+    const dailyTotals = dowTotals[i];
+    entry.total =
+      dailyTotals.length > 0
+        ? Math.round(dailyTotals.reduce((s, v) => s + v, 0) / dailyTotals.length)
+        : 0;
+
     return entry;
   });
 
-  // Weekday average (Mon-Fri, indices 0-4)
-  const weekdayTotals = chartData.slice(0, 5).map((d) => d.total as number);
-  const weekdayAvg = Math.round(
-    weekdayTotals.reduce((s, v) => s + v, 0) / weekdayTotals.length
-  );
+  // Weekday average (Mon-Fri, indices 0-4) — from daily totals
+  const weekdayDailyTotals = dayRows
+    .filter((dr) => dr.dow >= 0 && dr.dow <= 4)
+    .map((dr) => dr.dailyTotal);
+  const weekdayAvg =
+    weekdayDailyTotals.length > 0
+      ? Math.round(
+          weekdayDailyTotals.reduce((s, v) => s + v, 0) / weekdayDailyTotals.length
+        )
+      : 0;
 
-  // Per-service weekday averages (for reference line label)
+  // Per-service weekday averages (for tooltip breakdown)
   const perServiceWeekdayAvg: Record<string, number> = {};
   for (const key of keys) {
-    const vals = chartData.slice(0, 5).map((d) => d[key] as number);
+    const allVals: number[] = [];
+    for (let i = 0; i <= 4; i++) {
+      allVals.push(...dowServiceBuckets[i][key]);
+    }
     perServiceWeekdayAvg[key] =
-      vals.length > 0 ? Math.round(vals.reduce((s, v) => s + v, 0) / vals.length) : 0;
+      allVals.length > 0 ? Math.round(allVals.reduce((s, v) => s + v, 0) / allVals.length) : 0;
   }
 
-  // Stats
+  // Peak / low / weekend ratio — all from daily-total averages
   const totals = chartData.map((d) => d.total as number);
   const peakIdx = totals.indexOf(Math.max(...totals));
   const lowIdx = totals.indexOf(Math.min(...totals));
 
-  const weekendTotals = [chartData[5].total, chartData[6].total] as number[];
+  const weekendDailyTotals = dayRows
+    .filter((dr) => dr.dow === 5 || dr.dow === 6)
+    .map((dr) => dr.dailyTotal);
   const weekendAvg =
-    weekendTotals.reduce((s, v) => s + v, 0) / weekendTotals.length;
+    weekendDailyTotals.length > 0
+      ? weekendDailyTotals.reduce((s, v) => s + v, 0) / weekendDailyTotals.length
+      : 0;
   const weekendWeekdayRatio =
     weekdayAvg > 0 ? Math.round((weekendAvg / weekdayAvg) * 100) / 100 : 0;
 
@@ -310,23 +353,23 @@ function DayTypeTooltip({
 export function DayTypeAnalytics() {
   const [ktmbData, setKtmbData] = useState<KtmbRow[]>([]);
   const [prasData, setPrasData] = useState<PrasaranaRow[]>([]);
-  const [meta, setMeta] = useState<Metadata | null>(null);
   const [activeTab, setActiveTab] = useState<'ktmb' | 'prasarana'>('ktmb');
   const [hiddenLines, setHiddenLines] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
-  // Fetch data on mount
+  // Centralized metadata from Zustand (eliminates redundant /api/metadata fetch)
+  const meta = useAppStore((s) => s.metadata);
+
+  // Fetch data on mount (static JSON only — metadata comes from store)
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [ktmb, pras, metadata] = await Promise.all([
+      const [ktmb, pras] = await Promise.all([
         fetch('/ktmb-daily.json').then((r) => r.json()),
         fetch('/prasarana-daily.json').then((r) => r.json()),
-        fetch('/api/metadata').then((r) => r.json()).catch(() => null),
       ]);
       setKtmbData(ktmb);
       setPrasData(pras);
-      setMeta(metadata);
     } catch {
       // Silently fail
     } finally {

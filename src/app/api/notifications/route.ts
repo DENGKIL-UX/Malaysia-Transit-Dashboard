@@ -367,12 +367,14 @@ export async function GET() {
   const lowDayOfWeek = dayAvgs[dayAvgs.length - 1]?.dayName ?? 'N/A';
 
   // Weekend vs weekday ratio
+  // NOTE: DOW uses JS getDay() convention: 0=Sunday, 6=Saturday
   const weekdayAvgs = dayAvgs.filter(d => d.day >= 1 && d.day <= 5);
   const weekendAvgs = dayAvgs.filter(d => d.day === 0 || d.day === 6);
   const overallWeekdayAvg = weekdayAvgs.length > 0
     ? weekdayAvgs.reduce((s, d) => s + d.avg, 0) / weekdayAvgs.length : 0;
   const overallWeekendAvg = weekendAvgs.length > 0
     ? weekendAvgs.reduce((s, d) => s + d.avg, 0) / weekendAvgs.length : 0;
+  // Ratio = weekend average / weekday average (< 1.0 = less ridership on weekends)
   const weekendWeekdayRatio = overallWeekdayAvg > 0
     ? Math.round((overallWeekendAvg / overallWeekdayAvg) * 100) / 100 : 0;
 
