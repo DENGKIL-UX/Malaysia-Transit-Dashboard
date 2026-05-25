@@ -236,3 +236,30 @@ Stage Summary:
 - Analytics table now shows ML Insights Panel with 4 metric cards + weekly pattern + anomaly list
 - Hook auto-refreshes every 5 minutes, syncing all data to Zustand store
 - 4 files created, 2 files modified
+---
+Task ID: 1
+Agent: Main
+Task: Create Day-Type Analytics chart with 90-day window, weekday baseline, toggleable lines, dynamic timestamps
+
+Work Log:
+- Read page.tsx, all dashboard components, data files (ktmb-daily.json, prasarana-daily.json), metadata API, notification system
+- Understood data structure: KTMB has 57 days × 5 services (komuter, ets, intercity, komuter_utara, tebrau), Prasarana has 57 days × 5 lines (mrt_pjy, lrt_kj, lrt_ampang, monorail, brt)
+- Created `src/components/dashboard/day-type-analytics.tsx` — comprehensive component with:
+  - Two tabs: KTMB Services (5) and Rapid Rail Lines (5)
+  - 90-day rolling window computation (or all available data if < 90 days)
+  - Per-day-of-week averages for each service/line as stacked bars
+  - Weekday Average (Mon-Fri) reference line with dashed stroke and label
+  - Toggleable line visibility with show all / hide all buttons
+  - Stats row: Peak Day, Lowest Day, Weekend/Weekday Ratio, Weekday Avg baseline
+  - Dynamic timestamp badge synced with /api/metadata (freshest date + lag)
+  - Refresh button for data reload
+  - Computed window range display (start → end dates)
+  - Rich tooltip showing per-service values, total, and % vs weekday avg
+- Integrated into page.tsx between Prasarana Weekly Chart and Station Analytics sections
+- Lint passes clean, dev server compiles with 200 OK
+
+Stage Summary:
+- Created `src/components/dashboard/day-type-analytics.tsx` (~500 lines)
+- Updated `src/app/page.tsx` (import + component placement)
+- All 10 transit lines available across both tabs (5 KTMB + 5 Rapid Rail)
+- Dynamic data from /ktmb-daily.json, /prasarana-daily.json, /api/metadata

@@ -30,6 +30,7 @@ import { PrasaranaWeeklyChart } from '@/components/dashboard/prasarana-weekly-ch
 import { BusiestStationsRapidRail } from '@/components/dashboard/busiest-stations-rapid';
 import { BusiestStationsKTMB } from '@/components/dashboard/busiest-stations-ktmb';
 import { TopRoutesRapidRail, TopRoutesKTMB } from '@/components/dashboard/top-routes';
+import { DayTypeAnalytics } from '@/components/dashboard/day-type-analytics';
 import { OfflineBanner } from '@/components/dashboard/offline-banner';
 import { useRidership } from '@/hooks/use-ridership';
 import { useAnalytics } from '@/hooks/use-analytics';
@@ -624,6 +625,11 @@ export default function Home() {
               {/* Prasarana Real-Time Daily/Weekly Chart */}
               <div className="mb-6">
                 <PrasaranaWeeklyChart />
+              </div>
+
+              {/* Day-Type Analytics */}
+              <div className="mb-6">
+                <DayTypeAnalytics />
               </div>
 
               {/* Busiest Stations Section */}
