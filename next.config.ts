@@ -1,13 +1,9 @@
 import type { NextConfig } from 'next';
-import withSerwistInit from '@serwist/next';
 
-const withSerwist = withSerwistInit({
-  swSrc: 'src/app/sw.ts',
-  swDest: 'public/sw.js',
-  cacheOnNavigation: true,
-  reloadOnOnline: true,
-  disable: process.env.NODE_ENV === 'development',
-});
+// NOTE: Serwist's webpack plugin is incompatible with Turbopack (Next.js 16 default).
+// We use a static service worker at public/sw.js instead — no build-time precache,
+// runtime caching only. This works with both Turbopack and OpenNext/Cloudflare.
+// See: https://serwist.pages.dev/docs/next/turbo
 
 const nextConfig: NextConfig = {
   typescript: {
@@ -16,4 +12,4 @@ const nextConfig: NextConfig = {
   reactStrictMode: false,
 };
 
-export default withSerwist(nextConfig);
+export default nextConfig;
