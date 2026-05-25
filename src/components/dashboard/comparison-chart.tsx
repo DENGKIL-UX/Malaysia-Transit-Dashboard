@@ -24,6 +24,11 @@ const LINES = [
   { key: 'lrtAmpang', label: 'LRT Ampang', color: '#f87171' },
   { key: 'lrtKelanaJaya', label: 'LRT Kelana Jaya', color: '#a78bfa' },
   { key: 'monorail', label: 'Monorail', color: '#34d399' },
+  { key: 'komuter', label: 'KTM Komuter', color: '#2dd4bf' },
+  { key: 'ets', label: 'ETS', color: '#22d3ee' },
+  { key: 'intercity', label: 'Intercity', color: '#a3e635' },
+  { key: 'komuterUtara', label: 'Komuter Utara', color: '#f472b6' },
+  { key: 'tebrau', label: 'Shuttle Tebrau', color: '#facc15' },
 ] as const;
 
 interface ChartTooltipPayloadItem {

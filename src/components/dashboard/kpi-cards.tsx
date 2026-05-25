@@ -61,7 +61,7 @@ export function KpiCards() {
       glow: 'shadow-sky-400/5',
     },
     {
-      label: 'Total Rail Ridership',
+      label: 'Total Ridership',
       value: latest?.total ?? 0,
       delta: latest && prev ? delta(latest.total, prev.total) : '0.0',
       icon: Users,
@@ -80,12 +80,32 @@ export function KpiCards() {
       bg: 'bg-orange-400/10',
       glow: 'shadow-orange-400/5',
     },
+    {
+      label: 'ETS',
+      value: latest?.ets ?? 0,
+      delta: latest && prev ? delta(latest.ets, prev.ets) : '0.0',
+      icon: Train,
+      accent: 'text-cyan-400',
+      border: 'border-cyan-400/20',
+      bg: 'bg-cyan-400/10',
+      glow: 'shadow-cyan-400/5',
+    },
+    {
+      label: 'KTM Intercity',
+      value: latest?.intercity ?? 0,
+      delta: latest && prev ? delta(latest.intercity, prev.intercity) : '0.0',
+      icon: Train,
+      accent: 'text-lime-400',
+      border: 'border-lime-400/20',
+      bg: 'bg-lime-400/10',
+      glow: 'shadow-lime-400/5',
+    },
   ];
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {Array.from({ length: 4 }).map((_, i) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+        {Array.from({ length: 6 }).map((_, i) => (
           <SkeletonPulse key={i} />
         ))}
       </div>
@@ -93,7 +113,7 @@ export function KpiCards() {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
       {cards.map((c, i) => (
         <div
           key={c.label}

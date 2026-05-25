@@ -152,7 +152,13 @@ function AboutSection() {
               { label: 'LRT Ampang Line', color: 'bg-rose-400' },
               { label: 'Monorail Line', color: 'bg-emerald-400' },
               { label: 'KTM Komuter', color: 'bg-teal-400' },
+              { label: 'ETS', color: 'bg-cyan-400' },
+              { label: 'KTM Intercity', color: 'bg-lime-400' },
+              { label: 'KTM Komuter Utara', color: 'bg-pink-400' },
+              { label: 'Shuttle Tebrau', color: 'bg-yellow-400' },
               { label: 'RapidKL Bus (KL)', color: 'bg-orange-400' },
+              { label: 'Rapid Bus (Kuantan)', color: 'bg-fuchsia-400' },
+              { label: 'Rapid Bus (Penang)', color: 'bg-stone-400' },
             ].map((item) => (
               <div key={item.label} className="flex items-center gap-2">
                 <span className={`w-1.5 h-1.5 rounded-full ${item.color}`} />
@@ -402,7 +408,21 @@ export default function Home() {
                   <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
                   <span className="text-[var(--text-muted)]">Monorail</span>
                   <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
-                  <span className="text-orange-400/60">Rapid Bus KL</span>
+                  <span className="text-[var(--text-muted)]">Komuter</span>
+                  <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
+                  <span className="text-[var(--text-muted)]">ETS</span>
+                  <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
+                  <span className="text-[var(--text-muted)]">Intercity</span>
+                  <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
+                  <span className="text-[var(--text-muted)]">Komuter Utara</span>
+                  <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
+                  <span className="text-[var(--text-muted)]">Tebrau</span>
+                  <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
+                  <span className="text-orange-400/60">Bus KL</span>
+                  <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
+                  <span className="text-[var(--text-muted)]">Bus Kuantan</span>
+                  <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
+                  <span className="text-[var(--text-muted)]">Bus Penang</span>
                 </p>
 
                 <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold text-[var(--text-primary)] leading-[1.02] tracking-tight">

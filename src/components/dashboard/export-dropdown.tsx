@@ -22,12 +22,18 @@ function buildCSV(data: ReturnType<typeof useRidership>['data']): string {
     'LRT Ampang',
     'Monorail',
     'KTM Komuter',
-    'Total Rail',
-    'Bus KL',
+    'ETS',
+    'KTM Intercity',
+    'KTM Komuter Utara',
+    'Shuttle Tebrau',
+    'Rapid Bus (KL)',
+    'Rapid Bus (Kuantan)',
+    'Rapid Bus (Penang)',
+    'Total',
   ];
 
   const rows = data.map((d) =>
-    [d.date, d.mrtKajang, d.mrtPutrajaya, d.lrtKelanaJaya, d.lrtAmpang, d.monorail, d.komuter, d.total, d.busKl].join(',')
+    [d.date, d.mrtKajang, d.mrtPutrajaya, d.lrtKelanaJaya, d.lrtAmpang, d.monorail, d.komuter, d.ets, d.intercity, d.komuterUtara, d.tebrau, d.busKl, d.busKuantan, d.busRpn, d.total].join(',')
   );
 
   return [headers.join(','), ...rows].join('\n');

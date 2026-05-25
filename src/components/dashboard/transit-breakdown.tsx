@@ -1,12 +1,12 @@
 'use client';
 
-import { useRidership } from '@/hooks/use-ridership';
+import { useRidership, type RidershipDay } from '@/hooks/use-ridership';
 import { cn } from '@/lib/utils';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 interface LineData {
   label: string;
-  key: 'mrtKajang' | 'mrtPutrajaya' | 'lrtKelanaJaya' | 'lrtAmpang' | 'monorail' | 'komuter';
+  key: keyof RidershipDay;
   color: string;
   bgColor: string;
 }
@@ -18,6 +18,13 @@ const lines: LineData[] = [
   { label: 'LRT Ampang', key: 'lrtAmpang', color: 'text-rose-400', bgColor: 'bg-rose-400' },
   { label: 'Monorail', key: 'monorail', color: 'text-emerald-400', bgColor: 'bg-emerald-400' },
   { label: 'KTM Komuter', key: 'komuter', color: 'text-teal-400', bgColor: 'bg-teal-400' },
+  { label: 'ETS', key: 'ets', color: 'text-cyan-400', bgColor: 'bg-cyan-400' },
+  { label: 'KTM Intercity', key: 'intercity', color: 'text-lime-400', bgColor: 'bg-lime-400' },
+  { label: 'KTM Komuter Utara', key: 'komuterUtara', color: 'text-pink-400', bgColor: 'bg-pink-400' },
+  { label: 'Shuttle Tebrau', key: 'tebrau', color: 'text-yellow-400', bgColor: 'bg-yellow-400' },
+  { label: 'Rapid Bus (KL)', key: 'busKl', color: 'text-orange-400', bgColor: 'bg-orange-400' },
+  { label: 'Rapid Bus (Kuantan)', key: 'busKuantan', color: 'text-fuchsia-400', bgColor: 'bg-fuchsia-400' },
+  { label: 'Rapid Bus (Penang)', key: 'busRpn', color: 'text-stone-400', bgColor: 'bg-stone-400' },
 ];
 
 function TrendIcon({ value }: { value: string }) {
@@ -47,7 +54,7 @@ export function TransitBreakdown() {
       >
         <div className="animate-pulse space-y-4">
           <div className="h-4 w-40 bg-[var(--skeleton-bg)] rounded" />
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: 13 }).map((_, i) => (
             <div key={i} className="space-y-2">
               <div className="flex justify-between">
                 <div className="h-3 w-24 bg-[var(--skeleton-bg)] rounded" />
@@ -123,7 +130,7 @@ export function TransitBreakdown() {
       <div className="mt-5 pt-3 border-t border-[var(--border-faint)]">
         <div className="flex items-center justify-between">
           <span className="text-[10px] text-[var(--text-faint)] uppercase tracking-widest">
-            Total Rail
+            Total Ridership
           </span>
           <span className="text-sm font-semibold text-[var(--text-primary)] tabular-nums">
             {latest?.total.toLocaleString() ?? '—'}

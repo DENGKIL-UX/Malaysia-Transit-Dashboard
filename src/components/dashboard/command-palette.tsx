@@ -21,6 +21,13 @@ const transitLines = [
   { id: 'ampang', label: 'LRT Ampang Line', abbr: 'AG' },
   { id: 'monorail', label: 'Monorail Line', abbr: 'MR' },
   { id: 'komuter', label: 'KTM Komuter', abbr: 'KT' },
+  { id: 'ets', label: 'ETS', abbr: 'ETS' },
+  { id: 'intercity', label: 'KTM Intercity', abbr: 'IC' },
+  { id: 'komuter-utara', label: 'KTM Komuter Utara', abbr: 'KU' },
+  { id: 'tebrau', label: 'Shuttle Tebrau', abbr: 'ST' },
+  { id: 'bus-kl', label: 'Rapid Bus (KL)', abbr: 'BKL' },
+  { id: 'bus-kuantan', label: 'Rapid Bus (Kuantan)', abbr: 'BKN' },
+  { id: 'bus-penang', label: 'Rapid Bus (Penang)', abbr: 'BRP' },
 ];
 
 export function CommandPalette() {
@@ -127,6 +134,13 @@ export function CommandPalette() {
                   ampang: 'lrtAmpang',
                   monorail: 'monorail',
                   komuter: 'komuter',
+                  ets: 'ets',
+                  intercity: 'intercity',
+                  'komuter-utara': 'komuterUtara',
+                  tebrau: 'tebrau',
+                  'bus-kl': 'busKl',
+                  'bus-kuantan': 'busKuantan',
+                  'bus-penang': 'busRpn',
                 }[line.id]] as number ?? 0
                 : 0;
               return (
