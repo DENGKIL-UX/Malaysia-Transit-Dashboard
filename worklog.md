@@ -50,3 +50,36 @@ Stage Summary:
 - Comparison chart shows 10 rail lines (buses excluded per design)
 - CSV export includes all 15 columns (13 lines + date + total)
 - Command palette can search all 13 transit lines
+
+---
+Task ID: 3
+Agent: Main
+Task: Add KTMB Mon-Sun daily/weekly chart using ridership_ktmb_daily dataset
+
+Work Log:
+- Explored data.gov.my API to understand `ridership_ktmb_daily` dataset structure
+  - Fields: date (YYYY-MM-DD), service (ets/intercity/komuter/komuter_utara/shuttle_tebrau), ridership (number)
+  - Data available up to 2025-05-25 (very recent, ~1 day lag)
+  - Each date has 5 rows (one per service)
+- Created API route `src/app/api/ridership-ktmb-daily/route.ts`:
+  - Proxies to `https://api.data.gov.my/data-catalogue/?id=ridership_ktmb_daily` with date range
+  - 1-hour revalidation cache
+- Created hook `src/hooks/use-ktmb-daily.ts`:
+  - Fetches 5 weeks of data, pivots by date into KtmbDay interface
+  - Each KtmbDay has: date, ets, intercity, komuter, komuterUtara, shuttleTebrau, total, dayOfWeek, dayName
+  - Sorts chronologically
+- Created component `src/components/dashboard/ktmb-weekly-chart.tsx`:
+  - Bar chart showing Mon-Sun daily totals for current week vs previous week
+  - Summary stats row: Weekly Total, Daily Avg, vs Prev Week (with trend arrow)
+  - Teal gradient bars for current week, muted green for previous week
+  - Custom tooltip with day name, date, week range
+  - Proper skeleton loading state
+  - Matches existing dashboard design system (var() colors, animate-fade-in-up, glassmorphism)
+- Integrated into `src/app/page.tsx`: Added KtmbWeeklyChart below the main grid (ridership chart + transit breakdown)
+- Lint passes clean, API tested and returns valid data
+
+Stage Summary:
+- New data pipeline: API route → hook → chart component for KTMB daily ridership
+- Chart shows 7-day (Mon-Sun) comparison between current and previous week
+- Data sourced from `ridership_ktmb_daily` (real-time, ~1 day lag) vs headline (monthly audited)
+- 3 new files: API route, hook, chart component

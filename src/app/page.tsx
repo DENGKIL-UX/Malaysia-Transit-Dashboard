@@ -24,6 +24,7 @@ import { ComparisonChart } from '@/components/dashboard/comparison-chart';
 import { AnalyticsTable } from '@/components/dashboard/analytics-table';
 import { DataIntegrityBanner } from '@/components/dashboard/data-integrity-banner';
 import { DataStatusBar } from '@/components/dashboard/data-status-bar';
+import { KtmbWeeklyChart } from '@/components/dashboard/ktmb-weekly-chart';
 import { OfflineBanner } from '@/components/dashboard/offline-banner';
 import { useRidership } from '@/hooks/use-ridership';
 import { useAnalytics } from '@/hooks/use-analytics';
@@ -519,6 +520,11 @@ export default function Home() {
                 <div className="lg:col-span-5 xl:col-span-4">
                   <TransitBreakdown />
                 </div>
+              </div>
+
+              {/* KTMB Daily/Weekly Chart */}
+              <div className="mb-6">
+                <KtmbWeeklyChart />
               </div>
             </div>
           </div>
