@@ -1,0 +1,479 @@
+Yes. Cloudflare Workers free tier is ideal for hosting your own MCP server. It runs at the edge, has zero cold start, and the free tier covers the RapidStats use case comfortably.
+
+---
+
+## Cloudflare Workers Free Tier Limits
+
+| Resource | Free Tier | RapidStats Usage |
+|----------|-----------|------------------|
+| **Requests/day** | 100,000 | Dashboard has ~1 user (you). Negligible. |
+| **CPU time/request** | 10ms | MCP tool call: ~5-20ms (one fetch to data.gov.my). |
+| **Worker scripts** | 100 | One script for the MCP server. |
+| **KV reads/day** | 100,000 | Metadata cache reads. Negligible. |
+| **KV writes/day** | 1,000 | Daily cache refresh. One write. |
+
+**Verdict:** You will not hit free tier limits. Ever.
+
+---
+
+## Architecture: MCP Server on Cloudflare Workers
+
+```
+?? RapidStats Dashboard (CF Pages) ????????????
+?  Static Next.js app                          ?
+?  ? fetch https://mcp.rapidstats.workers.dev ?
+?? Your MCP Server (CF Worker) ?????????????????
+?  Worker: rapidstats-mcp                      ?
+?  Route: POST /                               ?
+?  Tools: query_ridership, get_metadata         ?
+?  ? fetch data.gov.my / GitHub raw           ?
+?? Data Sources ????????????????????????????????
+?  data.gov.my API                             ?
+?  github.com/data-gov-my/datagovmy-meta       ?
+???????????????????????????????????????????????
+```
+
+---
+
+## Implementation: CF Worker MCP Server
+
+**File:** `workers/mcp-server.ts`
+
+```typescript
+// Cloudflare Worker entry point
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { type Request as MCPRequest } from '@modelcontextprotocol/sdk/types.js';
+
+// CORS headers for dashboard access
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*', // Lock to your Pages domain in production
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
+
+export default {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    // Handle preflight
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { headers: corsHeaders });
+    }
+
+    if (request.method !== 'POST') {
+      return new Response('Method not allowed', { status: 405, headers: corsHeaders });
+    }
+
+    const body = await request.json();
+
+    // Route MCP requests
+    const result = await handleMCPRequest(body);
+
+    return new Response(JSON.stringify(result), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  },
+};
+
+async function handleMCPRequest(body: any) {
+  switch (body.method) {
+    case 'tools/list':
+      return {
+        tools: [
+          {
+            name: 'query_ridership',
+            description: 'Fetch daily ridership from data.gov.my',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                limit: { type: 'number', default: 30 },
+                start_date: { type: 'string' },
+                end_date: { type: 'string' },
+              },
+            },
+          },
+          {
+            name: 'get_metadata',
+            description: 'Read dataset metadata from datagovmy-meta',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                dataset_id: { type: 'string' },
+              },
+              required: ['dataset_id'],
+            },
+          },
+        ],
+      };
+
+    case 'tools/call': {
+      const { name, arguments: args } = body.params;
+
+      if (name === 'query_ridership') {
+        const { limit = 30, start_date, end_date } = args;
+        const url = new URL('https://api.data.gov.my/data-catalogue');
+        url.searchParams.set('id', 'ridership_headline');
+        url.searchParams.set('limit', String(limit));
+        if (start_date) url.searchParams.set('start_date', start_date);
+        if (end_date) url.searchParams.set('end_date', end_date);
+
+        const res = await fetch(url);
+        const data = await res.json();
+
+        return {
+          content: [{ type: 'text', text: JSON.stringify({ count: data.length, latest: data[data.length - 1]?.date, data }) }],
+        };
+      }
+
+      if (name === 'get_metadata') {
+        const { dataset_id } = args;
+        const url = `https://raw.githubusercontent.com/data-gov-my/datagovmy-meta/main/data-catalogue/${dataset_id}.json`;
+        
+        const res = await fetch(url);
+        const meta = await res.json();
+
+        return {
+          content: [{ type: 'text', text: JSON.stringify({
+            last_updated: meta.last_updated,
+            next_update: meta.next_update,
+            data_as_of: meta.data_as_of,
+          }) }],
+        };
+      }
+
+      throw new Error(`Unknown tool: ${name}`);
+    }
+
+    default:
+      throw new Error(`Unknown method: ${body.method}`);
+  }
+}
+```
+
+---
+
+## Deployment: Wrangler CLI
+
+```bash
+# Install Wrangler
+npm install -g wrangler
+
+# Login to Cloudflare
+wrangler login
+
+# Create worker project
+mkdir rapidstats-mcp && cd rapidstats-mcp
+wrangler init --from-dash rapidstats-mcp
+
+# Paste the code above into src/index.ts
+
+# Deploy
+wrangler deploy
+
+# Output: https://rapidstats-mcp.your-subdomain.workers.dev
+```
+
+---
+
+## Dashboard Integration
+
+```typescript
+// hooks/useRidership.ts — modified to call your Worker
+
+const MCP_WORKER_URL = 'https://rapidstats-mcp.your-subdomain.workers.dev';
+
+export async function fetchRidershipMCP(limit = 30) {
+  const res = await fetch(MCP_WORKER_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      method: 'tools/call',
+      params: {
+        name: 'query_ridership',
+        arguments: { limit },
+      },
+    }),
+  });
+
+  const result = await res.json();
+  const { data } = JSON.parse(result.content[0].text);
+  return data;
+}
+```
+
+---
+
+## Caching with KV (Optional but Recommended)
+
+Add a daily cache so you don't hit data.gov.my on every page load:
+
+```typescript
+// In Worker, before fetch:
+const cacheKey = `ridership:${new Date().toISOString().split('T')[0]}`;
+const cached = await env.RIDERSHIP_CACHE.get(cacheKey);
+
+if (cached) {
+  return { content: [{ type: 'text', text: cached }] };
+}
+
+// Fetch fresh, then cache:
+const fresh = await fetch(url);
+const data = await fresh.json();
+await env.RIDERSHIP_CACHE.put(cacheKey, JSON.stringify(data), { expirationTtl: 86400 });
+```
+
+**KV namespace:**
+```bash
+wrangler kv:namespace create RIDERSHIP_CACHE
+```
+
+---
+
+## Free Tier Reality Check
+
+| Scenario | Requests | CPU | Within Free? |
+|----------|----------|-----|--------------|
+| You check dashboard 10×/day | 10 | ~100ms total | ? Yes |
+| 100 users check 1×/day | 100 | ~1s total | ? Yes |
+| 1,000 users check 1×/day | 1,000 | ~10s total | ? Yes |
+| Aggressive polling every minute | 1,440/day | ~14s total | ? Yes |
+
+Even with aggressive use, you stay within free tier.
+
+---
+
+## Bottom Line
+
+| Question | Answer |
+|----------|--------|
+| Can I host MCP on CF Workers free? | **Yes** |
+| Will I hit limits? | **No** — usage is tiny |
+| Do I need KV? | **Recommended** for caching, also free |
+| Do I need a custom domain? | **No** — `*.workers.dev` is free |
+| Is this better than Smithery? | **Different** — you control everything, but you maintain it |
+
+**Deploy with Wrangler in 5 minutes. No credit card. No API keys. Fully functional MCP server at the edge.**
+
+ The build parameters confirm you're using **OpenNext Cloudflare** — a framework for deploying Next.js apps to Cloudflare Workers. This is different from standard Cloudflare Pages deployment.
+
+---
+
+## What OpenNext Cloudflare Means
+
+| Aspect | Standard CF Pages | OpenNext Cloudflare |
+|--------|-------------------|---------------------|
+| **Framework** | Static or SSR via Functions | Full Next.js App Router on Workers |
+| **Build command** | `next build` | `npx opennextjs-cloudflare build` |
+| **Deploy** | Git integration or drag-drop | `wrangler versions upload` |
+| **Edge runtime** | Pages Functions | Workers |
+| **API routes** | Pages Functions | Workers (colocated) |
+| **MCP server** | Separate Worker | **Can embed in same app** |
+
+**Key insight:** Your MCP server can live **inside the same OpenNext app**, not as a separate Worker. This simplifies architecture.
+
+---
+
+## Revised Architecture: MCP Inside OpenNext
+
+```
+?? RapidStats (OpenNext on Cloudflare Workers) ??
+?  ?? Static pages: Dashboard, Analytics, About ?
+?  ?? API routes: /api/ridership (existing)     ?
+?  ?? NEW: /api/mcp — MCP server endpoint       ?
+?      ?? POST /api/mcp ? list tools            ?
+?      ?? POST /api/mcp ? call tool             ?
+?? Data Sources ?????????????????????????????????
+?  data.gov.my API                               ?
+?  github.com/data-gov-my/datagovmy-meta         ?
+???????????????????????????????????????????????????
+```
+
+**No separate Worker needed.** The MCP server is just another API route in your existing app.
+
+---
+
+## Implementation: MCP as API Route
+
+```typescript
+// app/api/mcp/route.ts
+import { NextRequest } from 'next/server';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
+
+export async function OPTIONS() {
+  return new Response(null, { headers: corsHeaders });
+}
+
+export async function POST(request: NextRequest) {
+  const body = await request.json();
+
+  try {
+    const result = await handleMCPRequest(body);
+    return Response.json(result, { headers: corsHeaders });
+  } catch (err: any) {
+    return Response.json({ error: err.message }, { status: 500, headers: corsHeaders });
+  }
+}
+
+async function handleMCPRequest(body: any) {
+  switch (body.method) {
+    case 'tools/list':
+      return {
+        tools: [
+          {
+            name: 'query_ridership',
+            description: 'Fetch daily ridership from data.gov.my',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                limit: { type: 'number', default: 30 },
+                start_date: { type: 'string' },
+                end_date: { type: 'string' },
+              },
+            },
+          },
+          {
+            name: 'get_metadata',
+            description: 'Read dataset metadata from datagovmy-meta',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                dataset_id: { type: 'string' },
+              },
+              required: ['dataset_id'],
+            },
+          },
+        ],
+      };
+
+    case 'tools/call': {
+      const { name, arguments: args } = body.params;
+
+      if (name === 'query_ridership') {
+        const { limit = 30, start_date, end_date } = args;
+        const url = new URL('https://api.data.gov.my/data-catalogue');
+        url.searchParams.set('id', 'ridership_headline');
+        url.searchParams.set('limit', String(limit));
+        if (start_date) url.searchParams.set('start_date', start_date);
+        if (end_date) url.searchParams.set('end_date', end_date);
+
+        const res = await fetch(url);
+        const data = await res.json();
+
+        return {
+          content: [{ type: 'text', text: JSON.stringify({ count: data.length, latest: data[data.length - 1]?.date, data }) }],
+        };
+      }
+
+      if (name === 'get_metadata') {
+        const { dataset_id } = args;
+        const url = `https://raw.githubusercontent.com/data-gov-my/datagovmy-meta/main/data-catalogue/${dataset_id}.json`;
+        
+        const res = await fetch(url);
+        const meta = await res.json();
+
+        return {
+          content: [{ type: 'text', text: JSON.stringify({
+            last_updated: meta.last_updated,
+            next_update: meta.next_update,
+            data_as_of: meta.data_as_of,
+          }) }],
+        };
+      }
+
+      throw new Error(`Unknown tool: ${name}`);
+    }
+
+    default:
+      throw new Error(`Unknown method: ${body.method}`);
+  }
+}
+```
+
+---
+
+## Build Configuration (Already Correct)
+
+Your existing build commands handle this automatically:
+
+| Command | What It Does |
+|---------|-------------|
+| `npx opennextjs-cloudflare build` | Builds Next.js app + bundles API routes for Workers |
+| `npx wrangler versions upload` | Uploads built bundle to Cloudflare |
+| `npx wrangler versions deploy` | Promotes uploaded version to production |
+
+**No changes needed.** The `app/api/mcp/route.ts` file will be bundled into the same Worker as your dashboard.
+
+---
+
+## Dashboard Calls Internal MCP
+
+```typescript
+// hooks/useRidership.ts — call internal MCP endpoint
+
+const MCP_URL = '/api/mcp'; // Same domain, no CORS needed
+
+export async function fetchRidershipMCP(limit = 30) {
+  const res = await fetch(MCP_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      method: 'tools/call',
+      params: {
+        name: 'query_ridership',
+        arguments: { limit },
+      },
+    }),
+  });
+
+  const result = await res.json();
+  const { data } = JSON.parse(result.content[0].text);
+  return data;
+}
+```
+
+**Advantage:** Internal call — no network hop to external Worker. Faster. No CORS.
+
+---
+
+## Caching with Cloudflare Cache API
+
+Since you're on Workers, use the Cache API instead of KV:
+
+```typescript
+// Inside /api/mcp/route.ts
+const cache = caches.default;
+const cacheKey = new Request(`https://rapidstats.my/mcp-cache/ridership/${new Date().toISOString().split('T')[0]}`);
+
+const cached = await cache.match(cacheKey);
+if (cached) {
+  const text = await cached.text();
+  return { content: [{ type: 'text', text }] };
+}
+
+// Fetch fresh...
+const fresh = await fetch(url);
+const data = await fresh.json();
+const response = new Response(JSON.stringify(data), {
+  headers: { 'Cache-Control': 'max-age=86400' },
+});
+await cache.put(cacheKey, response);
+```
+
+**Cache API is free** on Workers. No KV namespace needed.
+
+---
+
+## Bottom Line
+
+| Question | Answer |
+|----------|--------|
+| Do I need a separate Worker? | **No** — embed MCP in `app/api/mcp/route.ts` |
+| Do I need to change build commands? | **No** — OpenNext handles API routes automatically |
+| Do I need an AI token? | **No** — generic Worker, no AI |
+| Do I need KV? | **No** — use Cache API (free) |
+| Is this still free tier? | **Yes** — single Worker, minimal requests |
+
+**Your existing build pipeline (`opennextjs-cloudflare build` + `wrangler versions upload`) is already correct.** Just add the `app/api/mcp/route.ts` file and deploy.

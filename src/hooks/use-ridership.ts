@@ -14,6 +14,50 @@ export interface RidershipDay {
   total: number;
 }
 
+/**
+ * Call the internal MCP endpoint to fetch ridership data.
+ * Falls back to direct /api/ridership if MCP fails.
+ */
+async function fetchViaMCP(
+  startDate: string,
+  endDate: string
+): Promise<Record<string, unknown>[]> {
+  const res = await fetch('/api/mcp', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      method: 'tools/call',
+      params: {
+        name: 'query_ridership',
+        arguments: { start_date: startDate, end_date: endDate },
+      },
+    }),
+  });
+
+  if (!res.ok) {
+    throw new Error(`MCP error: ${res.status}`);
+  }
+
+  const result = await res.json();
+  const parsed = JSON.parse(result.content[0].text);
+  return parsed.data;
+}
+
+async function fetchViaDirectAPI(
+  startDate: string,
+  endDate: string
+): Promise<Record<string, unknown>[]> {
+  const res = await fetch(
+    `/api/ridership?start_date=${startDate}&end_date=${endDate}`
+  );
+
+  if (!res.ok) {
+    throw new Error(`API error: ${res.status}`);
+  }
+
+  return res.json();
+}
+
 export function useRidership() {
   const [data, setData] = useState<RidershipDay[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,15 +71,13 @@ export function useRidership() {
     const start = new Date(Date.now() - 30 * 864e5).toISOString().split('T')[0];
 
     try {
-      const res = await fetch(
-        `/api/ridership?start_date=${start}&end_date=${end}`
-      );
-
-      if (!res.ok) {
-        throw new Error(`API error: ${res.status}`);
+      // Try MCP first, fallback to direct API
+      let rows: Record<string, unknown>[];
+      try {
+        rows = await fetchViaMCP(start, end);
+      } catch {
+        rows = await fetchViaDirectAPI(start, end);
       }
-
-      const rows: Record<string, unknown>[] = await res.json();
 
       const parsed = rows
         .filter((r) => r.date != null)
@@ -48,7 +90,12 @@ export function useRidership() {
           const komuter = Number(r['rail_komuter'] ?? 0);
           const busKl = Number(r['bus_rkl'] ?? 0);
           const total =
-            mrtKajang + mrtPutrajaya + lrtKelanaJaya + lrtAmpang + monorail + komuter;
+            mrtKajang +
+            mrtPutrajaya +
+            lrtKelanaJaya +
+            lrtAmpang +
+            monorail +
+            komuter;
 
           return {
             date: r.date as string,
