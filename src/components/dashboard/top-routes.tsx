@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { ArrowRight, MapPin, Train, Bus } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
 
 interface TopRoute {
   origin: string;
@@ -12,6 +13,11 @@ interface TopRoute {
 
 interface RoutesData {
   top_routes: TopRoute[];
+}
+
+// Minimal interface to extract date range from station JSON
+interface StationDateMeta {
+  station_series: Record<string, { date: string }[]>;
 }
 
 function useJsonData<T>(url: string) {
@@ -38,6 +44,26 @@ function useJsonData<T>(url: string) {
   return { data, loading, error };
 }
 
+/** Extract date range from any station series entry */
+function useDateRange(stationUrl: string) {
+  const { data } = useJsonData<StationDateMeta>(stationUrl);
+
+  return useMemo(() => {
+    if (!data) return null;
+    const keys = Object.keys(data.station_series);
+    if (keys.length === 0) return null;
+    const series = data.station_series[keys[0]];
+    if (!series || series.length === 0) return null;
+    const dates = series.map(d => d.date.slice(0, 10)).sort();
+    const fmt = (d: string) => format(parseISO(d), 'dd MMM');
+    return {
+      start: fmt(dates[0]),
+      end: fmt(dates[dates.length - 1]),
+      days: dates.length,
+    };
+  }, [data]);
+}
+
 function Skeleton() {
   return (
     <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 animate-pulse">
@@ -62,6 +88,7 @@ function Skeleton() {
 
 export function TopRoutesRapidRail() {
   const { data, loading, error } = useJsonData<RoutesData>('/prasarana-routes.json');
+  const dateRange = useDateRange('/prasarana-stations.json');
 
   if (loading) return <Skeleton />;
   if (error || !data) {
@@ -80,18 +107,27 @@ export function TopRoutesRapidRail() {
   return (
     <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 shadow-lg animate-fade-in-up">
       {/* Header */}
-      <div className="flex items-center gap-2 mb-5">
-        <div className="w-8 h-8 rounded-xl bg-amber-400/10 border border-amber-400/20 flex items-center justify-center">
-          <MapPin className="w-4 h-4 text-amber-400" />
+      <div className="flex items-start justify-between gap-3 mb-5">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-xl bg-amber-400/10 border border-amber-400/20 flex items-center justify-center">
+            <MapPin className="w-4 h-4 text-amber-400" />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-[var(--text-primary)]">
+              Top Routes — Rapid Rail
+            </h3>
+            <p className="text-[10px] text-[var(--text-faint)] mt-0.5">
+              Busiest origin → destination pairs
+            </p>
+          </div>
         </div>
-        <div>
-          <h3 className="text-sm font-semibold text-[var(--text-primary)]">
-            Top Routes — Rapid Rail
-          </h3>
-          <p className="text-[10px] text-[var(--text-faint)] mt-0.5">
-            Busiest origin → destination pairs
-          </p>
-        </div>
+        {dateRange && (
+          <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-amber-400/10 border border-amber-400/20 shrink-0">
+            <span className="text-[9px] text-amber-400 font-medium tabular-nums">
+              {dateRange.start} – {dateRange.end} · {dateRange.days} days
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Routes list */}
@@ -133,7 +169,12 @@ export function TopRoutesRapidRail() {
         })}
       </div>
 
-      <div className="mt-4 pt-3 border-t border-[var(--border-faint)]">
+      <div className="mt-4 pt-3 border-t border-[var(--border-faint)] flex items-center justify-between">
+        {dateRange && (
+          <span className="text-[9px] text-[var(--text-faint)]">
+            Aggregated over {dateRange.days} days
+          </span>
+        )}
         <span className="text-[9px] text-[var(--text-faint)] uppercase tracking-widest">
           Source: data.gov.my · parquet
         </span>
@@ -144,6 +185,7 @@ export function TopRoutesRapidRail() {
 
 export function TopRoutesKTMB() {
   const { data, loading, error } = useJsonData<RoutesData>('/ktmb-routes.json');
+  const dateRange = useDateRange('/ktmb-stations.json');
 
   if (loading) return <Skeleton />;
   if (error || !data) {
@@ -170,18 +212,27 @@ export function TopRoutesKTMB() {
   return (
     <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 shadow-lg animate-fade-in-up">
       {/* Header */}
-      <div className="flex items-center gap-2 mb-5">
-        <div className="w-8 h-8 rounded-xl bg-teal-400/10 border border-teal-400/20 flex items-center justify-center">
-          <Train className="w-4 h-4 text-teal-400" />
+      <div className="flex items-start justify-between gap-3 mb-5">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-xl bg-teal-400/10 border border-teal-400/20 flex items-center justify-center">
+            <Train className="w-4 h-4 text-teal-400" />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-[var(--text-primary)]">
+              Top Routes — KTMB
+            </h3>
+            <p className="text-[10px] text-[var(--text-faint)] mt-0.5">
+              Busiest origin → destination pairs by service
+            </p>
+          </div>
         </div>
-        <div>
-          <h3 className="text-sm font-semibold text-[var(--text-primary)]">
-            Top Routes — KTMB
-          </h3>
-          <p className="text-[10px] text-[var(--text-faint)] mt-0.5">
-            Busiest origin → destination pairs by service
-          </p>
-        </div>
+        {dateRange && (
+          <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-teal-400/10 border border-teal-400/20 shrink-0">
+            <span className="text-[9px] text-teal-400 font-medium tabular-nums">
+              {dateRange.start} – {dateRange.end} · {dateRange.days} days
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Routes list */}
@@ -224,7 +275,12 @@ export function TopRoutesKTMB() {
         })}
       </div>
 
-      <div className="mt-4 pt-3 border-t border-[var(--border-faint)]">
+      <div className="mt-4 pt-3 border-t border-[var(--border-faint)] flex items-center justify-between">
+        {dateRange && (
+          <span className="text-[9px] text-[var(--text-faint)]">
+            Aggregated over {dateRange.days} days
+          </span>
+        )}
         <span className="text-[9px] text-[var(--text-faint)] uppercase tracking-widest">
           Source: data.gov.my · parquet
         </span>

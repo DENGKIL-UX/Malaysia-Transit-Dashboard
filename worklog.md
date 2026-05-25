@@ -429,3 +429,57 @@ Stage Summary:
 - All stats (Peak Day, Lowest Day, Weekend/Weekday Ratio, Weekday Avg, vs Prev Window) update dynamically
 - Current dataset yields 2 windows; more windows will appear as data grows
 - Files modified: day-type-analytics.tsx
+---
+Task ID: 6
+Agent: full-stack-developer
+Task: Add time-window pagination to Station Analytics (4 components)
+
+Work Log:
+- Read worklog.md to understand project context (12 prior tasks, component architecture, data structures)
+- Read reference pagination pattern from ktmb-weekly-chart.tsx (lines 232-256: ChevronLeft/ChevronRight, "Latest"/"N / Total" label, disabled bounds)
+- Read all 4 target components: busiest-stations-rapid.tsx, busiest-stations-ktmb.tsx, top-routes.tsx
+- Read data files: prasarana-stations.json (20 stations, 30 days Apr 24–May 23), ktmb-stations.json (20 stations, 57 days Mar 29–May 24)
+- Read hooks: use-prasarana-stations.ts, use-ktmb-stations.ts for TypeScript interfaces
+
+**busiest-stations-rapid.tsx:**
+- Added imports: useState, useCallback from react; ChevronLeft, ChevronRight from lucide-react; format, parseISO from date-fns
+- Removed unused imports (Train, MapPin, Users from lucide-react)
+- Added WINDOW_SIZE=14, MIN_TRAILING_DAYS=7 constants
+- Added windowOffset state with safeOffset clamping
+- Computed 14-day windows from station_series dates (newest first): 30 days → 2 windows (May 10–23, Apr 24–May 9)
+- Built windowedStations: sums each station's passengers across window dates, re-sorted by windowed total descending
+- Updated stats: #1 Station and Top 20 Avg now use windowed data; Total Stations and Lines stay static
+- Added ◀/▶ pagination controls matching ktmb-weekly-chart.tsx pattern (hidden when only 1 window)
+- Updated subtitle: "Top 20 stations by 14-day total · {startDate} – {endDate}"
+- Added "{N} windows (14-day each)" to footer
+
+**busiest-stations-ktmb.tsx:**
+- Added imports: useCallback from react; ChevronLeft, ChevronRight from lucide-react; format, parseISO from date-fns
+- Removed unused imports (Train, Users from lucide-react)
+- Added same WINDOW_SIZE/MIN_TRAILING_DAYS constants
+- Added windowOffset state
+- Computed windows from "All Stations" series (57 days → 4 windows of 14 days)
+- Handles KTMB date format "YYYY-MM-DD HH:mm:ss" via slice(0,10) for comparison
+- For Overall tab: windowed rankings with "All Stations" filtered from display list; stats show top individual station
+- For service tabs: static top_by_service data as before; stats contextual to service
+- Pagination controls only visible on Overall tab with multiple windows
+- Subtitle dynamically shows "14-day total" for Overall tab or "daily count" for service tabs
+
+**top-routes.tsx (Rapid Rail + KTMB):**
+- Added useMemo import; format, parseISO from date-fns
+- Created StationDateMeta interface for extracting date range
+- Created useDateRange() custom hook that fetches station JSON, extracts first/last dates from station_series, formats as "dd MMM"
+- Added data period badge in header: "{start} – {end} · {days} days" (amber for Rapid Rail, teal for KTMB)
+- Added "Aggregated over {days} days" label in footer
+- Rapid Rail: 24 Apr – 23 May · 30 days; KTMB: 29 Mar – 24 May · 57 days
+
+- Lint clean: 0 errors in modified files (pre-existing errors in generate-report.js only)
+- Dev server compiled successfully, GET / 200 confirmed
+
+Stage Summary:
+- 4 Station Analytics components now have time-window context (2 with pagination, 2 with data period badges)
+- Busiest Stations — Rapid Rail: 2 navigable 14-day windows with ◀/▶ controls, dynamic rankings
+- Busiest Stations — KTMB: 4 navigable 14-day windows, pagination only on Overall tab, service tabs preserved
+- Top Routes — Rapid Rail: Data Period badge (24 Apr – 23 May · 30 days), "Aggregated over 30 days" footer
+- Top Routes — KTMB: Data Period badge (29 Mar – 24 May · 57 days), "Aggregated over 57 days" footer
+- Files modified: busiest-stations-rapid.tsx, busiest-stations-ktmb.tsx, top-routes.tsx
