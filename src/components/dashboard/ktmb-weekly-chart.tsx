@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import {
   BarChart,
   Bar,
@@ -12,7 +12,7 @@ import {
   Legend,
 } from 'recharts';
 import { format, startOfWeek, subWeeks, endOfWeek, isSameWeek, parseISO } from 'date-fns';
-import { TrendingUp, TrendingDown } from 'lucide-react';
+import { TrendingUp, TrendingDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useKtmbDaily } from '@/hooks/use-ktmb-daily';
 
 const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -86,23 +86,67 @@ function StackedTooltip({ active, payload, label }: { active?: boolean; payload?
 }
 
 export function KtmbWeeklyChart() {
-  const { data, loading, error } = useKtmbDaily(5);
+  const { data, loading, error } = useKtmbDaily(8);
+  const [weekOffset, setWeekOffset] = useState(0); // 0 = current week, 1 = last week, etc.
 
-  const { chartData, currentWeekTotal, previousWeekTotal, weekDates, dailyAvg, weekDelta, prevChartData } = useMemo(() => {
-    if (!data.length) {
-      return { chartData: [], prevChartData: [], currentWeekTotal: 0, previousWeekTotal: 0, weekDates: { current: '', previous: '' }, dailyAvg: 0, weekDelta: 0 };
-    }
+  // Compute all available week boundaries from the data
+  const { weeks, currentWeekIndex } = useMemo(() => {
+    if (!data.length) return { weeks: [], currentWeekIndex: 0 };
 
     const latestDate = data[data.length - 1].date;
     const latest = parseISO(latestDate);
     const currentMonday = startOfWeek(latest, { weekStartsOn: 1 });
-    const prevMonday = subWeeks(currentMonday, 1);
-    const currentSunday = endOfWeek(currentMonday, { weekStartsOn: 1 });
-    const prevSunday = endOfWeek(prevMonday, { weekStartsOn: 1 });
 
-    // Build per-service maps for both weeks
+    // Build list of all weeks that have data
+    const weekMondays: Date[] = [];
+    const seen = new Set<string>();
+
+    for (const d of data) {
+      const dt = parseISO(d.date);
+      const monday = startOfWeek(dt, { weekStartsOn: 1 });
+      const key = format(monday, 'yyyy-MM-dd');
+      if (!seen.has(key)) {
+        seen.add(key);
+        weekMondays.push(monday);
+      }
+    }
+
+    // Sort descending (newest first)
+    weekMondays.sort((a, b) => b.getTime() - a.getTime());
+
+    // Find current week index
+    const currentKey = format(currentMonday, 'yyyy-MM-dd');
+    const idx = weekMondays.findIndex((w) => format(w, 'yyyy-MM-dd') === currentKey);
+
+    return { weeks: weekMondays, currentWeekIndex: idx >= 0 ? idx : 0 };
+  }, [data]);
+
+  // Clamp offset to available weeks
+  const safeOffset = Math.min(weekOffset, Math.max(0, weeks.length - 1));
+  const activeMonday = weeks[safeOffset] ?? weeks[0];
+
+  const canGoPrev = safeOffset < weeks.length - 1;
+  const canGoNext = safeOffset > 0;
+
+  const goPrev = useCallback(() => {
+    if (canGoPrev) setWeekOffset((o) => o + 1);
+  }, [canGoPrev]);
+
+  const goNext = useCallback(() => {
+    if (canGoNext) setWeekOffset((o) => o - 1);
+  }, [canGoNext]);
+
+  // Build chart data for the active week and the previous week
+  const { chartData, weekTotal, prevWeekTotal, dailyAvg, weekDelta, weekLabel, prevWeekLabel } = useMemo(() => {
+    if (!activeMonday || !data.length) {
+      return { chartData: [], weekTotal: 0, prevWeekTotal: 0, dailyAvg: 0, weekDelta: 0, weekLabel: '', prevWeekLabel: '' };
+    }
+
     type ServiceKey = 'ets' | 'intercity' | 'komuter' | 'komuterUtara' | 'shuttleTebrau';
-    const svcKeys: ServiceKey[] = ['ets', 'intercity', 'komuter', 'komuterUtara', 'shuttleTebrau'];
+
+    const currentSunday = endOfWeek(activeMonday, { weekStartsOn: 1 });
+    const prevMonday = subWeeks(activeMonday, 1);
+    const prevSunday = endOfWeek(prevMonday, { weekStartsOn: 1 });
 
     const currentMap = new Map<number, Record<ServiceKey, number>>();
     const prevMap = new Map<number, Record<ServiceKey, number>>();
@@ -112,10 +156,9 @@ export function KtmbWeeklyChart() {
     for (const d of data) {
       const dt = parseISO(d.date);
       const dow = dt.getDay() === 0 ? 6 : dt.getDay() - 1;
-
       const entry = { ets: d.ets, intercity: d.intercity, komuter: d.komuter, komuterUtara: d.komuterUtara, shuttleTebrau: d.shuttleTebrau };
 
-      if (isSameWeek(dt, currentMonday, { weekStartsOn: 1 })) {
+      if (isSameWeek(dt, activeMonday, { weekStartsOn: 1 })) {
         currentMap.set(dow, entry);
         currentTotals.push(d.total);
       } else if (isSameWeek(dt, prevMonday, { weekStartsOn: 1 })) {
@@ -124,17 +167,15 @@ export function KtmbWeeklyChart() {
       }
     }
 
-    // Build stacked bar data
     const bars = DAY_NAMES.map((day, i) => {
       const cur = currentMap.get(i);
-      const prev = prevMap.get(i);
-      const dt = new Date(currentMonday.getTime() + i * 864e5);
+      const dt = new Date(activeMonday.getTime() + i * 864e5);
       const dateStr = format(dt, 'dd MMM');
 
       return {
         day,
         dayLabel: `${DAY_FULL[i]}, ${dateStr}`,
-        weekLabel: `${format(currentMonday, 'dd MMM')} – ${format(currentSunday, 'dd MMM')}`,
+        weekLabel: `${format(activeMonday, 'dd MMM')} – ${format(currentSunday, 'dd MMM yyyy')}`,
         ets: cur?.ets ?? 0,
         intercity: cur?.intercity ?? 0,
         komuter: cur?.komuter ?? 0,
@@ -145,34 +186,21 @@ export function KtmbWeeklyChart() {
       };
     });
 
-    // Previous week bars for background comparison
-    const prevBars = DAY_NAMES.map((day, i) => {
-      const prev = prevMap.get(i);
-      return {
-        day,
-        total: prev ? (prev.ets + prev.intercity + prev.komuter + prev.komuterUtara + prev.shuttleTebrau) : 0,
-        hasData: !!prev,
-      };
-    });
-
-    const currentWeekTotal = currentTotals.reduce((a, b) => a + b, 0);
-    const previousWeekTotal = prevTotals.reduce((a, b) => a + b, 0);
-    const dailyAvg = currentTotals.length > 0 ? Math.round(currentWeekTotal / currentTotals.length) : 0;
-    const weekDelta = previousWeekTotal > 0 ? ((currentWeekTotal - previousWeekTotal) / previousWeekTotal) * 100 : 0;
+    const wTotal = currentTotals.reduce((a, b) => a + b, 0);
+    const pTotal = prevTotals.reduce((a, b) => a + b, 0);
+    const avg = currentTotals.length > 0 ? Math.round(wTotal / currentTotals.length) : 0;
+    const delta = pTotal > 0 ? ((wTotal - pTotal) / pTotal) * 100 : 0;
 
     return {
       chartData: bars,
-      prevChartData: prevBars,
-      currentWeekTotal,
-      previousWeekTotal,
-      weekDates: {
-        current: `${format(currentMonday, 'dd MMM')} – ${format(currentSunday, 'dd MMM')}`,
-        previous: `${format(prevMonday, 'dd MMM')} – ${format(prevSunday, 'dd MMM')}`,
-      },
-      dailyAvg,
-      weekDelta,
+      weekTotal: wTotal,
+      prevWeekTotal: pTotal,
+      dailyAvg: avg,
+      weekDelta: delta,
+      weekLabel: `${format(activeMonday, 'dd MMM')} – ${format(currentSunday, 'dd MMM yyyy')}`,
+      prevWeekLabel: `${format(prevMonday, 'dd MMM')} – ${format(prevSunday, 'dd MMM yyyy')}`,
     };
-  }, [data]);
+  }, [activeMonday, data]);
 
   if (loading) return <ChartSkeleton />;
   if (error || !chartData.length) {
@@ -193,17 +221,44 @@ export function KtmbWeeklyChart() {
     <div data-chart className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 shadow-lg animate-fade-in-up">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-5">
-        <div>
+        <div className="flex-1">
           <h3 className="text-sm font-semibold text-[var(--text-primary)]">
             KTMB Daily Ridership — By Service
           </h3>
           <p className="text-[10px] text-[var(--text-faint)] mt-0.5">
-            Stacked Mon – Sun · {weekDates.current}
+            Stacked Mon – Sun · {weekLabel}
           </p>
         </div>
-        <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-teal-400/10 border border-teal-400/20">
-          <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
-          <span className="text-[9px] text-teal-400 font-medium">real-time · ~1 day lag</span>
+        <div className="flex items-center gap-2">
+          {/* Pagination */}
+          <div className="flex items-center rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] overflow-hidden">
+            <button
+              onClick={goPrev}
+              disabled={!canGoPrev}
+              className="flex items-center justify-center w-8 h-8 transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[var(--surface-active)] active:bg-[var(--border-subtle)]"
+              aria-label="Previous week"
+            >
+              <ChevronLeft className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+            </button>
+            <div className="flex items-center px-2.5 min-w-[120px] justify-center">
+              <span className="text-[10px] font-medium text-[var(--text-secondary)] tabular-nums">
+                {safeOffset === 0 ? 'This Week' : `${weeks.length - safeOffset} / ${weeks.length}`}
+              </span>
+            </div>
+            <button
+              onClick={goNext}
+              disabled={!canGoNext}
+              className="flex items-center justify-center w-8 h-8 transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[var(--surface-active)] active:bg-[var(--border-subtle)]"
+              aria-label="Next week"
+            >
+              <ChevronRight className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+            </button>
+          </div>
+          {/* Status badge */}
+          <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-teal-400/10 border border-teal-400/20">
+            <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
+            <span className="text-[9px] text-teal-400 font-medium">~1 day lag</span>
+          </div>
         </div>
       </div>
 
@@ -212,7 +267,7 @@ export function KtmbWeeklyChart() {
         <div className="rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-faint)] p-3">
           <span className="text-[9px] text-[var(--text-faint)] uppercase tracking-widest font-medium">Weekly Total</span>
           <div className="text-lg font-semibold text-[var(--text-primary)] tabular-nums tracking-tight mt-0.5">
-            {currentWeekTotal.toLocaleString()}
+            {weekTotal.toLocaleString()}
           </div>
         </div>
         <div className="rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-faint)] p-3">
@@ -229,6 +284,11 @@ export function KtmbWeeklyChart() {
             {isPositive ? <TrendingUp className="w-4 h-4" /> : isNegative ? <TrendingDown className="w-4 h-4" /> : null}
             {Math.abs(weekDelta).toFixed(1)}%
           </div>
+          {prevWeekLabel && (
+            <span className="text-[9px] text-[var(--text-faint)]">
+              {prevWeekLabel}
+            </span>
+          )}
         </div>
       </div>
 
@@ -272,13 +332,20 @@ export function KtmbWeeklyChart() {
       <div className="flex items-center justify-between mt-4 pt-3 border-t border-[var(--border-faint)]">
         <div className="flex items-center gap-4">
           <span className="text-[10px] text-[var(--text-faint)]">
-            <span className="text-[var(--text-muted)] font-medium">This week:</span> {weekDates.current}
+            <span className="text-[var(--text-muted)] font-medium">Showing:</span> {weekLabel}
           </span>
-          <span className="text-[10px] text-[var(--text-faint)]">
-            <span className="text-[var(--text-muted)] font-medium">Prev week:</span> {weekDates.previous} · <span className="text-emerald-400">{previousWeekTotal.toLocaleString()}</span>
-          </span>
+          {prevWeekTotal > 0 && (
+            <span className="text-[10px] text-[var(--text-faint)]">
+              <span className="text-[var(--text-muted)] font-medium">Prev:</span> {prevWeekLabel} · <span className="text-emerald-400">{prevWeekTotal.toLocaleString()}</span>
+            </span>
+          )}
         </div>
-        <span className="text-[9px] text-[var(--text-faint)] uppercase tracking-widest">Source: data.gov.my · parquet</span>
+        <div className="flex items-center gap-2">
+          <span className="text-[9px] text-[var(--text-faint)] uppercase tracking-widest">
+            {weeks.length} weeks available
+          </span>
+          <span className="text-[9px] text-[var(--text-faint)] uppercase tracking-widest">Source: data.gov.my · parquet</span>
+        </div>
       </div>
     </div>
   );

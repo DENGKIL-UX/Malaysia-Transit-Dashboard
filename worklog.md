@@ -386,3 +386,23 @@ Stage Summary:
 - API returns 30 rows spanning both April and May
 - Total Rail ~1.2-1.7M/day with all 10 services visible
 - File modified: src/app/api/ridership/route.ts
+---
+Task ID: 4
+Agent: main
+Task: Add week pagination to KTMB Daily Ridership By Service chart
+
+Work Log:
+- Increased data fetch from 5 weeks to 8 weeks in useKtmbDaily hook call (covers 9 actual weeks of data)
+- Computed all available week boundaries from loaded data (sorted newest-first)
+- Added weekOffset state (0 = current week, 1 = previous week, etc.)
+- Built prev/next navigation with ChevronLeft/ChevronRight buttons and "This Week" / "3 / 9" label
+- Disabled prev/next at bounds to prevent out-of-range navigation
+- Chart stats (Weekly Total, Daily Avg, vs Prev Week) update dynamically for each week
+- Footer shows which week is displayed and how many weeks are available
+- Week delta comparison always compares against the preceding week for context
+
+Stage Summary:
+- 9 weeks of data navigable via pagination controls
+- Stats dynamically update per selected week
+- Clean prev/next UI with bounds clamping
+- Files modified: ktmb-weekly-chart.tsx
