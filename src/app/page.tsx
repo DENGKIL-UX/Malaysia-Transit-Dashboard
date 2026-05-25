@@ -25,6 +25,7 @@ import { AnalyticsTable } from '@/components/dashboard/analytics-table';
 import { DataIntegrityBanner } from '@/components/dashboard/data-integrity-banner';
 import { DataStatusBar } from '@/components/dashboard/data-status-bar';
 import { KtmbWeeklyChart } from '@/components/dashboard/ktmb-weekly-chart';
+import { PrasaranaWeeklyChart } from '@/components/dashboard/prasarana-weekly-chart';
 import { OfflineBanner } from '@/components/dashboard/offline-banner';
 import { useRidership } from '@/hooks/use-ridership';
 import { useAnalytics } from '@/hooks/use-analytics';
@@ -160,6 +161,7 @@ function AboutSection() {
               { label: 'RapidKL Bus (KL)', color: 'bg-orange-400' },
               { label: 'Rapid Bus (Kuantan)', color: 'bg-fuchsia-400' },
               { label: 'Rapid Bus (Penang)', color: 'bg-stone-400' },
+              { label: 'BRT Sunway Line', color: 'bg-orange-300' },
             ].map((item) => (
               <div key={item.label} className="flex items-center gap-2">
                 <span className={`w-1.5 h-1.5 rounded-full ${item.color}`} />
@@ -184,25 +186,28 @@ function AboutSection() {
                 <span className="text-[11px] font-semibold text-[var(--text-secondary)]">Headline (Monthly, Audited)</span>
               </div>
               <p className="text-[10px] text-[var(--text-faint)] leading-relaxed">
-                This dashboard uses this pipeline. Published ~12 days after
-                month-end via an audit process. Used by KPI cards, chart, and analytics.
+                13 transit lines — rail + bus. Published ~12 days after
+                month-end via audit. Used by KPI cards, line breakdown, and comparison chart.
               </p>
             </div>
             <div className="rounded-lg bg-[var(--surface-card)] border border-[var(--border-faint)] p-3">
               <div className="flex items-center gap-2 mb-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
-                <span className="text-[11px] font-semibold text-[var(--text-secondary)]">OD Daily (Real-time, Raw)</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-teal-400" />
+                <span className="text-[11px] font-semibold text-[var(--text-secondary)]">KTMB Daily (Real-time)</span>
               </div>
               <p className="text-[10px] text-[var(--text-faint)] leading-relaxed">
-                Station-to-station tap-in/tap-out data. Updated ~18-24h after
-                midnight. Parquet-only, millions of rows. Not currently used
-                by this dashboard.
+                5 KTMB rail services. Updated daily ~03:45 MYT. Used by the KTMB Mon–Sun chart.
               </p>
-              {meta?.prasarana.data_as_of && (
-                <p className="text-[9px] text-sky-400/40 mt-1.5">
-                  Available as of: {meta.prasarana.data_as_of}
-                </p>
-              )}
+            </div>
+            <div className="rounded-lg bg-[var(--surface-card)] border border-[var(--border-faint)] p-3">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-orange-300" />
+                <span className="text-[11px] font-semibold text-[var(--text-secondary)]">Prasarana Daily (Real-time)</span>
+              </div>
+              <p className="text-[10px] text-[var(--text-faint)] leading-relaxed">
+                5 Rapid Rail lines + BRT Sunway. Updated daily ~22:00 MYT. Includes BRT Sunway
+                (not in headline). Used by the Rapid Rail Mon–Sun chart and BRT stats.
+              </p>
             </div>
           </div>
         </div>
@@ -424,6 +429,8 @@ export default function Home() {
                   <span className="text-[var(--text-muted)]">Bus Kuantan</span>
                   <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
                   <span className="text-[var(--text-muted)]">Bus Penang</span>
+                  <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
+                  <span className="text-orange-300/60">BRT Sunway</span>
                 </p>
 
                 <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold text-[var(--text-primary)] leading-[1.02] tracking-tight">
@@ -525,6 +532,11 @@ export default function Home() {
               {/* KTMB Daily/Weekly Chart */}
               <div className="mb-6">
                 <KtmbWeeklyChart />
+              </div>
+
+              {/* Prasarana Real-Time Daily/Weekly Chart */}
+              <div className="mb-6">
+                <PrasaranaWeeklyChart />
               </div>
             </div>
           </div>

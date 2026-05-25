@@ -83,3 +83,50 @@ Stage Summary:
 - Chart shows 7-day (Mon-Sun) comparison between current and previous week
 - Data sourced from `ridership_ktmb_daily` (real-time, ~1 day lag) vs headline (monthly audited)
 - 3 new files: API route, hook, chart component
+
+---
+Task ID: 4
+Agent: Main
+Task: Add Prasarana real-time daily data + BRT Sunway + Rapid Rail Mon-Sun chart
+
+Work Log:
+- Analyzed all 12 dataset catalogues from data.gov.my GitHub (datagovmy-meta repo)
+- Key findings:
+  - `ridership_headline`: 13 fields, monthly audited, ~12 day lag (already on dashboard)
+  - `ridership_ktmb_daily`: 5 services, daily, ~1 day lag (already on dashboard from Task 3)
+  - `prasarana_timeseries` parquet: 1.7M rows, daily station-to-station O-D for all Prasarana rail + BRT, ~1 day lag (NEW)
+  - 5 KTMB hourly O-D datasets: Parquet-only, too large for API, excluded
+  - 2 Rapid Rail/BRT O-D datasets: 404 via API, Parquet-only, excluded
+  - Explorer dashboards: prasarana.json + ktmb.json with pre-computed timeseries
+- Created `mini-services/prasarana-service/`:
+  - Python script `process_parquet.py`: Downloads and processes Prasarana explorer parquet
+  - Extracts per-line daily totals (MRT PJY, LRT KJ, LRT Ampang, Monorail, BRT Sunway)
+  - Output: `/tmp/prasarana_daily.json` (57 days, ~7.6KB)
+  - Bun server on port 3020 serves the JSON
+- Created hook `src/hooks/use-prasarana-daily.ts`:
+  - Fetches from `/prasarana-daily.json` (static file in public/)
+  - Returns `PrasaranaDay[]` with brt, lrt_ampang, lrt_kj, monorail, mrt_pjy, total per day
+- Created component `src/components/dashboard/prasarana-weekly-chart.tsx`:
+  - Bar chart showing Mon-Sun daily totals for Rapid Rail (current week vs previous week)
+  - 4 summary stats: Weekly Total, Daily Avg, vs Prev Week %, BRT Sunway weekly total
+  - Amber gradient bars for current week, muted green for previous week
+  - "● real-time · ~1 day lag" badge to distinguish from headline audited data
+  - Matches existing dashboard design system
+- Updated `src/components/dashboard/transit-breakdown.tsx`:
+  - Added BRT Sunway row at bottom with "live" badge (real-time indicator)
+  - Shows daily BRT ridership from Prasarana data with trend delta
+  - Skeleton count updated to 14
+- Updated `src/app/page.tsx`:
+  - Added PrasaranaWeeklyChart component below KTMB weekly chart
+  - Added BRT Sunway to hero coverage line
+  - Added BRT Sunway Line to Transit Coverage list in About section
+  - Updated "Two Data Pipelines" to show 3 pipelines: Headline, KTMB Daily, Prasarana Daily
+- Static JSON at `public/prasarana-daily.json` (for CF Pages compatibility — no server-side parquet processing needed)
+- Lint passes clean
+
+Stage Summary:
+- BRT Sunway Line is now visible on the dashboard (was completely missing before)
+- Prasarana real-time data pipeline: parquet → Python processing → JSON → public/ → hook → chart
+- 2 new data sources integrated: Prasarana daily (~1 day lag) and BRT Sunway
+- Dashboard now has 3 data pipelines: Headline (audited), KTMB Daily (real-time), Prasarana Daily (real-time)
+- New files: hook, chart component, Python processing script, mini-service

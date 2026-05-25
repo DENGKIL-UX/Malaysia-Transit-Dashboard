@@ -1,6 +1,7 @@
 'use client';
 
 import { useRidership, type RidershipDay } from '@/hooks/use-ridership';
+import { usePrasaranaDaily } from '@/hooks/use-prasarana-daily';
 import { cn } from '@/lib/utils';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
@@ -27,6 +28,8 @@ const lines: LineData[] = [
   { label: 'Rapid Bus (Penang)', key: 'busRpn', color: 'text-stone-400', bgColor: 'bg-stone-400' },
 ];
 
+const BRT_LINE = { label: 'BRT Sunway', color: 'text-orange-300', bgColor: 'bg-orange-300' };
+
 function TrendIcon({ value }: { value: string }) {
   const num = parseFloat(value);
   if (num > 0) return <TrendingUp className="w-3 h-3 text-emerald-400" />;
@@ -36,14 +39,17 @@ function TrendIcon({ value }: { value: string }) {
 
 export function TransitBreakdown() {
   const { data, loading } = useRidership();
+  const { data: prasaranaData, loading: prasaranaLoading } = usePrasaranaDaily();
   const latest = data[data.length - 1];
   const prev = data[data.length - 2];
+  const latestPrasarana = prasaranaData.length > 0 ? prasaranaData[prasaranaData.length - 1] : null;
+  const prevPrasarana = prasaranaData.length > 1 ? prasaranaData[prasaranaData.length - 2] : null;
 
   const delta = (curr: number, last: number) =>
     last ? (((curr - last) / last) * 100).toFixed(1) : '0.0';
 
   const maxVal = latest
-    ? Math.max(...lines.map((l) => latest[l.key]))
+    ? Math.max(...lines.map((l) => latest[l.key]), latestPrasarana?.brt ?? 0)
     : 0;
 
   if (loading) {
@@ -54,7 +60,7 @@ export function TransitBreakdown() {
       >
         <div className="animate-pulse space-y-4">
           <div className="h-4 w-40 bg-[var(--skeleton-bg)] rounded" />
-          {Array.from({ length: 13 }).map((_, i) => (
+          {Array.from({ length: 14 }).map((_, i) => (
             <div key={i} className="space-y-2">
               <div className="flex justify-between">
                 <div className="h-3 w-24 bg-[var(--skeleton-bg)] rounded" />
@@ -125,6 +131,46 @@ export function TransitBreakdown() {
             </div>
           );
         })}
+        {/* BRT Sunway - Real-time data */}
+        {latestPrasarana && (
+          <div className="group">
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center gap-2">
+                <span className={cn('w-1.5 h-1.5 rounded-full', BRT_LINE.bgColor)} />
+                <span className="text-xs font-medium text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors">
+                  {BRT_LINE.label}
+                </span>
+                <span className="text-[8px] px-1 py-0.5 rounded bg-sky-400/15 text-sky-300/70 font-medium">live</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-[var(--text-primary)] tabular-nums">
+                  {latestPrasarana.brt.toLocaleString()}
+                </span>
+                {prevPrasarana && (
+                  <div className="flex items-center gap-0.5">
+                    <TrendIcon value={delta(latestPrasarana.brt, prevPrasarana.brt)} />
+                    <span
+                      className={cn(
+                        'text-[10px] tabular-nums font-medium',
+                        parseFloat(delta(latestPrasarana.brt, prevPrasarana.brt)) > 0 && 'text-emerald-400',
+                        parseFloat(delta(latestPrasarana.brt, prevPrasarana.brt)) < 0 && 'text-red-400',
+                        parseFloat(delta(latestPrasarana.brt, prevPrasarana.brt)) === 0 && 'text-[var(--text-faint)]'
+                      )}
+                    >
+                      {Math.abs(parseFloat(delta(latestPrasarana.brt, prevPrasarana.brt))).toFixed(1)}%
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="h-1.5 bg-[var(--surface-card)] rounded-full overflow-hidden">
+              <div
+                className={cn('h-full rounded-full transition-all duration-700 ease-out', BRT_LINE.bgColor, 'opacity-60')}
+                style={{ width: `${maxVal > 0 ? (latestPrasarana.brt / maxVal) * 100 : 0}%` }}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="mt-5 pt-3 border-t border-[var(--border-faint)]">
