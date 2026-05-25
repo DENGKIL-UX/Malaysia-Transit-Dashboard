@@ -263,3 +263,20 @@ Stage Summary:
 - Updated `src/app/page.tsx` (import + component placement)
 - All 10 transit lines available across both tabs (5 KTMB + 5 Rapid Rail)
 - Dynamic data from /ktmb-daily.json, /prasarana-daily.json, /api/metadata
+---
+Task ID: 2
+Agent: Main
+Task: Generate comprehensive technical architecture report for the dashboard
+
+Work Log:
+- Read all 21 dashboard components, 9 hooks, 8 API routes, store, and package.json
+- Read DOCX skill: create route, report scene, design system, common rules
+- Created generate-report.js with DS-1 Deep Sea palette and R1 cover recipe
+- Generated 14-section report covering: build stack, data pipelines, component architecture, chart formulas, ML engine, state management, hooks, holiday classification, API routes, notification system, transit coverage, styling
+- Ran postcheck.py (0 errors), add_toc_placeholders.py (64 headings fixed)
+- Output: Malaysia-Transit-Dashboard-Technical-Report.docx (27KB)
+
+Stage Summary:
+- Technical report generated with cover page, TOC, and 14 detailed sections
+- All formulas documented: Z-Score anomaly detection, linear regression, exponential smoothing, day-type averages, week-over-week delta
+- Postcheck passed: 7/9 checks passed, 0 errors, 2 cosmetic warnings
