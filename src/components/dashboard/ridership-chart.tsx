@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import {
   AreaChart,
   Area,
@@ -11,7 +11,8 @@ import {
   CartesianGrid,
 } from 'recharts';
 import { useRidership } from '@/hooks/use-ridership';
-import { TrainFront, Train } from 'lucide-react';
+import { TrainFront, Train, ChevronLeft, ChevronRight } from 'lucide-react';
+import { format, subDays } from 'date-fns';
 
 // Deterministic pseudo-random heights (no Math.random to avoid hydration mismatch)
 const SKELETON_HEIGHTS = [
@@ -49,34 +50,27 @@ function CustomTooltip({
 }) {
   if (!active || !payload?.length) return null;
 
-  // Separate total from individual lines
-  const totalItem = payload.find((p) => p.name === 'Total Rail');
-  const items = payload.filter((p) => p.name !== 'Total Rail');
-
   // Group by operator
-  const rapidRailItems = items.filter((p) =>
+  const rapidRailItems = payload.filter((p) =>
     ['MRT Kajang', 'MRT Putrajaya', 'LRT Kelana Jaya', 'LRT Ampang', 'Monorail'].includes(p.name)
   );
-  const ktmbItems = items.filter((p) =>
+  const ktmbItems = payload.filter((p) =>
     ['Komuter', 'ETS', 'Intercity', 'Komuter Utara', 'Tebrau'].includes(p.name)
   );
+  const total = payload.reduce((s, p) => s + p.value, 0);
 
   return (
     <div className="bg-[var(--bg-tooltip)] backdrop-blur-md border border-[var(--border-subtle)] rounded-xl p-3 shadow-xl max-h-[340px] overflow-y-auto custom-scrollbar">
       <p className="text-[10px] font-medium text-[#85AB8B] uppercase tracking-widest mb-2">
         {label}
       </p>
-      {totalItem && (
-        <div className="flex items-center justify-between gap-4 pb-2 mb-2 border-b border-[var(--border-subtle)]">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: totalItem.color }} />
-            <span className="text-xs font-semibold text-[var(--text-primary)]">{totalItem.name}</span>
-          </div>
-          <span className="text-xs font-bold text-[var(--text-primary)] tabular-nums">
-            {totalItem.value.toLocaleString()}
-          </span>
-        </div>
-      )}
+      {/* Total */}
+      <div className="flex items-center justify-between gap-4 pb-2 mb-2 border-b border-[var(--border-subtle)]">
+        <span className="text-xs font-semibold text-[var(--text-primary)]">Total Rail</span>
+        <span className="text-xs font-bold text-[#85AB8B] tabular-nums">
+          {total.toLocaleString()}
+        </span>
+      </div>
 
       {rapidRailItems.length > 0 && (
         <div>
@@ -124,7 +118,6 @@ function CustomTooltip({
 }
 
 // Rail lines ordered bottom-to-top for stacked area (largest volume first)
-// Stacking order ensures visual stability
 const RAIL_LINES = [
   // Rapid Rail — largest volume at bottom
   { key: 'lrtKelanaJaya', label: 'LRT Kelana Jaya', color: '#a78bfa', group: 'rapid' },
@@ -140,27 +133,83 @@ const RAIL_LINES = [
   { key: 'intercity', label: 'Intercity', color: '#94a3b8', group: 'ktmb' },
 ] as const;
 
+const WINDOW_DAYS = 30;
+
 export function RidershipChart() {
-  const { data, loading } = useRidership();
+  const { data: allData, loading } = useRidership(90);
+  const [pageOffset, setPageOffset] = useState(0); // 0 = latest 30 days, 1 = previous, etc.
 
-  // Compute average ridership per line for legend display
-  const averages = useMemo(() => {
-    if (!data.length) return {};
-    const avgs: Record<string, number> = {};
-    for (const line of RAIL_LINES) {
-      const key = line.key as keyof (typeof data)[0];
-      const vals = data.map((d) => d[key] as number);
-      avgs[line.key] = vals.reduce((s, v) => s + v, 0) / vals.length;
+  // Compute all available 30-day windows from the data
+  const { windows, maxPages } = useMemo(() => {
+    if (!allData.length) return { windows: [] as string[][], maxPages: 0 };
+
+    const dates = allData.map((d) => d.date);
+    const latestDate = dates[dates.length - 1];
+
+    // Build non-overlapping 30-day windows counting back from latest
+    const result: string[][] = [];
+    let windowEnd = latestDate;
+
+    while (true) {
+      const windowStart = subDays(new Date(windowEnd + 'T00:00:00'), WINDOW_DAYS - 1);
+      const startStr = format(windowStart, 'yyyy-MM-dd');
+      // Find earliest date in this window from our data
+      const matchingDates = dates.filter((d) => d >= startStr && d <= windowEnd);
+      if (matchingDates.length === 0) break;
+      result.push([startStr, windowEnd]);
+      // Move window back
+      windowEnd = format(subDays(new Date(startStr + 'T00:00:00'), 1), 'yyyy-MM-dd');
     }
-    avgs['totalRail'] = data.map((d) => d.totalRail).reduce((s, v) => s + v, 0) / data.length;
-    return avgs;
-  }, [data]);
 
-  if (loading) {
-    return <ChartSkeleton />;
-  }
+    return { windows: result, maxPages: Math.max(0, result.length - 1) };
+  }, [allData]);
 
-  if (!data.length) {
+  // Clamp offset
+  const safeOffset = Math.min(pageOffset, maxPages);
+  const activeWindow = windows[safeOffset];
+
+  // Slice data for the active window
+  const chartData = useMemo(() => {
+    if (!activeWindow || !allData.length) return [];
+    const [start, end] = activeWindow;
+    return allData.filter((d) => d.date >= start && d.date <= end);
+  }, [activeWindow, allData]);
+
+  // Compute averages for the active window
+  const stats = useMemo(() => {
+    if (!chartData.length) return { avgTotalRail: 0, minDate: '', maxDate: '', dayCount: 0 };
+    const avgTotalRail = chartData.reduce((s, d) => s + d.totalRail, 0) / chartData.length;
+    return {
+      avgTotalRail,
+      minDate: chartData[0].date,
+      maxDate: chartData[chartData.length - 1].date,
+      dayCount: chartData.length,
+    };
+  }, [chartData]);
+
+  const canGoPrev = safeOffset < maxPages;
+  const canGoNext = safeOffset > 0;
+
+  const goPrev = useCallback(() => { if (canGoPrev) setPageOffset((o) => o + 1); }, [canGoPrev]);
+  const goNext = useCallback(() => { if (canGoNext) setPageOffset((o) => o - 1); }, [canGoNext]);
+
+  const fmtAvg = (v: number) => {
+    if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
+    if (v >= 1_000) return `${(v / 1_000).toFixed(0)}K`;
+    return Math.round(v).toLocaleString();
+  };
+
+  const fmtDate = (d: string) => {
+    try {
+      return format(new Date(d + 'T00:00:00'), 'dd MMM');
+    } catch {
+      return d;
+    }
+  };
+
+  if (loading) return <ChartSkeleton />;
+
+  if (!chartData.length) {
     return (
       <div className="h-[400px] rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md flex items-center justify-center">
         <p className="text-[var(--text-faint)] text-sm">No data available</p>
@@ -168,11 +217,9 @@ export function RidershipChart() {
     );
   }
 
-  const fmtAvg = (v: number) => {
-    if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
-    if (v >= 1_000) return `${(v / 1_000).toFixed(0)}K`;
-    return Math.round(v).toLocaleString();
-  };
+  const windowLabel = safeOffset === 0
+    ? 'Latest 30 Days'
+    : `${fmtDate(stats.minDate)} – ${fmtDate(stats.maxDate)}`;
 
   return (
     <div
@@ -181,20 +228,45 @@ export function RidershipChart() {
       style={{ animationDelay: '400ms', opacity: 0 }}
     >
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-4">
+        <div className="flex-1">
           <h3 className="text-sm font-semibold text-[var(--text-primary)]">
             30-Day Rail Ridership
           </h3>
           <p className="text-[10px] text-[var(--text-faint)] mt-0.5">
-            Daily passenger boardings · Stacked by service · Total Rail aligns with sum of all rails
+            {windowLabel} · Stacked by service
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {/* Pagination controls */}
+          <div className="flex items-center rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] overflow-hidden">
+            <button
+              onClick={goPrev}
+              disabled={!canGoPrev}
+              className="flex items-center justify-center w-8 h-8 transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[var(--surface-active)] active:bg-[var(--border-subtle)]"
+              aria-label="Previous 30 days"
+            >
+              <ChevronLeft className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+            </button>
+            <div className="flex items-center px-2.5 min-w-[120px] justify-center">
+              <span className="text-[10px] font-medium text-[var(--text-secondary)] tabular-nums">
+                {safeOffset === 0 ? 'Latest' : `Page ${maxPages - safeOffset + 1}`} of {windows.length}
+              </span>
+            </div>
+            <button
+              onClick={goNext}
+              disabled={!canGoNext}
+              className="flex items-center justify-center w-8 h-8 transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[var(--surface-active)] active:bg-[var(--border-subtle)]"
+              aria-label="Next 30 days"
+            >
+              <ChevronRight className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+            </button>
+          </div>
+          {/* Avg badge */}
           <span
-            className="text-xs font-bold text-[#85AB8B] px-2.5 py-1 rounded-lg bg-[#85AB8B]/10 border border-[#85AB8B]/20"
+            className="text-xs font-bold text-[#85AB8B] px-2.5 py-1 rounded-lg bg-[#85AB8B]/10 border border-[#85AB8B]/20 whitespace-nowrap"
           >
-            Total: {fmtAvg(averages['totalRail'] ?? 0)}/day
+            Avg: {fmtAvg(stats.avgTotalRail)}/day
           </span>
         </div>
       </div>
@@ -230,7 +302,7 @@ export function RidershipChart() {
       {/* Chart */}
       <div className="h-56 sm:h-72 md:h-80 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+          <AreaChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
             <defs>
               {RAIL_LINES.map((line) => (
                 <linearGradient key={line.key} id={`stackGrad-${line.key}`} x1="0" y1="0" x2="0" y2="1">
@@ -291,9 +363,16 @@ export function RidershipChart() {
         <span className="text-[10px] text-[var(--text-faint)] uppercase tracking-widest">
           Source: data.gov.my · CC-BY 4.0
         </span>
-        <span className="text-[10px] text-[var(--text-faint)]">
-          {data.length} days · Stacked areas sum to total rail
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-[10px] text-[var(--text-faint)]">
+            {stats.dayCount} days · Stacked areas sum to total rail
+          </span>
+          {windows.length > 1 && (
+            <span className="text-[9px] text-[var(--text-faint)] uppercase tracking-widest">
+              {windows.length} windows available
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
