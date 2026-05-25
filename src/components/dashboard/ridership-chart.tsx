@@ -48,27 +48,39 @@ function CustomTooltip({
   if (!active || !payload?.length) return null;
 
   return (
-    <div className="bg-[var(--bg-tooltip)] backdrop-blur-md border border-[var(--border-subtle)] rounded-xl p-3 shadow-xl">
+    <div className="bg-[var(--bg-tooltip)] backdrop-blur-md border border-[var(--border-subtle)] rounded-xl p-3 shadow-xl max-h-[300px] overflow-y-auto">
       <p className="text-[10px] font-medium text-[#85AB8B] uppercase tracking-widest mb-2">
         {label}
       </p>
-      {payload.map((item: TooltipPayloadItem) => (
-        <div key={item.name} className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <span
-              className="w-2 h-2 rounded-full"
-              style={{ backgroundColor: item.color }}
-            />
-            <span className="text-xs text-[var(--text-muted)]">{item.name}</span>
+      <div className="space-y-1">
+        {payload.map((item: TooltipPayloadItem) => (
+          <div key={item.name} className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <span
+                className="w-2 h-2 rounded-full shrink-0"
+                style={{ backgroundColor: item.color }}
+              />
+              <span className="text-xs text-[var(--text-muted)]">{item.name}</span>
+            </div>
+            <span className="text-xs font-semibold text-[var(--text-primary)] tabular-nums">
+              {item.value.toLocaleString()}
+            </span>
           </div>
-          <span className="text-xs font-semibold text-[var(--text-primary)] tabular-nums">
-            {item.value.toLocaleString()}
-          </span>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }
+
+// All rail lines with their colors and data keys
+const RAIL_LINES = [
+  { key: 'mrtKajang', label: 'MRT Kajang', color: '#fbbf24', strokeWidth: 2 },
+  { key: 'mrtPutrajaya', label: 'MRT Putrajaya', color: '#38bdf8', strokeWidth: 2 },
+  { key: 'lrtKelanaJaya', label: 'LRT Kelana Jaya', color: '#a78bfa', strokeWidth: 1.5 },
+  { key: 'lrtAmpang', label: 'LRT Ampang', color: '#fb7185', strokeWidth: 1.5 },
+  { key: 'monorail', label: 'Monorail', color: '#34d399', strokeWidth: 1.5 },
+  { key: 'total', label: 'Total Rail', color: '#85AB8B', strokeWidth: 1.5 },
+] as const;
 
 export function RidershipChart() {
   const { data, loading } = useRidership();
@@ -100,25 +112,15 @@ export function RidershipChart() {
             Daily passenger boardings across all rail lines
           </p>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-amber-400" />
-            <span className="text-[10px] text-[var(--text-muted)] font-medium">
-              MRT Kajang
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-sky-400" />
-            <span className="text-[10px] text-[var(--text-muted)] font-medium">
-              MRT Putrajaya
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#85AB8B]" />
-            <span className="text-[10px] text-[var(--text-muted)] font-medium">
-              Total
-            </span>
-          </div>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          {RAIL_LINES.map((line) => (
+            <div key={line.key} className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: line.color }} />
+              <span className="text-[10px] text-[var(--text-muted)] font-medium">
+                {line.label}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -126,18 +128,12 @@ export function RidershipChart() {
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
             <defs>
-              <linearGradient id="kajangGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#fbbf24" stopOpacity={0.25} />
-                <stop offset="95%" stopColor="#fbbf24" stopOpacity={0} />
-              </linearGradient>
-              <linearGradient id="putrajayaGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#38bdf8" stopOpacity={0.25} />
-                <stop offset="95%" stopColor="#38bdf8" stopOpacity={0} />
-              </linearGradient>
-              <linearGradient id="totalGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#85AB8B" stopOpacity={0.15} />
-                <stop offset="95%" stopColor="#85AB8B" stopOpacity={0} />
-              </linearGradient>
+              {RAIL_LINES.map((line) => (
+                <linearGradient key={line.key} id={`${line.key}Grad`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={line.color} stopOpacity={line.key === 'total' ? 0.15 : 0.25} />
+                  <stop offset="95%" stopColor={line.color} stopOpacity={0} />
+                </linearGradient>
+              ))}
             </defs>
             <CartesianGrid
               strokeDasharray="3 3"
@@ -168,33 +164,18 @@ export function RidershipChart() {
               axisLine={false}
             />
             <Tooltip content={<CustomTooltip />} />
-            <Area
-              type="monotone"
-              dataKey="total"
-              stroke="#85AB8B"
-              strokeWidth={1.5}
-              fill="url(#totalGrad)"
-              name="Total"
-              dot={false}
-            />
-            <Area
-              type="monotone"
-              dataKey="mrtKajang"
-              stroke="#fbbf24"
-              strokeWidth={2}
-              fill="url(#kajangGrad)"
-              name="MRT Kajang"
-              dot={false}
-            />
-            <Area
-              type="monotone"
-              dataKey="mrtPutrajaya"
-              stroke="#38bdf8"
-              strokeWidth={2}
-              fill="url(#putrajayaGrad)"
-              name="MRT Putrajaya"
-              dot={false}
-            />
+            {RAIL_LINES.map((line) => (
+              <Area
+                key={line.key}
+                type="monotone"
+                dataKey={line.key}
+                stroke={line.color}
+                strokeWidth={line.strokeWidth}
+                fill={`url(#${line.key}Grad)`}
+                name={line.label}
+                dot={false}
+              />
+            ))}
           </AreaChart>
         </ResponsiveContainer>
       </div>
