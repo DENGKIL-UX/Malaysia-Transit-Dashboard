@@ -9,7 +9,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
-  Cell,
+  Legend,
 } from 'recharts';
 import { format, startOfWeek, subWeeks, endOfWeek, isSameWeek, parseISO } from 'date-fns';
 import { usePrasaranaDaily } from '@/hooks/use-prasarana-daily';
@@ -18,17 +18,21 @@ import { TrendingUp, TrendingDown, Bus } from 'lucide-react';
 const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const DAY_FULL = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
+const LINES = [
+  { key: 'mrt_pjy', label: 'MRT Putrajaya', color: '#38bdf8' },
+  { key: 'lrt_kj', label: 'LRT Kelana Jaya', color: '#a78bfa' },
+  { key: 'lrt_ampang', label: 'LRT Ampang', color: '#fb7185' },
+  { key: 'monorail', label: 'Monorail', color: '#34d399' },
+  { key: 'brt', label: 'BRT Sunway', color: '#fdba74' },
+] as const;
+
 const SKELETON_HEIGHTS = [55, 80, 42, 88, 72, 50, 85, 48, 70, 60, 82, 52, 68, 38];
 
 function ChartSkeleton() {
   return (
-    <div className="h-[420px] rounded-2xl border border-[var(--border-subtle)] bg-[var(--skeleton-bg)] backdrop-blur-md animate-pulse flex items-end gap-1 p-6">
+    <div className="h-[460px] rounded-2xl border border-[var(--border-subtle)] bg-[var(--skeleton-bg)] backdrop-blur-md animate-pulse flex items-end gap-1 p-6">
       {SKELETON_HEIGHTS.map((h, i) => (
-        <div
-          key={i}
-          className="flex-1 bg-[var(--skeleton-bg)] rounded-t"
-          style={{ height: `${h}%` }}
-        />
+        <div key={i} className="flex-1 bg-[var(--skeleton-bg)] rounded-t" style={{ height: `${h}%` }} />
       ))}
     </div>
   );
@@ -41,39 +45,27 @@ interface TooltipPayloadItem {
   payload?: {
     dayLabel?: string;
     weekLabel?: string;
-    daily?: number;
-    previousDaily?: number;
   };
 }
 
-function ChartTooltip({
-  active,
-  payload,
-  label,
-}: {
-  active?: boolean;
-  payload?: TooltipPayloadItem[];
-  label?: string;
-}) {
+function StackedTooltip({ active, payload, label }: { active?: boolean; payload?: TooltipPayloadItem[]; label?: string }) {
   if (!active || !payload?.length) return null;
   const pl = payload[0]?.payload;
+  const total = payload.reduce((sum, p) => sum + p.value, 0);
 
   return (
-    <div className="bg-[var(--bg-tooltip)] backdrop-blur-md border border-[var(--border-subtle)] rounded-xl p-3 shadow-xl min-w-[180px]">
+    <div className="bg-[var(--bg-tooltip)] backdrop-blur-md border border-[var(--border-subtle)] rounded-xl p-3 shadow-xl min-w-[220px]">
       <p className="text-[10px] font-medium text-[#85AB8B] uppercase tracking-widest mb-1">
         {pl?.dayLabel ?? label}
       </p>
       {pl?.weekLabel && (
         <p className="text-[9px] text-[var(--text-faint)] mb-2">{pl.weekLabel}</p>
       )}
-      <div className="space-y-1.5">
+      <div className="space-y-1">
         {payload.map((item) => (
           <div key={item.name} className="flex items-center justify-between gap-6">
             <div className="flex items-center gap-2">
-              <span
-                className="w-2 h-2 rounded-full shrink-0"
-                style={{ backgroundColor: item.color }}
-              />
+              <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
               <span className="text-[11px] text-[var(--text-muted)]">{item.name}</span>
             </div>
             <span className="text-[11px] font-semibold text-[var(--text-primary)] tabular-nums">
@@ -81,6 +73,12 @@ function ChartTooltip({
             </span>
           </div>
         ))}
+        <div className="border-t border-[var(--border-faint)] pt-1 mt-1 flex items-center justify-between gap-6">
+          <span className="text-[11px] font-medium text-[var(--text-secondary)]">Total</span>
+          <span className="text-[11px] font-bold text-[var(--text-primary)] tabular-nums">
+            {total.toLocaleString()}
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -104,48 +102,60 @@ export function PrasaranaWeeklyChart() {
     const currentSunday = endOfWeek(currentMonday, { weekStartsOn: 1 });
     const prevSunday = endOfWeek(prevMonday, { weekStartsOn: 1 });
 
-    const dailyMap = new Map<number, number>();
-    const prevDailyMap = new Map<number, number>();
+    // Build per-line maps for both weeks
+    type LineKey = 'mrt_pjy' | 'lrt_kj' | 'lrt_ampang' | 'monorail' | 'brt';
+
+    const currentMap = new Map<number, Record<LineKey, number>>();
+    const prevMap = new Map<number, Record<LineKey, number>>();
+    const currentTotals: number[] = [];
+    const prevTotals: number[] = [];
     const brtCurrent: number[] = [];
-    const allWeeksData: number[][] = [[], []];
 
     for (const d of data) {
       const dt = parseISO(d.date);
       const dow = dt.getDay() === 0 ? 6 : dt.getDay() - 1;
+      const entry: Record<LineKey, number> = {
+        mrt_pjy: d.mrt_pjy,
+        lrt_kj: d.lrt_kj,
+        lrt_ampang: d.lrt_ampang,
+        monorail: d.monorail,
+        brt: d.brt,
+      };
 
       if (isSameWeek(dt, currentMonday, { weekStartsOn: 1 })) {
-        dailyMap.set(dow, d.total);
+        currentMap.set(dow, entry);
+        currentTotals.push(d.total);
         brtCurrent.push(d.brt);
-        allWeeksData[0].push(d.total);
       } else if (isSameWeek(dt, prevMonday, { weekStartsOn: 1 })) {
-        prevDailyMap.set(dow, d.total);
-        allWeeksData[1].push(d.total);
+        prevMap.set(dow, entry);
+        prevTotals.push(d.total);
       }
     }
 
+    // Build stacked bar data
     const bars = DAY_NAMES.map((day, i) => {
-      const daily = dailyMap.get(i) ?? 0;
-      const prevDaily = prevDailyMap.get(i) ?? 0;
+      const cur = currentMap.get(i);
       const dt = new Date(currentMonday.getTime() + i * 864e5);
       const dateStr = format(dt, 'dd MMM');
 
       return {
         day,
         dayLabel: `${DAY_FULL[i]}, ${dateStr}`,
-        daily,
-        previousDaily: prevDaily,
         weekLabel: `${format(currentMonday, 'dd MMM')} – ${format(currentSunday, 'dd MMM')}`,
-        hasData: dailyMap.has(i),
-        hasPrevData: prevDailyMap.has(i),
+        mrt_pjy: cur?.mrt_pjy ?? 0,
+        lrt_kj: cur?.lrt_kj ?? 0,
+        lrt_ampang: cur?.lrt_ampang ?? 0,
+        monorail: cur?.monorail ?? 0,
+        brt: cur?.brt ?? 0,
+        total: cur ? (cur.mrt_pjy + cur.lrt_kj + cur.lrt_ampang + cur.monorail + cur.brt) : 0,
+        hasData: !!cur,
       };
     });
 
-    const currentWeekTotal = allWeeksData[0].reduce((a, b) => a + b, 0);
-    const previousWeekTotal = allWeeksData[1].reduce((a, b) => a + b, 0);
-    const dailyAvg = allWeeksData[0].length > 0
-      ? Math.round(currentWeekTotal / allWeeksData[0].length) : 0;
-    const weekDelta = previousWeekTotal > 0
-      ? ((currentWeekTotal - previousWeekTotal) / previousWeekTotal) * 100 : 0;
+    const currentWeekTotal = currentTotals.reduce((a, b) => a + b, 0);
+    const previousWeekTotal = prevTotals.reduce((a, b) => a + b, 0);
+    const dailyAvg = currentTotals.length > 0 ? Math.round(currentWeekTotal / currentTotals.length) : 0;
+    const weekDelta = previousWeekTotal > 0 ? ((currentWeekTotal - previousWeekTotal) / previousWeekTotal) * 100 : 0;
     const brtWeekTotal = brtCurrent.reduce((a, b) => a + b, 0);
 
     return {
@@ -159,10 +169,9 @@ export function PrasaranaWeeklyChart() {
   }, [data]);
 
   if (loading) return <ChartSkeleton />;
-
   if (error || !chartData.length) {
     return (
-      <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md flex items-center justify-center h-[420px]">
+      <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md flex items-center justify-center h-[460px]">
         <div className="text-center">
           <p className="text-[var(--text-faint)] text-sm">No Prasarana daily data available</p>
           {error && <p className="text-red-400/60 text-[10px] mt-1">{error}</p>}
@@ -175,29 +184,20 @@ export function PrasaranaWeeklyChart() {
   const isNegative = weekDelta < 0;
 
   return (
-    <div
-      data-chart
-      className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 shadow-lg animate-fade-in-up"
-    >
+    <div data-chart className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 shadow-lg animate-fade-in-up">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-5">
         <div>
           <h3 className="text-sm font-semibold text-[var(--text-primary)]">
-            Rapid Rail Daily Ridership
+            Rapid Rail & BRT Daily Ridership — By Line
           </h3>
           <p className="text-[10px] text-[var(--text-faint)] mt-0.5">
-            Mon – Sun daily totals · {weekDates.current}
+            Stacked Mon – Sun · {weekDates.current}
           </p>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-amber-400" />
-            <span className="text-[10px] text-[var(--text-muted)] font-medium">This Week</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#85AB8B]/40" />
-            <span className="text-[10px] text-[var(--text-muted)] font-medium">Prev Week</span>
-          </div>
+        <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-amber-400/10 border border-amber-400/20">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+          <span className="text-[9px] text-amber-400 font-medium">real-time · ~1 day lag</span>
         </div>
       </div>
 
@@ -236,23 +236,17 @@ export function PrasaranaWeeklyChart() {
         </div>
       </div>
 
-      {/* Chart */}
-      <div className="h-56 sm:h-72 md:h-80 w-full">
+      {/* Stacked bar chart */}
+      <div className="h-64 sm:h-72 md:h-80 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={chartData}
-            margin={{ top: 5, right: 5, left: -20, bottom: 0 }}
-            barCategoryGap="20%"
-          >
+          <BarChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }} barCategoryGap="16%">
             <defs>
-              <linearGradient id="prasaranaGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#fbbf24" stopOpacity={0.9} />
-                <stop offset="95%" stopColor="#fbbf24" stopOpacity={0.5} />
-              </linearGradient>
-              <linearGradient id="prasaranaPrevGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#85AB8B" stopOpacity={0.35} />
-                <stop offset="95%" stopColor="#85AB8B" stopOpacity={0.15} />
-              </linearGradient>
+              {LINES.map((l) => (
+                <linearGradient key={l.key} id={`prsa-${l.key}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={l.color} stopOpacity={0.9} />
+                  <stop offset="95%" stopColor={l.color} stopOpacity={0.55} />
+                </linearGradient>
+              ))}
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" vertical={false} />
             <XAxis dataKey="day" stroke="var(--chart-axis)" fontSize={11} fontWeight={600} tickLine={false} axisLine={false} dy={8} />
@@ -267,13 +261,23 @@ export function PrasaranaWeeklyChart() {
               tickLine={false}
               axisLine={false}
             />
-            <Tooltip content={<ChartTooltip />} />
-            <Bar dataKey="previousDaily" fill="url(#prasaranaPrevGrad)" radius={[4, 4, 0, 0]} maxBarSize={36} name="Previous Week" />
-            <Bar dataKey="daily" radius={[4, 4, 0, 0]} maxBarSize={36} name="This Week">
-              {chartData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.hasData ? '#fbbf24' : '#fbbf2433'} opacity={entry.hasData ? 1 : 0.3} />
-              ))}
-            </Bar>
+            <Tooltip content={<StackedTooltip />} cursor={{ fill: 'var(--chart-hover)', radius: 4 }} />
+            <Legend
+              iconType="circle"
+              iconSize={8}
+              wrapperStyle={{ fontSize: '10px', paddingTop: '8px' }}
+              formatter={(value: string) => <span className="text-[var(--text-muted)]">{value}</span>}
+            />
+            {LINES.map((l) => (
+              <Bar
+                key={l.key}
+                dataKey={l.key}
+                name={l.label}
+                fill={`url(#prsa-${l.key})`}
+                stackId="prasarana"
+                maxBarSize={52}
+              />
+            ))}
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -285,17 +289,10 @@ export function PrasaranaWeeklyChart() {
             <span className="text-[var(--text-muted)] font-medium">This week:</span> {weekDates.current}
           </span>
           <span className="text-[10px] text-[var(--text-faint)]">
-            <span className="text-[var(--text-muted)] font-medium">Prev week:</span> {weekDates.previous}
+            <span className="text-[var(--text-muted)] font-medium">Prev week:</span> {weekDates.previous} · <span className="text-emerald-400">{previousWeekTotal.toLocaleString()}</span>
           </span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-[8px] px-1.5 py-0.5 rounded bg-sky-400/15 text-sky-300/70 font-medium">
-            ● real-time · ~1 day lag
-          </span>
-          <span className="text-[9px] text-[var(--text-faint)] uppercase tracking-widest">
-            Source: data.gov.my · Prasarana
-          </span>
-        </div>
+        <span className="text-[9px] text-[var(--text-faint)] uppercase tracking-widest">Source: data.gov.my · parquet</span>
       </div>
     </div>
   );
