@@ -24,6 +24,7 @@ import { ComparisonChart } from '@/components/dashboard/comparison-chart';
 import { AnalyticsTable } from '@/components/dashboard/analytics-table';
 import { DataIntegrityBanner } from '@/components/dashboard/data-integrity-banner';
 import { DataStatusBar } from '@/components/dashboard/data-status-bar';
+import { OfflineBanner } from '@/components/dashboard/offline-banner';
 import { useRidership } from '@/hooks/use-ridership';
 import { useAnalytics } from '@/hooks/use-analytics';
 
@@ -354,6 +355,9 @@ export default function Home() {
 
   return (
     <section className="relative w-full min-h-screen overflow-hidden bg-[var(--bg-base)]">
+      {/* Offline banner */}
+      <OfflineBanner />
+
       {/* Ambient orbs */}
       <div className="fixed inset-0 pointer-events-none" aria-hidden="true">
         <div className="absolute top-[-15%] left-[-10%] w-[500px] h-[500px] rounded-full bg-[#336443]/20 blur-[140px] animate-pulse-glow" />
