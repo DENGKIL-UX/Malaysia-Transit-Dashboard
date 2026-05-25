@@ -26,6 +26,9 @@ import { DataIntegrityBanner } from '@/components/dashboard/data-integrity-banne
 import { DataStatusBar } from '@/components/dashboard/data-status-bar';
 import { KtmbWeeklyChart } from '@/components/dashboard/ktmb-weekly-chart';
 import { PrasaranaWeeklyChart } from '@/components/dashboard/prasarana-weekly-chart';
+import { BusiestStationsRapidRail } from '@/components/dashboard/busiest-stations-rapid';
+import { BusiestStationsKTMB } from '@/components/dashboard/busiest-stations-ktmb';
+import { TopRoutesRapidRail, TopRoutesKTMB } from '@/components/dashboard/top-routes';
 import { OfflineBanner } from '@/components/dashboard/offline-banner';
 import { useRidership } from '@/hooks/use-ridership';
 import { useAnalytics } from '@/hooks/use-analytics';
@@ -177,7 +180,7 @@ function AboutSection() {
             <AlertCircle className="w-4 h-4 text-sky-400" />
           </div>
           <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-2">
-            Two Data Pipelines
+            Four Data Pipelines
           </h3>
           <div className="space-y-3">
             <div className="rounded-lg bg-[var(--surface-card)] border border-[var(--border-faint)] p-3">
@@ -193,20 +196,31 @@ function AboutSection() {
             <div className="rounded-lg bg-[var(--surface-card)] border border-[var(--border-faint)] p-3">
               <div className="flex items-center gap-2 mb-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-teal-400" />
-                <span className="text-[11px] font-semibold text-[var(--text-secondary)]">KTMB Daily (Real-time)</span>
+                <span className="text-[11px] font-semibold text-[var(--text-secondary)]">KTMB Daily (Real-time, Parquet)</span>
               </div>
               <p className="text-[10px] text-[var(--text-faint)] leading-relaxed">
-                5 KTMB rail services. Updated daily ~03:45 MYT. Used by the KTMB Mon–Sun chart.
+                5 KTMB rail services + 158 stations. Origin-destination parquet from data.gov.my.
+                Used by KTMB Mon–Sun chart, Busiest Stations, and Top Routes.
               </p>
             </div>
             <div className="rounded-lg bg-[var(--surface-card)] border border-[var(--border-faint)] p-3">
               <div className="flex items-center gap-2 mb-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-orange-300" />
-                <span className="text-[11px] font-semibold text-[var(--text-secondary)]">Prasarana Daily (Real-time)</span>
+                <span className="text-[11px] font-semibold text-[var(--text-secondary)]">Prasarana Daily (Real-time, Parquet)</span>
               </div>
               <p className="text-[10px] text-[var(--text-faint)] leading-relaxed">
-                5 Rapid Rail lines + BRT Sunway. Updated daily ~22:00 MYT. Includes BRT Sunway
-                (not in headline). Used by the Rapid Rail Mon–Sun chart and BRT stats.
+                5 Rapid Rail lines + BRT Sunway + 150+ stations. Origin-destination parquet from
+                data.gov.my. Used by Rapid Rail chart, Busiest Stations, and Top Routes.
+              </p>
+            </div>
+            <div className="rounded-lg bg-[var(--surface-card)] border border-[var(--border-faint)] p-3">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
+                <span className="text-[11px] font-semibold text-[var(--text-secondary)]">OD Datasets (Exploratory)</span>
+              </div>
+              <p className="text-[10px] text-[var(--text-faint)] leading-relaxed">
+                7 origin-destination datasets covering every station pair across all services.
+                Available as per-year Parquet files from data.gov.my. Raw data for advanced analysis.
               </p>
             </div>
           </div>
@@ -290,6 +304,9 @@ function AboutSection() {
               'Recharts',
               'date-fns',
               'Lucide Icons',
+              'Python',
+              'Pandas',
+              'Parquet',
             ].map((tech) => (
               <span
                 key={tech}
@@ -537,6 +554,29 @@ export default function Home() {
               {/* Prasarana Real-Time Daily/Weekly Chart */}
               <div className="mb-6">
                 <PrasaranaWeeklyChart />
+              </div>
+
+              {/* Busiest Stations Section */}
+              <div className="flex items-center gap-3 mb-5 mt-10 animate-fade-in-up">
+                <div className="w-1 h-6 rounded-full bg-amber-400/40" />
+                <div>
+                  <h2 className="text-base font-semibold text-[var(--text-primary)]">
+                    Station Analytics
+                  </h2>
+                  <p className="text-[10px] text-[var(--text-faint)] mt-0.5">
+                    Busiest stations & routes · From parquet origin-destination data
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 mb-6">
+                <BusiestStationsRapidRail />
+                <BusiestStationsKTMB />
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 mb-6">
+                <TopRoutesRapidRail />
+                <TopRoutesKTMB />
               </div>
             </div>
           </div>

@@ -130,3 +130,36 @@ Stage Summary:
 - 2 new data sources integrated: Prasarana daily (~1 day lag) and BRT Sunway
 - Dashboard now has 3 data pipelines: Headline (audited), KTMB Daily (real-time), Prasarana Daily (real-time)
 - New files: hook, chart component, Python processing script, mini-service
+
+---
+Task ID: 5
+Agent: Main
+Task: Add station analytics from Parquet OD data (Busiest Stations + Top Routes)
+
+Work Log:
+- Analyzed data.gov.my explorer configs: prasarana.json and ktmb.json
+- Discovered 4 explorer parquets: prasarana_timeseries, prasarana_timeseries_callout, ktmb_timeseries, ktmb_timeseries_callout
+- Expanded process_parquet.py to process all 4 parquets into 6 JSON outputs:
+  - prasarana_daily.json (57 days, per-line totals) [existing, updated]
+  - prasarana_stations.json (top 20 stations + 30-day series per station)
+  - prasarana_callout.json (top 20 O-D routes)
+  - ktmb_daily.json (57 days, per-service totals)
+  - ktmb_stations.json (top 20 stations + per-service breakdown)
+  - ktmb_callout.json (top 20 O-D routes by service)
+- Simplified Bun microservice to serve static JSON files (no auto-refresh due to process stability)
+- Created hooks: use-prasarana-stations.ts, use-ktmb-stations.ts
+- Created components: busiest-stations-rapid.tsx (top 20 Rapid Rail stations with line colors, progress bars), busiest-stations-ktmb.tsx (top 20 KTMB stations with service tabs), top-routes.tsx (top O-D pairs for both networks)
+- Integrated all 4 new components into dashboard page under "Station Analytics" section
+- Updated About section: "Two Data Pipelines" → "Four Data Pipelines" (added KTMB Parquet, Prasarana Parquet, OD Datasets)
+- Updated "Built With" to include Python, Pandas, Parquet
+- Fixed station name extraction regex (stripped `: ` prefix from names)
+- All static JSON files served from public/ directory (CF Pages compatible)
+- Lint passes clean
+
+Stage Summary:
+- 4 new dashboard components: Busiest Stations (Rapid Rail + KTMB) + Top Routes (Rapid Rail + KTMB)
+- Station Analytics section now shows top 20 stations per network with 30-day daily series
+- KTMB component has service tabs (Overall/ETS/Intercity/Komuter/Komuter Utara/Tebrau)
+- Prasarana component shows per-line station distribution and line-colored progress bars
+- All data sourced from Parquet files via Python/pandas processing pipeline
+- 7 new files: 2 hooks, 3 components, updated Python script, updated Bun server
