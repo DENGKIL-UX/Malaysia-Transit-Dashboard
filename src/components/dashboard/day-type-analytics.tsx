@@ -10,18 +10,20 @@ import {
   ResponsiveContainer,
   CartesianGrid,
   ReferenceLine,
-  Cell,
 } from 'recharts';
-import { format, subDays, parseISO } from 'date-fns';
+import { format, subDays } from 'date-fns';
 import { useAppStore } from '@/lib/store';
 import {
   BarChart3,
   TrendingDown,
   TrendingUp,
+  Minus,
   Eye,
   EyeOff,
   RefreshCw,
   CalendarDays,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 // ─── Types ───────────────────────────────────────────────────────────
@@ -66,6 +68,12 @@ interface DayTypeResult {
   perServiceWeekdayAvg: Record<string, number>;
 }
 
+interface WindowDef {
+  start: string;
+  end: string;
+  days: number;
+}
+
 // ─── Constants ───────────────────────────────────────────────────────
 
 const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -78,6 +86,9 @@ const DAY_FULL = [
   'Saturday',
   'Sunday',
 ];
+
+const WINDOW_SIZE = 28;
+const MIN_WINDOW_DAYS = 10;
 
 const KTMB_SERVICES: SeriesDef[] = [
   { key: 'komuter', label: 'Komuter', color: '#2dd4bf' },
@@ -113,12 +124,60 @@ function ChartSkeleton() {
   );
 }
 
-// ─── Computation ─────────────────────────────────────────────────────
+// ─── Window Computation ──────────────────────────────────────────────
+
+function computeWindows<T extends { date: string }>(data: T[]): WindowDef[] {
+  if (!data.length) return [];
+
+  // Extract and sort unique dates
+  const dates = data.map((d) => d.date.split(' ')[0]).sort();
+  const latestStr = dates[dates.length - 1];
+  const earliestStr = dates[0];
+
+  const latest = new Date(latestStr + 'T00:00:00');
+  const earliest = new Date(earliestStr + 'T00:00:00');
+
+  const windows: WindowDef[] = [];
+  let windowEnd = new Date(latest);
+
+  while (true) {
+    const windowStart = subDays(windowEnd, WINDOW_SIZE - 1);
+    const startMs = windowStart.getTime();
+    const endMs = windowEnd.getTime();
+
+    if (startMs < earliest.getTime()) {
+      // Last (partial) window — include only if it meets minimum threshold
+      const actualDays = Math.round((endMs - earliest.getTime()) / 864e5) + 1;
+      if (actualDays >= MIN_WINDOW_DAYS) {
+        windows.push({
+          start: earliestStr,
+          end: format(windowEnd, 'yyyy-MM-dd'),
+          days: actualDays,
+        });
+      }
+      break;
+    }
+
+    windows.push({
+      start: format(windowStart, 'yyyy-MM-dd'),
+      end: format(windowEnd, 'yyyy-MM-dd'),
+      days: WINDOW_SIZE,
+    });
+
+    // Next window ends the day before this one starts
+    windowEnd = subDays(windowStart, 1);
+  }
+
+  return windows; // index 0 = latest
+}
+
+// ─── Day-Type Computation ───────────────────────────────────────────
 
 function computeDayTypeAverages<T extends { date: string }>(
   data: T[],
   keys: string[],
-  windowDays = 90
+  windowStart?: string,
+  windowEnd?: string
 ): DayTypeResult {
   if (!data.length) {
     return {
@@ -136,13 +195,12 @@ function computeDayTypeAverages<T extends { date: string }>(
     };
   }
 
-  const cutoff = subDays(new Date(), windowDays);
-
-  // Filter to window
+  // Filter to explicit window
   const filtered = data.filter((d) => {
     const dateStr = d.date.split(' ')[0];
-    const dt = new Date(dateStr + 'T00:00:00');
-    return dt >= cutoff;
+    if (windowStart && dateStr < windowStart) return false;
+    if (windowEnd && dateStr > windowEnd) return false;
+    return true;
   });
 
   // ── Daily-total-first approach ──
@@ -164,7 +222,7 @@ function computeDayTypeAverages<T extends { date: string }>(
     const dateStr = row.date.split(' ')[0];
     const dt = new Date(dateStr + 'T00:00:00');
     let dow = dt.getDay() - 1; // JS getDay(): Sun=0 → Mon=-1, so remap
-    if (dow < 0) dow = 6;      // Sunday → index 6
+    if (dow < 0) dow = 6; // Sunday → index 6
 
     const perService: Record<string, number> = {};
     let dailyTotal = 0;
@@ -356,11 +414,12 @@ export function DayTypeAnalytics() {
   const [activeTab, setActiveTab] = useState<'ktmb' | 'prasarana'>('ktmb');
   const [hiddenLines, setHiddenLines] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [windowOffset, setWindowOffset] = useState(0); // 0 = latest window
 
-  // Centralized metadata from Zustand (eliminates redundant /api/metadata fetch)
+  // Centralized metadata from Zustand
   const meta = useAppStore((s) => s.metadata);
 
-  // Fetch data on mount (static JSON only — metadata comes from store)
+  // Fetch data on mount
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
@@ -381,29 +440,86 @@ export function DayTypeAnalytics() {
     fetchData();
   }, [fetchData]);
 
-  // Compute KTMB day-type averages
+  // Compute available windows for each data source
+  const ktmbWindows = useMemo(() => computeWindows(ktmbData), [ktmbData]);
+  const prasWindows = useMemo(() => computeWindows(prasData), [prasData]);
+
+  // Active windows based on tab
+  const windows = activeTab === 'ktmb' ? ktmbWindows : prasWindows;
+
+  // Clamp offset to available windows
+  const safeOffset = Math.min(windowOffset, Math.max(0, windows.length - 1));
+  const activeWindow = windows[safeOffset] ?? windows[0];
+
+  // Reset offset when tab changes
+  useEffect(() => {
+    setWindowOffset(0);
+  }, [activeTab]);
+
+  // Navigation
+  const canGoPrev = safeOffset < windows.length - 1;
+  const canGoNext = safeOffset > 0;
+
+  const goPrev = useCallback(() => {
+    if (canGoPrev) setWindowOffset((o) => o + 1);
+  }, [canGoPrev]);
+
+  const goNext = useCallback(() => {
+    if (canGoNext) setWindowOffset((o) => o - 1);
+  }, [canGoNext]);
+
+  // Compute day-type averages for the active window
   const ktmbResult = useMemo(
     () =>
       computeDayTypeAverages<KtmbRow>(
         ktmbData,
-        KTMB_SERVICES.map((s) => s.key)
+        KTMB_SERVICES.map((s) => s.key),
+        activeWindow?.start,
+        activeWindow?.end
       ),
-    [ktmbData]
+    [ktmbData, activeWindow]
   );
 
-  // Compute Prasarana day-type averages
   const prasResult = useMemo(
     () =>
       computeDayTypeAverages<PrasaranaRow>(
         prasData,
-        PRASARANA_LINES.map((s) => s.key)
+        PRASARANA_LINES.map((s) => s.key),
+        activeWindow?.start,
+        activeWindow?.end
       ),
-    [prasData]
+    [prasData, activeWindow]
   );
 
   // Current result based on active tab
   const result = activeTab === 'ktmb' ? ktmbResult : prasResult;
   const series = activeTab === 'ktmb' ? KTMB_SERVICES : PRASARANA_LINES;
+
+  // Compute previous window result for delta comparison
+  const prevWindow = windows[safeOffset + 1];
+  const prevResult = useMemo(() => {
+    if (!prevWindow) return null;
+    if (activeTab === 'ktmb') {
+      return computeDayTypeAverages<KtmbRow>(
+        ktmbData,
+        KTMB_SERVICES.map((s) => s.key),
+        prevWindow.start,
+        prevWindow.end
+      );
+    }
+    return computeDayTypeAverages<PrasaranaRow>(
+      prasData,
+      PRASARANA_LINES.map((s) => s.key),
+      prevWindow.start,
+      prevWindow.end
+    );
+  }, [prevWindow, activeTab, ktmbData, prasData]);
+
+  // Delta vs previous window
+  const weekdayAvgDelta = useMemo(() => {
+    if (!prevResult || prevResult.weekdayAvg === 0) return null;
+    return ((result.weekdayAvg - prevResult.weekdayAvg) / prevResult.weekdayAvg) * 100;
+  }, [result.weekdayAvg, prevResult]);
 
   // Toggle line visibility
   const toggleLine = useCallback((key: string) => {
@@ -452,6 +568,9 @@ export function DayTypeAnalytics() {
     );
   }
 
+  const deltaIsPositive = weekdayAvgDelta !== null && weekdayAvgDelta > 0;
+  const deltaIsNegative = weekdayAvgDelta !== null && weekdayAvgDelta < 0;
+
   return (
     <div
       data-chart
@@ -460,7 +579,7 @@ export function DayTypeAnalytics() {
       {/* ── Header ── */}
       <div className="flex flex-col gap-4 mb-5">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-          <div>
+          <div className="flex-1">
             <div className="flex items-center gap-2.5">
               <BarChart3 className="w-4 h-4 text-[#85AB8B]" />
               <h3 className="text-sm font-semibold text-[var(--text-primary)]">
@@ -485,13 +604,41 @@ export function DayTypeAnalytics() {
                   </span>
                 </>
               )}{' '}
-              · Baseline:{' '}
+                  · Baseline:{' '}
               <span className="text-[#85AB8B] font-medium">Weekday Avg</span>
             </p>
           </div>
 
-          {/* Dynamic timestamp badge */}
+          {/* Pagination + timestamp badge */}
           <div className="flex items-center gap-2 flex-wrap">
+            {/* Window pagination */}
+            {windows.length > 1 && (
+              <div className="flex items-center rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] overflow-hidden">
+                <button
+                  onClick={goPrev}
+                  disabled={!canGoPrev}
+                  className="flex items-center justify-center w-8 h-8 transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[var(--surface-active)] active:bg-[var(--border-subtle)]"
+                  aria-label="Previous window"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+                </button>
+                <div className="flex items-center px-2.5 min-w-[120px] justify-center">
+                  <span className="text-[10px] font-medium text-[var(--text-secondary)] tabular-nums">
+                    {safeOffset === 0 ? 'Latest' : `${windows.length - safeOffset} / ${windows.length}`}
+                  </span>
+                </div>
+                <button
+                  onClick={goNext}
+                  disabled={!canGoNext}
+                  className="flex items-center justify-center w-8 h-8 transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[var(--surface-active)] active:bg-[var(--border-subtle)]"
+                  aria-label="Next window"
+                >
+                  <ChevronRight className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+                </button>
+              </div>
+            )}
+
+            {/* Dynamic timestamp badge */}
             {meta?.freshest_date && (
               <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#85AB8B]/10 border border-[#85AB8B]/20">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#85AB8B] animate-pulse" />
@@ -591,7 +738,7 @@ export function DayTypeAnalytics() {
       </div>
 
       {/* ── Stats Row ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-5">
         <div className="rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-faint)] p-3">
           <div className="flex items-center gap-1 mb-1">
             <TrendingUp className="w-3 h-3 text-emerald-400" />
@@ -643,6 +790,42 @@ export function DayTypeAnalytics() {
             {result.weekdayAvg.toLocaleString()}
           </div>
           <span className="text-[10px] text-[var(--text-faint)]">baseline</span>
+        </div>
+
+        {/* vs Prev Window delta */}
+        <div className="rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-faint)] p-3">
+          <span className="text-[9px] text-[var(--text-faint)] uppercase tracking-widest font-medium">
+            vs Prev Window
+          </span>
+          <div
+            className={`text-base font-semibold tabular-nums tracking-tight mt-1 flex items-center gap-1 ${
+              deltaIsPositive
+                ? 'text-emerald-400'
+                : deltaIsNegative
+                  ? 'text-red-400'
+                  : 'text-[var(--text-muted)]'
+            }`}
+          >
+            {weekdayAvgDelta !== null ? (
+              <>
+                {deltaIsPositive ? (
+                  <TrendingUp className="w-3.5 h-3.5" />
+                ) : deltaIsNegative ? (
+                  <TrendingDown className="w-3.5 h-3.5" />
+                ) : (
+                  <Minus className="w-3.5 h-3.5" />
+                )}
+                {Math.abs(weekdayAvgDelta).toFixed(1)}%
+              </>
+            ) : (
+              <span className="text-[var(--text-ghost)]">—</span>
+            )}
+          </div>
+          {prevWindow && (
+            <span className="text-[10px] text-[var(--text-faint)] tabular-nums">
+              {prevWindow.start} → {prevWindow.end}
+            </span>
+          )}
         </div>
       </div>
 
@@ -761,6 +944,14 @@ export function DayTypeAnalytics() {
             {series.filter((s) => !hiddenLines.has(s.key)).length}/
             {series.length} visible
           </span>
+          {windows.length > 1 && (
+            <span className="text-[10px] text-[var(--text-faint)]">
+              <span className="text-[var(--text-muted)] font-medium">
+                {windows.length} windows
+              </span>{' '}
+              ({WINDOW_SIZE}-day each)
+            </span>
+          )}
         </div>
         <span className="text-[9px] text-[var(--text-faint)] uppercase tracking-widest">
           Source: data.gov.my · parquet

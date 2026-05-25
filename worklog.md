@@ -406,3 +406,26 @@ Stage Summary:
 - Stats dynamically update per selected week
 - Clean prev/next UI with bounds clamping
 - Files modified: ktmb-weekly-chart.tsx
+---
+Task ID: 5
+Agent: main
+Task: Add 28-day window pagination to Day-Type Analytics chart
+
+Work Log:
+- Refactored `computeDayTypeAverages()` to accept explicit `windowStart`/`windowEnd` params instead of using relative `subDays(new Date(), 90)` cutoff
+- Created `computeWindows()` function that builds non-overlapping 28-day windows from data boundaries (earliest → latest date), sorted newest-first; partial trailing windows included if ≥10 days
+- Added `windowOffset` state (0 = latest window) with ◀/▶ ChevronLeft/ChevronRight navigation
+- Navigation label shows "Latest" for offset 0, or "N / Total" for previous windows
+- Added 5th stat card "vs Prev Window" showing weekday avg % change vs previous window with TrendingUp/TrendingDown/Minus icons
+- Stats row expanded from 4→5 columns (grid-cols-2 sm:grid-cols-5)
+- Tab switch resets windowOffset to 0
+- Footer now shows "{N} windows (28-day each)" when multiple windows available
+- Pagination controls hidden when only 1 window exists
+- Fixed TrendingFlat → Minus (lucide-react version compatibility)
+- Removed unused `parseISO` import
+
+Stage Summary:
+- Day-Type Analytics now supports navigating between 28-day time windows
+- All stats (Peak Day, Lowest Day, Weekend/Weekday Ratio, Weekday Avg, vs Prev Window) update dynamically
+- Current dataset yields 2 windows; more windows will appear as data grows
+- Files modified: day-type-analytics.tsx
