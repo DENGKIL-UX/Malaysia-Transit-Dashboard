@@ -325,3 +325,23 @@ Stage Summary:
 - **10 dead packages removed** (~50MB+ node_modules savings)
 - **Prisma fully excised** (schema, client, DB file)
 - All changes compile cleanly, dev server running, zero lint errors in app code
+---
+Task ID: 1
+Agent: main
+Task: Fix ML Analytics not rendering on Cloudflare deployment
+
+Work Log:
+- Diagnosed root cause: two bugs preventing analytics from displaying
+- Bug 1 (rendering): `AnalyticsTable` component at line 277 had `if (!analytics) return null` which killed the ENTIRE component including the MLInsightsPanel, even though ML panel gets its data independently from Zustand store
+- Bug 2 (Cloudflare): API routes `/api/notifications` and `/api/metadata` used `readFileSync` to read JSON from `public/` directory, which doesn't work on Cloudflare Pages Functions (no filesystem)
+- Fixed AnalyticsTable: decoupled MLInsightsPanel from analytics prop gate — now renders independently via Zustand store, and when day-type analytics data is unavailable, shows a "waiting for data" placeholder instead of hiding everything
+- Fixed notifications API: replaced `readFileSync` + `fs`/`path` imports with `fetch()` using `new URL(request.url).origin` as base URL
+- Fixed metadata API: same `readFileSync` → `fetch()` migration
+- Verified: notifications API returns 7 anomalies, trend=up, growth=8.22%, peak=Friday, ratio=0.96, forecast=195973
+- Verified: metadata API returns ktmb latest=2026-05-24, prasarana latest=2026-05-23
+
+Stage Summary:
+- Analytics section now renders on both local dev and Cloudflare Pages
+- ML Insights Panel is independent from day-type analytics data availability
+- All API routes are Cloudflare-compatible (no filesystem dependencies)
+- Files modified: analytics-table.tsx, notifications/route.ts, metadata/route.ts

@@ -250,10 +250,13 @@ function MLInsightsPanel({ analyticsState }: { analyticsState: AnalyticsState | 
 export function AnalyticsTable({ analytics, loading }: Props) {
   const analyticsState = useAppStore((s) => s.analyticsState);
 
+  // ML Insights Panel renders independently from Zustand — never gated by analytics prop
+  const mlPanel = <MLInsightsPanel analyticsState={analyticsState} />;
+
   if (loading) {
     return (
       <div className="space-y-5">
-        <MLInsightsPanel analyticsState={null} />
+        {mlPanel}
         <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md overflow-hidden animate-fade-in-up">
           <div className="px-5 py-4 border-b border-[var(--border-subtle)]">
             <div className="h-4 w-36 bg-[var(--skeleton-bg)] rounded animate-pulse" />
@@ -274,7 +277,29 @@ export function AnalyticsTable({ analytics, loading }: Props) {
     );
   }
 
-  if (!analytics) return null;
+  // If day-type analytics data isn't available, still show ML panel
+  if (!analytics) {
+    return (
+      <div className="space-y-5">
+        {mlPanel}
+        <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md overflow-hidden animate-fade-in-up">
+          <div className="px-5 py-4 border-b border-[var(--border-subtle)]">
+            <h3 className="text-sm font-semibold text-[var(--text-primary)]">
+              Day-Type Analytics
+            </h3>
+            <p className="text-[10px] text-[var(--text-faint)] mt-0.5">
+              Waiting for ridership data…
+            </p>
+          </div>
+          <div className="px-5 py-6 text-center">
+            <p className="text-[11px] text-[var(--text-muted)]">
+              Day-type comparison requires extended ridership data. It will appear once loaded.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const metrics: Metric[] = [
     {
@@ -317,9 +342,9 @@ export function AnalyticsTable({ analytics, loading }: Props) {
   return (
     <div className="space-y-5">
       {/* ML Insights Panel */}
-      <MLInsightsPanel analyticsState={analyticsState} />
+      {mlPanel}
 
-      {/* Existing Day-Type Analytics Table */}
+      {/* Day-Type Analytics Table */}
       <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md overflow-hidden animate-fade-in-up">
         {/* Header */}
         <div className="px-5 py-4 border-b border-[var(--border-subtle)]">

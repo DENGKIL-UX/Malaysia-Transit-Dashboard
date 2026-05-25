@@ -1,6 +1,4 @@
-import { NextResponse } from 'next/server';
-import { readFileSync } from 'fs';
-import { join } from 'path';
+import { NextRequest, NextResponse } from 'next/server';
 import { format, differenceInDays } from 'date-fns';
 
 // ─── Types ────────────────────────────────────────────────────────────
@@ -74,11 +72,13 @@ interface AnalyticsState {
 
 // ─── Helpers ──────────────────────────────────────────────────────────
 
-function readJsonFile<T>(filename: string): T[] {
+async function readJsonFile<T>(baseUrl: string, filename: string): Promise<T[]> {
   try {
-    const filePath = join(process.cwd(), 'public', filename);
-    const raw = readFileSync(filePath, 'utf-8');
-    return JSON.parse(raw) as T[];
+    // Use fetch for Cloudflare Pages compatibility (no filesystem access)
+    const url = `${baseUrl}/${filename}`;
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    return (await res.json()) as T[];
   } catch {
     return [];
   }
@@ -181,15 +181,16 @@ function exponentialSmoothingForecast(
 
 // ─── Main GET handler ───────────────────────────────────────────────
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const baseUrl = new URL(request.url).origin;
   const now = new Date();
   const todayStr = format(now, 'yyyy-MM-dd');
   const todayMs = new Date(todayStr + 'T00:00:00').getTime();
   const notifications: NotificationItem[] = [];
 
-  // ── Read local JSON data ──
-  const ktmbData = readJsonFile<KtmbDay>('ktmb-daily.json');
-  const prasaranaData = readJsonFile<PrasaranaDay>('prasarana-daily.json');
+  // ── Read local JSON data (fetch for Cloudflare compatibility) ──
+  const ktmbData = await readJsonFile<KtmbDay>(baseUrl, 'ktmb-daily.json');
+  const prasaranaData = await readJsonFile<PrasaranaDay>(baseUrl, 'prasarana-daily.json');
 
   // ── Compute freshness ──
   const ktmbLatest = ktmbData.length > 0

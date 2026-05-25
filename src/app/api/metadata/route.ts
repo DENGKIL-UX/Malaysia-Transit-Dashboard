@@ -1,6 +1,4 @@
-import { NextResponse } from 'next/server';
-import { readFileSync } from 'fs';
-import { join } from 'path';
+import { NextRequest, NextResponse } from 'next/server';
 
 interface MetaResult {
   headline: {
@@ -45,13 +43,15 @@ async function fetchWithTimeout(
 
 /**
  * Read the last `date` field from a local JSON file in public/.
+ * Uses fetch for Cloudflare Pages compatibility (no filesystem access).
  * Returns null if file doesn't exist or parse fails.
  */
-function getLatestDateFromLocalJson(filename: string): string | null {
+async function getLatestDateFromLocalJson(baseUrl: string, filename: string): Promise<string | null> {
   try {
-    const filePath = join(process.cwd(), 'public', filename);
-    const raw = readFileSync(filePath, 'utf-8');
-    const arr = JSON.parse(raw) as Array<{ date: string }>;
+    const url = `${baseUrl}/${filename}`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const arr = (await res.json()) as Array<{ date: string }>;
     if (Array.isArray(arr) && arr.length > 0) {
       const dates = arr
         .map((r) => r.date)
@@ -65,7 +65,7 @@ function getLatestDateFromLocalJson(filename: string): string | null {
   return null;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const results: MetaResult = {
     headline: {
       data_as_of: '',
@@ -91,11 +91,12 @@ export async function GET() {
     freshest_source: '',
   };
 
+  const baseUrl = new URL(request.url).origin;
   const today = new Date().toISOString().split('T')[0];
   const todayMs = new Date(today + 'T00:00:00').getTime();
 
   // ── 0. Scan local Parquet-derived JSON files ──
-  const ktmbLocalDate = getLatestDateFromLocalJson('ktmb-daily.json');
+  const ktmbLocalDate = await getLatestDateFromLocalJson(baseUrl, 'ktmb-daily.json');
   if (ktmbLocalDate) {
     results.ktmb.latest_date = ktmbLocalDate.split(' ')[0];
     results.ktmb.lag_days = Math.round(
@@ -103,7 +104,7 @@ export async function GET() {
     );
   }
 
-  const prasaranaLocalDate = getLatestDateFromLocalJson('prasarana-daily.json');
+  const prasaranaLocalDate = await getLatestDateFromLocalJson(baseUrl, 'prasarana-daily.json');
   if (prasaranaLocalDate) {
     results.prasarana_od.latest_date = prasaranaLocalDate;
     results.prasarana_od.lag_days = Math.round(
