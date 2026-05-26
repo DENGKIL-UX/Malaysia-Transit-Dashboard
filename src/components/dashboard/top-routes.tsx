@@ -131,7 +131,7 @@ export function TopRoutesRapidRail() {
       </div>
 
       {/* Routes list */}
-      <div className="space-y-0.5 max-h-[360px] overflow-y-auto pr-1 custom-scrollbar">
+      <div className="space-y-0.5 max-h-[340px] overflow-y-auto pr-1 custom-scrollbar">
         {data.top_routes.map((route, i) => {
           const pct = Math.round((route.passengers / maxPax) * 100);
           // Extract short station names
@@ -236,7 +236,7 @@ export function TopRoutesKTMB() {
       </div>
 
       {/* Routes list */}
-      <div className="space-y-0.5 max-h-[360px] overflow-y-auto pr-1 custom-scrollbar">
+      <div className="space-y-0.5 max-h-[340px] overflow-y-auto pr-1 custom-scrollbar">
         {data.top_routes.map((route, i) => {
           const pct = Math.round((route.passengers / maxPax) * 100);
           const style = SERVICE_STYLE[route.service ?? ''] ?? { bg: 'bg-gray-400/10', text: 'text-gray-400', bar: 'bg-gray-400/60' };

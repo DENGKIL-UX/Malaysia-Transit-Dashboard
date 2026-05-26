@@ -229,7 +229,7 @@ export function BusiestStationsRapidRail() {
       </div>
 
       {/* Station ranking list */}
-      <div className="space-y-0.5 max-h-[420px] overflow-y-auto pr-1 custom-scrollbar">
+      <div className="space-y-0.5 max-h-[380px] overflow-y-auto pr-1 custom-scrollbar">
         {windowedStations.map((station, i) => {
           const maxPassengers = windowedStations[0].passengers;
           const pct = maxPassengers > 0 ? Math.round((station.passengers / maxPassengers) * 100) : 0;

@@ -281,7 +281,7 @@ export function BusiestStationsKTMB() {
       </div>
 
       {/* Station ranking list */}
-      <div className="space-y-0.5 max-h-[360px] overflow-y-auto pr-1 custom-scrollbar">
+      <div className="space-y-0.5 max-h-[340px] overflow-y-auto pr-1 custom-scrollbar">
         {displayStations.map((station, i) => {
           const maxPassengers = displayStations[0]?.passengers ?? 1;
           const pct = Math.round((station.passengers / maxPassengers) * 100);
