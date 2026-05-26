@@ -47,6 +47,17 @@ let pollingIntervalId: ReturnType<typeof setInterval> | null = null;
 let isPollingActive = false;
 let inFlight = false; // prevents concurrent fetches
 
+// Dev-only: prevent HMR from spawning duplicate intervals
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+  window.addEventListener('beforeunload', () => {
+    if (pollingIntervalId) {
+      clearInterval(pollingIntervalId);
+      pollingIntervalId = null;
+      isPollingActive = false;
+    }
+  });
+}
+
 /**
  * Centralized metadata hook — single source of truth for /api/metadata data.
  * Stores result in Zustand to eliminate duplicate fetches from multiple components.

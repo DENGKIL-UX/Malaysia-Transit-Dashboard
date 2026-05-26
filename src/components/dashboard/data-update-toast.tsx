@@ -1,7 +1,9 @@
 'use client';
 
+import { useMemo } from 'react';
 import { CheckCircle2, X } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
+import { differenceInHours } from 'date-fns';
 
 /**
  * Subtle toast that appears when new data is detected and the dashboard
@@ -11,6 +13,16 @@ import { useAppStore } from '@/lib/store';
 export function DataUpdateToast() {
   const dataUpdateTimestamp = useAppStore((s) => s.dataUpdateTimestamp);
   const metadata = useAppStore((s) => s.metadata);
+
+  const lagLabel = useMemo(() => {
+    if (!metadata?.freshest_date) return '';
+    try {
+      const hours = differenceInHours(Date.now(), new Date(metadata.freshest_date + 'T00:00:00'));
+      return hours < 24 ? '· T-1' : `${Math.round(hours / 24)}d lag`;
+    } catch {
+      return '';
+    }
+  }, [metadata?.freshest_date]);
 
   if (!dataUpdateTimestamp) return null;
 
@@ -22,14 +34,14 @@ export function DataUpdateToast() {
         </div>
         <div className="flex flex-col">
           <span className="text-xs font-semibold text-[var(--text-primary)]">
-            Data updated
+            New batch detected
           </span>
           {metadata?.freshest_date && (
             <span className="text-[10px] text-[var(--text-muted)]">
-              Fresh through {metadata.freshest_date}
+              Data through {metadata.freshest_date}
               {metadata.freshest_source && (
                 <span className="text-[var(--text-ghost)]">
-                  {' '}({metadata.freshest_source})
+                  {' '}({metadata.freshest_source}{' '}{lagLabel})
                 </span>
               )}
             </span>
