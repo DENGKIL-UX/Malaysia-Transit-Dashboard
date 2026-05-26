@@ -7,3 +7,22 @@
 /manifest.json
   Content-Type: application/manifest+json
   Cache-Control: public,max-age=3600
+# Pre-computed data files — long cache since they only change on deploy
+/headline-recent.json
+  Cache-Control: public,max-age=86400
+/holidays-*.json
+  Cache-Control: public,max-age=86400
+/headline-daily.json
+  Cache-Control: public,max-age=86400
+/ktmb-daily.json
+  Cache-Control: public,max-age=300,stale-while-revalidate=1800
+/prasarana-daily*.json
+  Cache-Control: public,max-age=300,stale-while-revalidate=1800
+/ktmb-stations.json
+  Cache-Control: public,max-age=3600
+/prasarana-stations.json
+  Cache-Control: public,max-age=3600
+/ktmb-routes.json
+  Cache-Control: public,max-age=3600
+/prasarana-routes.json
+  Cache-Control: public,max-age=3600

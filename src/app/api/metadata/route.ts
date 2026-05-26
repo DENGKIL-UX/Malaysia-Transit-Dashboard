@@ -239,91 +239,80 @@ export async function GET(request: NextRequest) {
     // Holiday fetch failed — continue without holiday context
   }
 
-  // ── 1. Scan local Parquet-derived JSON files ──
-  const ktmbLocalDate = await getLatestDateFromLocalJson(baseUrl, 'ktmb-daily.json');
-  const prasaranaLocalDate = await getLatestDateFromLocalJson(baseUrl, 'prasarana-daily.json');
+  // ── 1-3. Fetch all external data in parallel ──
+  // Local JSONs (small, fast) + headline API + prasarana meta run concurrently
 
-  // ── 2. Check actual headline data ──
-  let headlineLatest = '';
-  try {
-    const threeMonthsAgo = new Date(Date.now() - 90 * 864e5)
-      .toISOString()
-      .split('T')[0];
-    const res = await fetchWithTimeout(
-      `https://api.data.gov.my/data-catalogue?id=ridership_headline&date_start=${threeMonthsAgo}@date&date_end=${today}@date`,
-      10000
-    );
-    if (res && res.ok) {
-      const rows = (await res.json()) as Record<string, unknown>[];
-      if (Array.isArray(rows) && rows.length > 0) {
-        const dates = rows
-          .map((r) => r.date as string)
-          .filter(Boolean)
-          .sort();
-        headlineLatest = dates[dates.length - 1] ?? '';
-      }
-    }
-  } catch {
-    // Silently fail
-  }
+  const threeMonthsAgo = new Date(Date.now() - 90 * 864e5)
+    .toISOString()
+    .split('T')[0];
 
-  // ── 3. Check data.gov.my page for "Data as of" ──
-  let headlineDataAsOf = '';
-  try {
-    const res = await fetchWithTimeout(
-      'https://data.gov.my/data-catalogue/ridership_headline',
-      8000
-    );
-    if (res && res.ok) {
-      const html = await res.text();
-      const match = html.match(
-        /Data as of (\d{4}-\d{2}-\d{2}),\s*(\d{2}:\d{2})/
-      );
-      if (match) {
-        headlineDataAsOf = `${match[1]} ${match[2]}`;
-      }
-    }
-  } catch {
-    // Silently fail
-  }
+  const [ktmbLocalDate, prasaranaLocalDate, headlineResult, prasaranaMetaResult] =
+    await Promise.all([
+      // 1a. Local KTMB daily JSON
+      getLatestDateFromLocalJson(baseUrl, 'ktmb-daily.json'),
+      // 1b. Local Prasarana daily JSON
+      getLatestDateFromLocalJson(baseUrl, 'prasarana-daily.json'),
+      // 2. Headline API (latest date from 3-month window)
+      (async (): Promise<string> => {
+        try {
+          const res = await fetchWithTimeout(
+            `https://api.data.gov.my/data-catalogue?id=ridership_headline&date_start=${threeMonthsAgo}@date&date_end=${today}@date`,
+            10000
+          );
+          if (res && res.ok) {
+            const rows = (await res.json()) as Record<string, unknown>[];
+            if (Array.isArray(rows) && rows.length > 0) {
+              const dates = rows
+                .map((r) => r.date as string)
+                .filter(Boolean)
+                .sort();
+              return dates[dates.length - 1] ?? '';
+            }
+          }
+        } catch { /* silently fail */ }
+        return '';
+      })(),
+      // 3. Prasarana metadata from datagovmy-meta repo
+      (async () => {
+        try {
+          const res = await fetchWithTimeout(
+            'https://raw.githubusercontent.com/data-gov-my/datagovmy-meta/main/explorers/prasarana.json',
+            8000
+          );
+          if (res && res.ok) {
+            const prasarana = (await res.json()) as {
+              data_last_updated?: string;
+              data_next_update?: string;
+              tables?: {
+                PrasaranaTimeseries?: {
+                  data_as_of?: string;
+                  source?: string;
+                };
+              };
+            };
+            return {
+              last_updated: prasarana.data_last_updated ?? '',
+              next_update: prasarana.data_next_update ?? '',
+              data_as_of: prasarana.tables?.PrasaranaTimeseries?.data_as_of ?? '',
+              source: prasarana.tables?.PrasaranaTimeseries?.source ?? '',
+            };
+          }
+        } catch { /* silently fail */ }
+        return { data_as_of: '', last_updated: '', next_update: '', source: '' };
+      })(),
+    ]);
 
-  // ── 4. Fetch prasarana.json from datagovmy-meta repo ──
-  let prasaranaMeta = { data_as_of: '', last_updated: '', next_update: '', source: '' };
-  try {
-    const res = await fetchWithTimeout(
-      'https://raw.githubusercontent.com/data-gov-my/datagovmy-meta/main/explorers/prasarana.json',
-      8000
-    );
-    if (res && res.ok) {
-      const prasarana = (await res.json()) as {
-        data_last_updated?: string;
-        data_next_update?: string;
-        tables?: {
-          PrasaranaTimeseries?: {
-            data_as_of?: string;
-            source?: string;
-          };
-        };
-      };
-      prasaranaMeta = {
-        last_updated: prasarana.data_last_updated ?? '',
-        next_update: prasarana.data_next_update ?? '',
-        data_as_of: prasarana.tables?.PrasaranaTimeseries?.data_as_of ?? '',
-        source: prasarana.tables?.PrasaranaTimeseries?.source ?? '',
-      };
-    }
-  } catch {
-    // Silently fail
-  }
+  const headlineLatest = headlineResult;
+  const prasaranaMeta = prasaranaMetaResult;
 
-  // ── 5. Compute holiday-aware freshness ──
+  // ── 4. Compute holiday-aware freshness ──
   const ktmbDate = ktmbLocalDate?.split(' ')[0] ?? '';
   const ktmbFreshness = computeODFreshness(ktmbDate, today, holidaySet);
   const prasaranaDate = prasaranaLocalDate ?? '';
   const prasaranaFreshness = computeODFreshness(prasaranaDate, today, holidaySet);
   const headlineFreshness = computeHeadlineFreshness(headlineLatest, today);
 
-  // ── 6. Compute freshest date ──
+  // ── 5. Compute freshest date ──
   const candidates: Array<{ date: string; source: string }> = [];
   if (ktmbFreshness.latest_date) candidates.push({ date: ktmbFreshness.latest_date, source: 'KTMB OD' });
   if (prasaranaFreshness.latest_date) candidates.push({ date: prasaranaFreshness.latest_date, source: 'Rapid Rail OD' });
@@ -336,7 +325,7 @@ export async function GET(request: NextRequest) {
 
   const freshest = candidates.length > 0 ? candidates[0] : { date: '', source: '' };
 
-  // ── 7. Generate pipeline insights ──
+  // ── 6. Generate pipeline insights ──
   const insights: string[] = [];
   if (holidayContext) {
     if (holidayContext.todayIsBlackout) {
@@ -372,7 +361,7 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json(results, {
     headers: {
-      'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=1800',
+      'Cache-Control': 'public, s-maxage=1800, stale-while-revalidate=3600',
     },
   });
 }

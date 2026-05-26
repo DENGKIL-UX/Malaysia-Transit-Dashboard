@@ -274,6 +274,65 @@ export function countBlackoutDaysBefore(
   return { count, reasons };
 }
 
+// ── Prebuilt holiday JSON format ──────────────────────────────────
+
+interface PrebuiltClassification {
+  date: string;
+  day_type: string;
+  is_public_holiday: boolean;
+  holiday_name?: string;
+  confidence: string;
+  warnings?: string[];
+}
+
+interface PrebuiltHolidayFile {
+  year: number;
+  source: string;
+  holidays: number;
+  classifications: PrebuiltClassification[];
+}
+
+const MAJOR_HOLIDAY_KEYWORDS = [
+  'hari raya',
+  'chinese new year',
+  'deepavali',
+  'christmas',
+  'eid',
+];
+
+/**
+ * Try to load holidays from a prebuilt /holidays-{year}.json file.
+ * Returns null if the file doesn't exist or can't be parsed.
+ */
+async function loadPrebuiltHolidays(year: number): Promise<Holiday[] | null> {
+  try {
+    const res = await fetch(`/holidays-${year}.json`);
+    if (!res.ok) return null;
+    const data = (await res.json()) as PrebuiltHolidayFile;
+    if (!data.classifications) return null;
+
+    const holidays: Holiday[] = [];
+    for (const c of data.classifications) {
+      if (c.is_public_holiday && c.holiday_name) {
+        holidays.push({
+          date: c.date,
+          name: c.holiday_name,
+          localName: c.holiday_name,
+          scope: 'national' as const,
+          confirmed: c.confidence === 'high' || c.confidence === 'medium',
+          isReplacement: c.holiday_name.includes('(Cuti Ganti)'),
+          isMajor: MAJOR_HOLIDAY_KEYWORDS.some((m) =>
+            c.holiday_name!.toLowerCase().includes(m)
+          ),
+        });
+      }
+    }
+    return holidays;
+  } catch {
+    return null;
+  }
+}
+
 // ── Simple in-memory cache for holiday data ─────────────────────────
 
 let cachedHolidaySet: Set<string> | null = null;
@@ -282,6 +341,8 @@ let cachedHolidays: Holiday[] = [];
 
 /**
  * Get holidays for the current year with caching.
+ * Strategy: prebuilt JSON first → Nager API fallback.
+ * Prebuilt files eliminate 2 external API calls on every cold start.
  */
 export async function getCachedHolidays(): Promise<{
   holidays: Holiday[];
@@ -293,15 +354,32 @@ export async function getCachedHolidays(): Promise<{
     return { holidays: cachedHolidays, holidaySet: cachedHolidaySet };
   }
 
-  // Also fetch next year's holidays (for Dec → Jan transitions)
-  const [thisYear, nextYear] = await Promise.all([
-    getHolidaysForYear(year),
-    getHolidaysForYear(year + 1),
+  // Strategy 1: Load from prebuilt JSON files (0 external API calls)
+  const [thisYearPrebuilt, nextYearPrebuilt] = await Promise.all([
+    loadPrebuiltHolidays(year),
+    loadPrebuiltHolidays(year + 1),
   ]);
 
-  const all = [...thisYear, ...nextYear];
-  cachedHolidays = all;
-  cachedHolidaySet = getHolidayDateSet(all);
+  let allHolidays: Holiday[];
+
+  if (thisYearPrebuilt && nextYearPrebuilt) {
+    // Both years available from prebuilt files — best case
+    allHolidays = [...thisYearPrebuilt, ...nextYearPrebuilt];
+  } else if (thisYearPrebuilt) {
+    // Current year prebuilt, fetch next year from Nager
+    const nextYear = await getHolidaysForYear(year + 1);
+    allHolidays = [...thisYearPrebuilt, ...nextYear];
+  } else {
+    // Fallback: fetch both from Nager API (original behavior)
+    const [thisYear, nextYear] = await Promise.all([
+      getHolidaysForYear(year),
+      getHolidaysForYear(year + 1),
+    ]);
+    allHolidays = [...thisYear, ...nextYear];
+  }
+
+  cachedHolidays = allHolidays;
+  cachedHolidaySet = getHolidayDateSet(allHolidays);
   cachedYear = year;
 
   return { holidays: cachedHolidays, holidaySet: cachedHolidaySet };

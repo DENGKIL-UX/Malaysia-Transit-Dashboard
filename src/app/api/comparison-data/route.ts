@@ -156,8 +156,10 @@ export async function GET(request: NextRequest) {
     }
 
     // 1. Load base headline data from local JSON
+    // Uses headline-recent.json (2024+, ~241KB) instead of full file (~736KB)
+    // to reduce CPU time from JSON.parse on cold cache miss.
     const baseUrl = new URL(request.url).origin;
-    const res = await fetch(`${baseUrl}/headline-daily.json`);
+    const res = await fetch(`${baseUrl}/headline-recent.json`);
     if (!res.ok) {
       return NextResponse.json(
         { error: 'Failed to load headline data' },
