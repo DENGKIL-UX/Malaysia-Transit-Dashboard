@@ -391,6 +391,7 @@ export default function Home() {
     holidaySource,
     holidayFallback,
     hasLowConfidence,
+    availableDates,
     loading: analyticsLoading,
   } = useAnalytics();
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
@@ -694,6 +695,7 @@ export default function Home() {
                     selected={selectedDates}
                     onSelect={setSelectedDates}
                     holidayMap={holidayMap}
+                    availableDates={availableDates}
                     defaultMonth={new Date(latest.date + 'T00:00:00')}
                   />
                 ) : (
@@ -705,6 +707,7 @@ export default function Home() {
                     dateB={selectedDates[1]}
                     dataA={dataA}
                     dataB={dataB}
+                    availableDates={availableDates}
                   />
                 )}
               </div>

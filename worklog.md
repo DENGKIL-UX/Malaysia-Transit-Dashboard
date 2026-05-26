@@ -483,3 +483,26 @@ Stage Summary:
 - Top Routes — Rapid Rail: Data Period badge (24 Apr – 23 May · 30 days), "Aggregated over 30 days" footer
 - Top Routes — KTMB: Data Period badge (29 Mar – 24 May · 57 days), "Aggregated over 57 days" footer
 - Files modified: busiest-stations-rapid.tsx, busiest-stations-ktmb.tsx, top-routes.tsx
+
+---
+Task ID: 1
+Agent: Main
+Task: Fix date comparison — zeros, wrong field mapping, data source inconsistency
+
+Work Log:
+- Diagnosed root cause: useAnalytics() used /api/ridership-extended (external data.gov.my API) while main dashboard used /api/ridership (local JSON). External API was stale/inconsistent → many dates returned no data → zero comparisons.
+- Found critical bug: /api/ridership mapped `rail_mrt_kajang` to `prasarana?.brt` (BRT Sunway data) instead of MRT Kajang. MRT Kajang data doesn't exist in local JSON — only in headline API.
+- Fixed /api/ridership field mapping: rail_mrt_kajang set to 0 (honest), brt mapped to bus_brt
+- Changed useAnalytics() to MCP-first approach (same as useRidership()): MCP → headline API (full data including MRT Kajang), fallback → /api/ridership (local JSON, correct but missing MRT Kajang)
+- Widened fetch window from 90 to 180 days to cover all available data
+- Added `availableDates` Set to useAnalytics() return value
+- Updated CalendarPicker: dims dates without data (disabled + opacity-30), shows "No data" legend item, displays data range hint
+- Updated ComparisonChart: shows helpful empty state when both dates out of range, shows ⚠ warnings for individual out-of-range dates, preserves day-type info for in-range dates
+- Passed availableDates from page.tsx to both CalendarPicker and ComparisonChart
+
+Stage Summary:
+- 6 files modified: use-analytics.ts, /api/ridership/route.ts, calendar-picker.tsx, comparison-chart.tsx, page.tsx
+- Root cause fixed: consistent data source (MCP → headline API) for both main dashboard and comparison chart
+- Field mapping bug fixed: brt no longer mislabeled as mrt_kajang
+- Calendar now clearly indicates which dates have data
+- Comparison chart shows meaningful empty states instead of silent zeros

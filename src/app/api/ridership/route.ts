@@ -24,7 +24,7 @@ interface PrasaranaDay {
 
 interface MergedRow {
   date: string;
-  rail_mrt_kajang: number;
+  rail_mrt_kajang: number;  // NOT in local JSON — only from headline API
   rail_mrt_pjy: number;
   rail_lrt_kj: number;
   rail_lrt_ampang: number;
@@ -34,6 +34,7 @@ interface MergedRow {
   rail_intercity: number;
   rail_komuter_utara: number;
   rail_tebrau: number;
+  bus_brt: number;         // BRT Sunway (from prasarana parquet)
   bus_rkl: number;
   bus_rkn: number;
   bus_rpn: number;
@@ -115,7 +116,10 @@ export async function GET(request: NextRequest) {
 
       merged.push({
         date,
-        rail_mrt_kajang: prasarana?.brt ?? 0,
+        // NOTE: MRT Kajang (SBK) is NOT available in local parquet JSON.
+        // It only exists in the headline dataset. Set to 0 here —
+        // the MCP route provides full headline data including mrt_kajang.
+        rail_mrt_kajang: 0,
         rail_mrt_pjy: prasarana?.mrt_pjy ?? 0,
         rail_lrt_kj: prasarana?.lrt_kj ?? 0,
         rail_lrt_ampang: prasarana?.lrt_ampang ?? 0,
@@ -125,6 +129,7 @@ export async function GET(request: NextRequest) {
         rail_intercity: ktmb?.intercity ?? 0,
         rail_komuter_utara: ktmb?.komuter_utara ?? 0,
         rail_tebrau: ktmb?.tebrau ?? 0,
+        bus_brt: prasarana?.brt ?? 0,
         bus_rkl: 0,
         bus_rkn: 0,
         bus_rpn: 0,

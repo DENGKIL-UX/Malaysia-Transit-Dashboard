@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Calendar as CalIcon } from 'lucide-react';
 import {
   format,
@@ -19,17 +19,26 @@ interface Props {
   selected: Date[];
   onSelect: (dates: Date[]) => void;
   holidayMap: Record<string, HolidayMapEntry>;
+  /** Dates that have ridership data available */
+  availableDates?: Set<string>;
   /** Preferred starting month — calendar uses this instead of 2 months ago */
   defaultMonth?: Date;
 }
 
-export function CalendarPicker({ selected, onSelect, holidayMap, defaultMonth }: Props) {
+export function CalendarPicker({ selected, onSelect, holidayMap, availableDates, defaultMonth }: Props) {
   const [currentMonth, setCurrentMonth] = useState(() => {
     if (defaultMonth) return defaultMonth;
     const d = new Date();
     d.setMonth(d.getMonth() - 2);
     return d;
   });
+
+  // Compute the data range from available dates
+  const dataRange = useMemo(() => {
+    if (!availableDates || availableDates.size === 0) return null;
+    const sorted = [...availableDates].sort();
+    return { min: sorted[0], max: sorted[sorted.length - 1] };
+  }, [availableDates]);
 
 
   const days = eachDayOfInterval({
@@ -100,6 +109,8 @@ export function CalendarPicker({ selected, onSelect, holidayMap, defaultMonth }:
           const dateStr = format(day, 'yyyy-MM-dd');
           const isSelected = selected.find((s) => isSameDay(s, day));
           const highlight = holidayMap[dateStr];
+          const hasData = availableDates ? availableDates.has(dateStr) : true;
+          const isOutOfRange = !hasData && availableDates && availableDates.size > 0;
 
           return (
             <button
@@ -111,14 +122,21 @@ export function CalendarPicker({ selected, onSelect, holidayMap, defaultMonth }:
                 ${
                   isSelected
                     ? 'bg-[#85AB8B] text-[var(--accent-heading)] shadow-lg shadow-[#85AB8B]/20'
-                    : 'text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]'
+                    : isOutOfRange
+                      ? 'text-[var(--text-ghost)] opacity-30 cursor-default'
+                      : 'text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]'
                 }
               `}
-              title={highlight?.name ?? undefined}
+              title={
+                isOutOfRange
+                  ? 'No data available for this date'
+                  : highlight?.name ?? undefined
+              }
+              disabled={isOutOfRange}
             >
               {format(day, 'd')}
               {/* Holiday / day-type dot */}
-              {highlight && !isSelected && (
+              {highlight && !isSelected && !isOutOfRange && (
                 <span
                   className={`
                     absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full
@@ -135,7 +153,7 @@ export function CalendarPicker({ selected, onSelect, holidayMap, defaultMonth }:
                 />
               )}
               {/* Warning pulse for estimated holidays */}
-              {highlight?.confidence === 'low' && !isSelected && (
+              {highlight?.confidence === 'low' && !isSelected && !isOutOfRange && (
                 <span
                   className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-orange-500 rounded-full animate-pulse"
                   title={highlight.warnings[0] ?? 'Estimated date'}
@@ -148,6 +166,12 @@ export function CalendarPicker({ selected, onSelect, holidayMap, defaultMonth }:
 
       {/* Legend */}
       <div className="flex flex-wrap items-center gap-3 mt-3 pt-3 border-t border-[var(--border-faint)]">
+        {availableDates && availableDates.size > 0 && (
+          <span className="flex items-center gap-1 text-[9px] text-[var(--text-faint)]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-ghost)] opacity-30" />
+            No data
+          </span>
+        )}
         <span className="flex items-center gap-1 text-[9px] text-[var(--text-faint)]">
           <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
           Confirmed
@@ -168,6 +192,16 @@ export function CalendarPicker({ selected, onSelect, holidayMap, defaultMonth }:
           · No dot = weekday
         </span>
       </div>
+
+      {/* Data range hint */}
+      {dataRange && (
+        <div className="text-[9px] text-[var(--text-ghost)] mb-3">
+          Data available:{' '}
+          <span className="text-[var(--text-muted)] tabular-nums">
+            {dataRange.min} → {dataRange.max}
+          </span>
+        </div>
+      )}
 
       {/* Comparison hint */}
       {selected.length === 2 && (

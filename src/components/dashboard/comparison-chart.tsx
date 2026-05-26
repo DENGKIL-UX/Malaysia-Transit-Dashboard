@@ -9,6 +9,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { format } from 'date-fns';
+import { AlertCircle } from 'lucide-react';
 import type { EnrichedDay } from '@/hooks/use-analytics';
 
 interface Props {
@@ -16,6 +17,8 @@ interface Props {
   dateB: Date;
   dataA: EnrichedDay | undefined;
   dataB: EnrichedDay | undefined;
+  /** Dates that have ridership data available */
+  availableDates?: Set<string>;
 }
 
 const LINES = [
@@ -72,18 +75,57 @@ function ChartTooltip({
   );
 }
 
-export function ComparisonChart({ dateA, dateB, dataA, dataB }: Props) {
+export function ComparisonChart({ dateA, dateB, dataA, dataB, availableDates }: Props) {
+  const labelA = format(dateA, 'dd MMM');
+  const labelB = format(dateB, 'dd MMM');
+  const noDataA = !dataA;
+  const noDataB = !dataB;
+
+  // Check if selected dates are within the available data range
+  const dateAStr = format(dateA, 'yyyy-MM-dd');
+  const dateBStr = format(dateB, 'yyyy-MM-dd');
+  const dateAInRange = !availableDates || availableDates.size === 0 || availableDates.has(dateAStr);
+  const dateBInRange = !availableDates || availableDates.size === 0 || availableDates.has(dateBStr);
+  const bothOutOfRange = !dateAInRange && !dateBInRange;
+
+  // If both dates are completely out of data range, show a helpful empty state
+  if (bothOutOfRange) {
+    return (
+      <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 animate-fade-in-up">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-sm font-semibold text-[var(--text-primary)]">
+              Date Comparison
+            </h3>
+            <p className="text-[10px] text-[var(--text-faint)] mt-0.5">
+              Ridership across all rail lines
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-col items-center justify-center h-56 gap-3">
+          <AlertCircle className="w-8 h-8 text-[var(--text-ghost)]" />
+          <div className="text-center">
+            <p className="text-sm font-medium text-[var(--text-muted)]">
+              No data for selected dates
+            </p>
+            <p className="text-[11px] text-[var(--text-faint)] mt-1">
+              Both {labelA} and {labelB} are outside the available data range.
+            </p>
+            <p className="text-[10px] text-[var(--text-ghost)] mt-2">
+              Dates marked dim in the calendar have no ridership data.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const chartData = LINES.map((line) => ({
     name: line.label,
     [line.key + 'A']: dataA ? (dataA[line.key] as number) : 0,
     [line.key + 'B']: dataB ? (dataB[line.key] as number) : 0,
     color: line.color,
   }));
-
-  const labelA = format(dateA, 'dd MMM');
-  const labelB = format(dateB, 'dd MMM');
-  const noDataA = !dataA;
-  const noDataB = !dataB;
 
   return (
     <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 animate-fade-in-up">
@@ -167,7 +209,26 @@ export function ComparisonChart({ dateA, dateB, dataA, dataB }: Props) {
 
       {/* Data availability notes */}
       <div className="mt-3 pt-3 border-t border-[var(--border-faint)]">
-        {dataA && (
+        {/* Out-of-range warnings */}
+        {!dateAInRange && (
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[9px] text-orange-400/80 w-16">{labelA}:</span>
+            <span className="text-[9px] text-orange-400/70">
+              ⚠ No data available for this date
+            </span>
+          </div>
+        )}
+        {!dateBInRange && (
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[9px] text-orange-400/80 w-16">{labelB}:</span>
+            <span className="text-[9px] text-orange-400/70">
+              ⚠ No data available for this date
+            </span>
+          </div>
+        )}
+
+        {/* Day-type info for in-range dates */}
+        {dataA && dateAInRange && (
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[9px] text-[var(--text-faint)] w-16">{labelA}:</span>
             <span className="text-[9px] text-[var(--text-faint)]">
@@ -180,7 +241,7 @@ export function ComparisonChart({ dateA, dateB, dataA, dataB }: Props) {
             </span>
           </div>
         )}
-        {dataB && (
+        {dataB && dateBInRange && (
           <div className="flex items-center gap-2">
             <span className="text-[9px] text-[var(--text-faint)] w-16">{labelB}:</span>
             <span className="text-[9px] text-[var(--text-faint)]">
