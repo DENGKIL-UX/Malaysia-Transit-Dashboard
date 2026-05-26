@@ -693,3 +693,20 @@ Stage Summary:
 - Files modified: page.tsx, transit-breakdown.tsx, store.ts, use-data-metadata.ts, use-analytics.ts
 - Files created: data-update-toast.tsx
 - Lint clean (0 new errors)
+---
+Task ID: 1
+Agent: main
+Task: Fix Busiest Stations "tree trunk" layout — widen cards and reduce side margins on desktop
+
+Work Log:
+- Analyzed screenshot with VLM: identified that 35-40% of viewport was empty dark margins due to max-w-[1400px] container
+- Changed Station Analytics + Top Routes from inside max-w-[1400px] to a dedicated max-w-[1800px] container
+- Kept 12-col asymmetric grid: Rapid Rail at 7/8 cols, KTMB at 5/4 cols
+- Removed duplicate sections (old ones were left inside the 1400px container)
+- Reduced scrollable max-heights: Rapid Rail 420→380px, KTMB 360→340px, Top Routes 360→340px
+
+Stage Summary:
+- Busiest Stations + Top Routes now use max-w-[1800px] container instead of max-w-[1400px]
+- On 1600px viewport: cards now fill ~90% of width vs ~65% before
+- 7/5 asymmetric split gives Rapid Rail cards more horizontal room for line badges and progress bars
+- items-start prevents equal-height stretching

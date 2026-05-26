@@ -645,9 +645,14 @@ export default function Home() {
               <div className="mb-6">
                 <DayTypeAnalytics />
               </div>
+            </div>
+          </div>
 
-              {/* Busiest Stations Section */}
-              <div className="flex items-center gap-3 mb-5 mt-10 animate-fade-in-up">
+          {/* ═══ Station Analytics — full-bleed wider section for wide desktops ═══ */}
+          <div className="px-4 sm:px-6 md:px-10 pb-8">
+            <div className="max-w-[1800px] mx-auto">
+              {/* Station Analytics Section Header */}
+              <div className="flex items-center gap-3 mb-5 mt-4 animate-fade-in-up">
                 <div className="w-1 h-6 rounded-full bg-amber-400/40" />
                 <div>
                   <h2 className="text-base font-semibold text-[var(--text-primary)]">
@@ -659,7 +664,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Station Analytics — wider asymmetric split like ridership chart */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 mb-6 items-start">
                 <div className="lg:col-span-7 xl:col-span-8">
                   <BusiestStationsRapidRail />
