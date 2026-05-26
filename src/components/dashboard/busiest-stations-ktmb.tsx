@@ -93,16 +93,22 @@ export function BusiestStationsKTMB() {
     if (canGoNext) setWindowOffset(o => o - 1);
   }, [canGoNext]);
 
-  // Compute windowed station rankings for Overall tab
+  // Compute windowed station rankings for Overall tab.
+  // Stations without station_series data (no time-series) are excluded —
+  // showing "0" for stations that are genuinely busy is misleading.
   const windowedStations = useMemo(() => {
     if (!data || !activeWindow) return [];
     // Build date set that handles KTMB's "YYYY-MM-DD HH:mm:ss" format
     const windowDatePrefixes = new Set(Array.from(activeWindow.dateSet));
 
     return data.top_overall
+      .filter(station => {
+        // Only include stations that have actual time-series data
+        const series = data.station_series[station.name];
+        return series && series.length > 0;
+      })
       .map(station => {
         const series = data.station_series[station.name];
-        if (!series) return { ...station, passengers: 0 };
         const total = series
           .filter(d => windowDatePrefixes.has(d.date.slice(0, 10)))
           .reduce((sum, d) => sum + d.passengers, 0);
