@@ -76,10 +76,10 @@ export function TransitBreakdown() {
 
   return (
     <div
-      className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 shadow-lg animate-fade-in-up"
+      className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 shadow-lg animate-fade-in-up flex flex-col"
       style={{ animationDelay: '550ms', opacity: 0 }}
     >
-      <div className="mb-5">
+      <div className="mb-4 shrink-0">
         <h3 className="text-sm font-semibold text-[var(--text-primary)]">
           Line Breakdown
         </h3>
@@ -88,7 +88,8 @@ export function TransitBreakdown() {
         </p>
       </div>
 
-      <div className="space-y-4">
+      {/* Scrollable line list — constrained height to match chart card */}
+      <div className="space-y-3 overflow-y-auto flex-1 min-h-0 max-h-[380px] pr-1 custom-scrollbar">
         {lines.map((line) => {
           const value = latest?.[line.key] ?? 0;
           const pct = maxVal > 0 ? (value / maxVal) * 100 : 0;
@@ -96,7 +97,7 @@ export function TransitBreakdown() {
 
           return (
             <div key={line.key} className="group">
-              <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
                   <span className={cn('w-1.5 h-1.5 rounded-full', line.bgColor)} />
                   <span className="text-xs font-medium text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors">
@@ -122,7 +123,7 @@ export function TransitBreakdown() {
                   </div>
                 </div>
               </div>
-              <div className="h-1.5 bg-[var(--surface-card)] rounded-full overflow-hidden">
+              <div className="h-1 bg-[var(--surface-card)] rounded-full overflow-hidden">
                 <div
                   className={cn('h-full rounded-full transition-all duration-700 ease-out', line.bgColor, 'opacity-60')}
                   style={{ width: `${pct}%` }}
@@ -134,7 +135,7 @@ export function TransitBreakdown() {
         {/* BRT Sunway - Batch data */}
         {latestPrasarana && (
           <div className="group">
-            <div className="flex items-center justify-between mb-1.5">
+            <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-2">
                 <span className={cn('w-1.5 h-1.5 rounded-full', BRT_LINE.bgColor)} />
                 <span className="text-xs font-medium text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors">
@@ -163,7 +164,7 @@ export function TransitBreakdown() {
                 )}
               </div>
             </div>
-            <div className="h-1.5 bg-[var(--surface-card)] rounded-full overflow-hidden">
+            <div className="h-1 bg-[var(--surface-card)] rounded-full overflow-hidden">
               <div
                 className={cn('h-full rounded-full transition-all duration-700 ease-out', BRT_LINE.bgColor, 'opacity-60')}
                 style={{ width: `${maxVal > 0 ? (latestPrasarana.brt / maxVal) * 100 : 0}%` }}
@@ -173,7 +174,7 @@ export function TransitBreakdown() {
         )}
       </div>
 
-      <div className="mt-5 pt-3 border-t border-[var(--border-faint)]">
+      <div className="mt-4 pt-3 border-t border-[var(--border-faint)] shrink-0">
         <div className="flex items-center justify-between">
           <span className="text-[10px] text-[var(--text-faint)] uppercase tracking-widest">
             Total Ridership
