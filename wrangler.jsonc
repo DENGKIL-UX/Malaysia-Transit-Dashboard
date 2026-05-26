@@ -27,16 +27,5 @@
                 // Enable image optimization
                 // see https://opennext.js.org/cloudflare/howtos/image
                 "binding": "IMAGES"
-        },
-        "r2_buckets": [
-                {
-                        // R2 incremental cache — persists cached API responses across
-                        // Worker isolate evictions. Without this, in-memory caches
-                        // die on every recycle, forcing expensive re-computation.
-                        // Free tier: 10GB storage, 10M reads/month, 1M writes/month.
-                        // see https://opennext.js.org/cloudflare/caching
-                        "binding": "CACHE_BUCKET",
-                        "bucket_name": "malaysia-transit-cache"
-                }
-        ]
+        }
 }
