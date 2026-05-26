@@ -33,6 +33,7 @@ import { TopRoutesRapidRail, TopRoutesKTMB } from '@/components/dashboard/top-ro
 import { DayTypeAnalytics } from '@/components/dashboard/day-type-analytics';
 import { FeatureCardsSection } from '@/components/dashboard/feature-cards';
 import { OfflineBanner } from '@/components/dashboard/offline-banner';
+import { InstallPrompt } from '@/components/dashboard/install-prompt';
 import { PipelineStatusPanel } from '@/components/dashboard/pipeline-status';
 import { useRidership } from '@/hooks/use-ridership';
 import { useAnalytics } from '@/hooks/use-analytics';
@@ -446,6 +447,9 @@ export default function Home() {
     <section className="relative w-full min-h-screen overflow-hidden bg-[var(--bg-base)]">
       {/* Offline banner */}
       <OfflineBanner />
+
+      {/* A2HS install prompt (Chrome Android only) */}
+      <InstallPrompt />
 
       {/* Ambient orbs */}
       <div className="fixed inset-0 pointer-events-none" aria-hidden="true">

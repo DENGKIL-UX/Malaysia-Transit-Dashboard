@@ -80,13 +80,13 @@ export default function RootLayout({
         {/* Theme color fallback for browsers that don't support viewport export */}
         <meta name="theme-color" content="#070e07" />
 
-        {/* Unregister any legacy service workers (removed in A2HS cleanup) */}
+        {/* Register minimal service worker — Chrome requires SW with fetch handler for A2HS install prompt */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
               if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(function(regs) {
-                  regs.forEach(function(reg) { reg.unregister(); });
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').catch(function() {});
                 });
               }
             `,
