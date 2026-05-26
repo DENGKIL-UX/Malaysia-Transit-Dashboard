@@ -76,8 +76,9 @@ function classifyDay(
 }
 
 export interface DataRangeInfo {
-  headlineThrough: string | null;  // Last date with full 14-service data
-  ktmbThrough: string | null;      // Last date with KTMB data (may extend beyond headline)
+  headlineThrough: string | null;    // Last date with audited headline data
+  prasaranaThrough: string | null;   // Last date with Prasarana data (from parquet)
+  ktmbThrough: string | null;        // Last date with KTMB data
   totalDays: number;
   minDate: string | null;
   maxDate: string | null;
@@ -138,6 +139,7 @@ export function useAnalytics() {
         if (response.full_range) {
           setDataRange({
             headlineThrough: response.full_range.headline_through ?? null,
+            prasaranaThrough: response.full_range.prasarana_through ?? null,
             ktmbThrough: response.full_range.ktmb_through ?? null,
             totalDays: response.full_range.total_days ?? 0,
             minDate: response.full_range.min ?? null,

@@ -711,6 +711,7 @@ export default function Home() {
                     dataB={dataB}
                     availableDates={availableDates}
                     headlineThrough={dataRange?.headlineThrough}
+                    prasaranaThrough={dataRange?.prasaranaThrough}
                   />
                 )}
               </div>

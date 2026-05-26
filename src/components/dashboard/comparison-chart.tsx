@@ -17,10 +17,9 @@ interface Props {
   dateB: Date;
   dataA: EnrichedDay | undefined;
   dataB: EnrichedDay | undefined;
-  /** Dates that have ridership data available */
   availableDates?: Set<string>;
-  /** Last date with full 14-service data */
   headlineThrough?: string | null;
+  prasaranaThrough?: string | null;
 }
 
 const LINES = [
@@ -62,10 +61,7 @@ function ChartTooltip({
       {payload.map((item) => (
         <div key={item.dataKey} className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <span
-              className="w-2 h-2 rounded-full"
-              style={{ backgroundColor: item.color }}
-            />
+            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
             <span className="text-xs text-[var(--text-muted)]">{item.name}</span>
           </div>
           <span className="text-xs font-semibold text-[var(--text-primary)] tabular-nums">
@@ -77,52 +73,43 @@ function ChartTooltip({
   );
 }
 
-export function ComparisonChart({ dateA, dateB, dataA, dataB, availableDates, headlineThrough }: Props) {
+export function ComparisonChart({ dateA, dateB, dataA, dataB, availableDates, headlineThrough, prasaranaThrough }: Props) {
   const labelA = format(dateA, 'dd MMM');
   const labelB = format(dateB, 'dd MMM');
   const noDataA = !dataA;
   const noDataB = !dataB;
 
-  // Check if selected dates are within the available data range
   const dateAStr = format(dateA, 'yyyy-MM-dd');
   const dateBStr = format(dateB, 'yyyy-MM-dd');
   const dateAInRange = !availableDates || availableDates.size === 0 || availableDates.has(dateAStr);
   const dateBInRange = !availableDates || availableDates.size === 0 || availableDates.has(dateBStr);
   const bothOutOfRange = !dateAInRange && !dateBInRange;
 
-  // Check if dates are beyond headline range (KTMB-only data)
-  const dateAPartial = headlineThrough && dateAStr > headlineThrough;
-  const dateBPartial = headlineThrough && dateBStr > headlineThrough;
+  // Pre-audit zone: beyond headline audited data
+  const dateAPreAudit = headlineThrough && dateAStr > headlineThrough;
+  const dateBPreAudit = headlineThrough && dateBStr > headlineThrough;
 
-  // Prasarana line keys (affected by headline lag)
+  // Has Prasarana OD data (pre-audit but with Rapid Rail data)
+  const dateAKtmbOnly = dateAPreAudit && prasaranaThrough && dateAStr > prasaranaThrough;
+  const dateBKtmbOnly = dateBPreAudit && prasaranaThrough && dateBStr > prasaranaThrough;
+
   const PRASARANA_KEYS = ['mrtKajang', 'mrtPutrajaya', 'lrtAmpang', 'lrtKelanaJaya', 'monorail'] as const;
 
-  // If both dates are completely out of data range, show a helpful empty state
   if (bothOutOfRange) {
     return (
       <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 animate-fade-in-up">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-sm font-semibold text-[var(--text-primary)]">
-              Date Comparison
-            </h3>
-            <p className="text-[10px] text-[var(--text-faint)] mt-0.5">
-              Ridership across all rail lines
-            </p>
+            <h3 className="text-sm font-semibold text-[var(--text-primary)]">Date Comparison</h3>
+            <p className="text-[10px] text-[var(--text-faint)] mt-0.5">Ridership across all rail lines</p>
           </div>
         </div>
         <div className="flex flex-col items-center justify-center h-56 gap-3">
           <AlertCircle className="w-8 h-8 text-[var(--text-ghost)]" />
           <div className="text-center">
-            <p className="text-sm font-medium text-[var(--text-muted)]">
-              No data for selected dates
-            </p>
-            <p className="text-[11px] text-[var(--text-faint)] mt-1">
-              Both {labelA} and {labelB} are outside the available data range.
-            </p>
-            <p className="text-[10px] text-[var(--text-ghost)] mt-2">
-              Dates marked dim in the calendar have no ridership data.
-            </p>
+            <p className="text-sm font-medium text-[var(--text-muted)]">No data for selected dates</p>
+            <p className="text-[11px] text-[var(--text-faint)] mt-1">Both {labelA} and {labelB} are outside the available data range.</p>
+            <p className="text-[10px] text-[var(--text-ghost)] mt-2">Dates marked dim in the calendar have no ridership data.</p>
           </div>
         </div>
       </div>
@@ -134,38 +121,30 @@ export function ComparisonChart({ dateA, dateB, dataA, dataB, availableDates, he
     [line.key + 'A']: dataA ? (dataA[line.key] as number) : 0,
     [line.key + 'B']: dataB ? (dataB[line.key] as number) : 0,
     color: line.color,
-    isPartialA: dateAPartial && PRASARANA_KEYS.includes(line.key as typeof PRASARANA_KEYS[number]),
-    isPartialB: dateBPartial && PRASARANA_KEYS.includes(line.key as typeof PRASARANA_KEYS[number]),
+    isPartialA: dateAKtmbOnly && PRASARANA_KEYS.includes(line.key as typeof PRASARANA_KEYS[number]),
+    isPartialB: dateBKtmbOnly && PRASARANA_KEYS.includes(line.key as typeof PRASARANA_KEYS[number]),
   }));
 
   return (
     <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 animate-fade-in-up">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
         <div>
-          <h3 className="text-sm font-semibold text-[var(--text-primary)]">
-            Date Comparison
-          </h3>
-          <p className="text-[10px] text-[var(--text-faint)] mt-0.5">
-            Ridership across all rail lines
-          </p>
+          <h3 className="text-sm font-semibold text-[var(--text-primary)]">Date Comparison</h3>
+          <p className="text-[10px] text-[var(--text-faint)] mt-0.5">Ridership across all rail lines</p>
         </div>
         <div className="flex items-center gap-3 text-[10px]">
           <span className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-amber-400" />
             <span className="text-[var(--text-muted)] font-medium">
               {labelA}
-              {noDataA && (
-                <span className="text-red-400/60 ml-1">(no data)</span>
-              )}
+              {noDataA && <span className="text-red-400/60 ml-1">(no data)</span>}
             </span>
           </span>
           <span className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-sky-400" />
             <span className="text-[var(--text-muted)] font-medium">
               {labelB}
-              {noDataB && (
-                <span className="text-red-400/60 ml-1">(no data)</span>
-              )}
+              {noDataB && <span className="text-red-400/60 ml-1">(no data)</span>}
             </span>
           </span>
         </div>
@@ -173,90 +152,57 @@ export function ComparisonChart({ dateA, dateB, dataA, dataB, availableDates, he
 
       <div className="h-56 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={chartData}
-            margin={{ top: 5, right: 5, left: -20, bottom: 0 }}
-          >
-            <XAxis
-              dataKey="name"
-              stroke="var(--chart-axis)"
-              fontSize={10}
-              tickLine={false}
-              axisLine={false}
-              interval={0}
-            />
-            <YAxis
-              stroke="var(--chart-axis)"
-              fontSize={10}
-              tickFormatter={(v: number) => {
-                if (v >= 1000) return `${(v / 1000).toFixed(0)}k`;
-                return v.toString();
-              }}
-              tickLine={false}
-              axisLine={false}
-            />
+          <BarChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+            <XAxis dataKey="name" stroke="var(--chart-axis)" fontSize={10} tickLine={false} axisLine={false} interval={0} />
+            <YAxis stroke="var(--chart-axis)" fontSize={10} tickFormatter={(v: number) => (v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v.toString())} tickLine={false} axisLine={false} />
             <Tooltip content={<ChartTooltip />} />
             {LINES.map((line) => (
-              <Bar
-                key={line.key + 'A'}
-                dataKey={line.key + 'A'}
-                fill="#fbbf24"
-                radius={[3, 3, 0, 0]}
-                maxBarSize={20}
-              />
+              <Bar key={line.key + 'A'} dataKey={line.key + 'A'} fill="#fbbf24" radius={[3, 3, 0, 0]} maxBarSize={20} />
             ))}
             {LINES.map((line) => (
-              <Bar
-                key={line.key + 'B'}
-                dataKey={line.key + 'B'}
-                fill="#38bdf8"
-                radius={[3, 3, 0, 0]}
-                maxBarSize={20}
-              />
+              <Bar key={line.key + 'B'} dataKey={line.key + 'B'} fill="#38bdf8" radius={[3, 3, 0, 0]} maxBarSize={20} />
             ))}
           </BarChart>
         </ResponsiveContainer>
       </div>
 
-      {/* Data availability notes */}
       <div className="mt-3 pt-3 border-t border-[var(--border-faint)]">
-        {/* Partial data warnings (beyond headline range) */}
-        {dateAPartial && (
+        {dateAPreAudit && !dateAKtmbOnly && (
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[9px] text-teal-400/80 w-16">{labelA}:</span>
-            <span className="text-[9px] text-teal-400/70">
-              ◆ KTMB data only — Prasarana pending monthly audit
-            </span>
+            <span className="text-[9px] text-teal-400/70">Prasarana from daily OD (pre-audit)</span>
           </div>
         )}
-        {dateBPartial && (
+        {dateBPreAudit && !dateBKtmbOnly && (
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[9px] text-teal-400/80 w-16">{labelB}:</span>
-            <span className="text-[9px] text-teal-400/70">
-              ◆ KTMB data only — Prasarana pending monthly audit
-            </span>
+            <span className="text-[9px] text-teal-400/70">Prasarana from daily OD (pre-audit)</span>
           </div>
         )}
-
-        {/* Out-of-range warnings */}
+        {dateAKtmbOnly && (
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[9px] text-orange-400/80 w-16">{labelA}:</span>
+            <span className="text-[9px] text-orange-400/70">KTMB only - Prasarana OD not yet available</span>
+          </div>
+        )}
+        {dateBKtmbOnly && (
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[9px] text-orange-400/80 w-16">{labelB}:</span>
+            <span className="text-[9px] text-orange-400/70">KTMB only - Prasarana OD not yet available</span>
+          </div>
+        )}
         {!dateAInRange && (
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[9px] text-orange-400/80 w-16">{labelA}:</span>
-            <span className="text-[9px] text-orange-400/70">
-              ⚠ No data available for this date
-            </span>
+            <span className="text-[9px] text-orange-400/70">No data available for this date</span>
           </div>
         )}
         {!dateBInRange && (
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[9px] text-orange-400/80 w-16">{labelB}:</span>
-            <span className="text-[9px] text-orange-400/70">
-              ⚠ No data available for this date
-            </span>
+            <span className="text-[9px] text-orange-400/70">No data available for this date</span>
           </div>
         )}
-
-        {/* Day-type info for in-range dates */}
         {dataA && dateAInRange && (
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[9px] text-[var(--text-faint)] w-16">{labelA}:</span>
@@ -264,9 +210,7 @@ export function ComparisonChart({ dateA, dateB, dataA, dataB, availableDates, he
               {dataA.day_type === 'holiday' && dataA.holiday_name
                 ? `${dataA.holiday_name} (Holiday)`
                 : `${dataA.day_type.charAt(0).toUpperCase() + dataA.day_type.slice(1)}`}
-              {dataA.confidence !== 'high' && (
-                <span className="text-orange-400/70 ml-1">⚠ est.</span>
-              )}
+              {dataA.confidence !== 'high' && <span className="text-orange-400/70 ml-1">est.</span>}
             </span>
           </div>
         )}
@@ -277,9 +221,7 @@ export function ComparisonChart({ dateA, dateB, dataA, dataB, availableDates, he
               {dataB.day_type === 'holiday' && dataB.holiday_name
                 ? `${dataB.holiday_name} (Holiday)`
                 : `${dataB.day_type.charAt(0).toUpperCase() + dataB.day_type.slice(1)}`}
-              {dataB.confidence !== 'high' && (
-                <span className="text-orange-400/70 ml-1">⚠ est.</span>
-              )}
+              {dataB.confidence !== 'high' && <span className="text-orange-400/70 ml-1">est.</span>}
             </span>
           </div>
         )}

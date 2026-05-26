@@ -23,10 +23,11 @@ interface Props {
   availableDates?: Set<string>;
   /** Preferred starting month — calendar uses this instead of 2 months ago */
   defaultMonth?: Date;
-  /** Data range metadata showing headline vs KTMB coverage */
+  /** Data range metadata showing data tier coverage */
   dataRange?: {
     minDate: string | null;
     headlineThrough: string | null;
+    prasaranaThrough: string | null;
     ktmbThrough: string | null;
     totalDays: number;
   } | null;
@@ -118,7 +119,8 @@ export function CalendarPicker({ selected, onSelect, holidayMap, availableDates,
           const highlight = holidayMap[dateStr];
           const hasData = availableDates ? availableDates.has(dateStr) : true;
           const isOutOfRange = !hasData && availableDates && availableDates.size > 0;
-          const isKtmbOnly = hasData && dataRange?.headlineThrough && dateStr > dataRange.headlineThrough;
+          const isKtmbOnly = hasData && dataRange?.prasaranaThrough && dateStr > dataRange.prasaranaThrough && dataRange?.ktmbThrough && dateStr <= dataRange.ktmbThrough;
+          const isExtended = hasData && dataRange?.headlineThrough && dateStr > dataRange.headlineThrough && dataRange?.prasaranaThrough && dateStr <= dataRange.prasaranaThrough;
 
           return (
             <button
@@ -133,7 +135,9 @@ export function CalendarPicker({ selected, onSelect, holidayMap, availableDates,
                     : isOutOfRange
                       ? 'text-[var(--text-ghost)] opacity-30 cursor-default'
                       : isKtmbOnly
-                        ? 'text-teal-400/80 hover:bg-teal-400/10 hover:text-teal-300'
+                        ? 'text-orange-400/80 hover:bg-orange-400/10 hover:text-orange-300'
+                        : isExtended
+                          ? 'text-teal-400/80 hover:bg-teal-400/10 hover:text-teal-300'
                         : 'text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]'
                 }
               `}
@@ -142,7 +146,9 @@ export function CalendarPicker({ selected, onSelect, holidayMap, availableDates,
                   ? 'No data available for this date'
                   : isKtmbOnly
                     ? 'KTMB data only — Prasarana pending monthly audit'
-                    : highlight?.name ?? undefined
+                    : isExtended
+                      ? 'Prasarana from daily OD (pre-audit)'
+                      : highlight?.name ?? undefined
               }
               disabled={isOutOfRange}
             >
@@ -184,9 +190,15 @@ export function CalendarPicker({ selected, onSelect, holidayMap, availableDates,
             No data
           </span>
         )}
-        {dataRange?.headlineThrough && dataRange?.ktmbThrough && dataRange.ktmbThrough > dataRange.headlineThrough && (
+        {dataRange?.headlineThrough && dataRange?.prasaranaThrough && dataRange.prasaranaThrough > dataRange.headlineThrough && (
           <span className="flex items-center gap-1 text-[9px] text-[var(--text-faint)]">
             <span className="w-1.5 h-1.5 rounded-full bg-teal-400/60" />
+            Prasarana (pre-audit)
+          </span>
+        )}
+        {dataRange?.prasaranaThrough && dataRange?.ktmbThrough && dataRange.ktmbThrough > dataRange.prasaranaThrough && (
+          <span className="flex items-center gap-1 text-[9px] text-[var(--text-faint)]">
+            <span className="w-1.5 h-1.5 rounded-full bg-orange-400/60" />
             KTMB only
           </span>
         )}
@@ -217,19 +229,30 @@ export function CalendarPicker({ selected, onSelect, holidayMap, availableDates,
           <div className="flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-[#85AB8B]" />
             <span>
-              Full data:{' '}
+              Audited:{' '}
               <span className="text-[var(--text-muted)] tabular-nums">
                 {dataRange.minDate} → {dataRange.headlineThrough}
               </span>
             </span>
           </div>
-          {dataRange.headlineThrough && dataRange.ktmbThrough && dataRange.ktmbThrough > dataRange.headlineThrough && (
+          {dataRange.headlineThrough && dataRange.prasaranaThrough && dataRange.prasaranaThrough > dataRange.headlineThrough && (
             <div className="flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-teal-400" />
               <span>
-                <span className="text-teal-400/70">KTMB only</span>:{' '}
+                <span className="text-teal-400/70">Prasarana OD</span>:{' '}
                 <span className="text-[var(--text-muted)] tabular-nums">
-                  {dataRange.headlineThrough} → {dataRange.ktmbThrough}
+                  → {dataRange.prasaranaThrough}
+                </span>
+              </span>
+            </div>
+          )}
+          {dataRange.prasaranaThrough && dataRange.ktmbThrough && dataRange.ktmbThrough > dataRange.prasaranaThrough && (
+            <div className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-orange-400" />
+              <span>
+                <span className="text-orange-400/70">KTMB only</span>:{' '}
+                <span className="text-[var(--text-muted)] tabular-nums">
+                  → {dataRange.ktmbThrough}
                 </span>
               </span>
             </div>
