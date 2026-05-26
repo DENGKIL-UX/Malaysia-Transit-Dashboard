@@ -220,7 +220,7 @@ export function BusiestStationsKTMB() {
           <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-teal-400/10 border border-teal-400/20">
             <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
             <span className="text-[9px] text-teal-400 font-medium">
-              real-time · ~1 day lag
+              batch-updated · T-1 to T-3 lag
             </span>
           </div>
         </div>

@@ -29,7 +29,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: 'RapidStats MY — Malaysia Transit Dashboard',
   description:
-    "Daily ridership analytics for Malaysia's Klang Valley rail and bus networks. Real-time data from data.gov.my.",
+    "Daily ridership analytics for Malaysia's Klang Valley rail and bus networks. Batch-updated data from data.gov.my.",
   keywords: [
     'Malaysia',
     'transit',

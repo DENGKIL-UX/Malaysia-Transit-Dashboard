@@ -151,7 +151,7 @@ function PipelineRow({
             <div className="flex items-center gap-1.5 mt-1">
               <AlertTriangle className="w-3 h-3 text-red-400" />
               <span className="text-[10px] text-red-300">
-                Data overdue — upstream batch may be delayed
+                Data overdue — batch may be delayed (see Holiday Factors)
               </span>
             </div>
           )}
@@ -293,7 +293,7 @@ export function PipelineStatusPanel({ meta }: { meta: DataMetadata | null }) {
             Pipeline Status
           </h2>
           <p className="text-[10px] text-[var(--text-faint)] mt-0.5">
-            Holiday-aware data freshness · Real-time lag analysis
+            Holiday-aware data freshness · Batch lag analysis
           </p>
         </div>
       </div>

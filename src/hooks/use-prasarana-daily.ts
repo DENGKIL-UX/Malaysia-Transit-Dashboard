@@ -13,10 +13,10 @@ export interface PrasaranaDay {
 }
 
 /**
- * Fetch real-time Prasarana daily ridership.
+ * Fetch Prasarana daily ridership.
  * Data is sourced from the Prasarana explorer parquet (processed server-side)
  * and includes BRT Sunway + 5 Rapid Rail lines.
- * ~57 days of daily data with ~1 day lag.
+ * ~57 days of daily data with T-1 to T-3 lag.
  */
 export function usePrasaranaDaily() {
   const [data, setData] = useState<PrasaranaDay[]>([]);

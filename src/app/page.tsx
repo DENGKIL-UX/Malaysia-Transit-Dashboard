@@ -253,7 +253,7 @@ function AboutSection() {
             <div className="rounded-lg bg-[var(--surface-card)] border border-[var(--border-faint)] p-3">
               <div className="flex items-center gap-2 mb-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-teal-400" />
-                <span className="text-[11px] font-semibold text-[var(--text-secondary)]">KTMB Daily (Real-time, Parquet)</span>
+                <span className="text-[11px] font-semibold text-[var(--text-secondary)]">KTMB Daily (Daily Batch, Parquet)</span>
               </div>
               <p className="text-[10px] text-[var(--text-faint)] leading-relaxed">
                 5 KTMB rail services + 158 stations. Origin-destination parquet from data.gov.my.
@@ -263,7 +263,7 @@ function AboutSection() {
             <div className="rounded-lg bg-[var(--surface-card)] border border-[var(--border-faint)] p-3">
               <div className="flex items-center gap-2 mb-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-orange-300" />
-                <span className="text-[11px] font-semibold text-[var(--text-secondary)]">Prasarana Daily (Real-time, Parquet)</span>
+                <span className="text-[11px] font-semibold text-[var(--text-secondary)]">Prasarana Daily (Daily Batch, Parquet)</span>
               </div>
               <p className="text-[10px] text-[var(--text-faint)] leading-relaxed">
                 5 Rapid Rail lines + BRT Sunway + 150+ stations. Origin-destination parquet from
@@ -610,7 +610,7 @@ export default function Home() {
                 <KtmbWeeklyChart />
               </div>
 
-              {/* Prasarana Real-Time Daily/Weekly Chart */}
+              {/* Prasarana Daily/Weekly Chart */}
               <div className="mb-6">
                 <PrasaranaWeeklyChart />
               </div>

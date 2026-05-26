@@ -255,9 +255,9 @@ export function KtmbWeeklyChart() {
             </button>
           </div>
           {/* Status badge */}
-          <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-teal-400/10 border border-teal-400/20">
-            <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
-            <span className="text-[9px] text-teal-400 font-medium">~1 day lag</span>
+          <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-amber-400/10 border border-amber-400/20">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+            <span className="text-[9px] text-amber-400 font-medium">T-1 to T-3 (calendar dependent)</span>
           </div>
         </div>
       </div>

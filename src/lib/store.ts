@@ -3,12 +3,12 @@ import type { DataMetadata } from '@/hooks/use-data-metadata';
 
 export interface NotificationItem {
   id: string;
-  type: 'data_update' | 'anomaly' | 'insight' | 'forecast' | 'system';
+  type: 'data_update' | 'anomaly' | 'insight' | 'projection' | 'system';
   title: string;
   description: string;
   timestamp: string; // ISO string
   read: boolean;
-  source: 'KTMB OD' | 'Rapid Rail OD' | 'Headline Audit' | 'ML Engine' | 'System';
+  source: 'KTMB OD' | 'Rapid Rail OD' | 'Headline Audit' | 'Analytics Engine' | 'System';
   severity: 'info' | 'warning' | 'success' | 'critical';
   meta?: Record<string, unknown>;
 }

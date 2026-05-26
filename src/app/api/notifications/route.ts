@@ -25,12 +25,12 @@ interface PrasaranaDay {
 
 interface NotificationItem {
   id: string;
-  type: 'data_update' | 'anomaly' | 'insight' | 'forecast' | 'system';
+  type: 'data_update' | 'anomaly' | 'insight' | 'projection' | 'system';
   title: string;
   description: string;
   timestamp: string;
   read: boolean;
-  source: 'KTMB OD' | 'Rapid Rail OD' | 'Headline Audit' | 'ML Engine' | 'System';
+  source: 'KTMB OD' | 'Rapid Rail OD' | 'Headline Audit' | 'Analytics Engine' | 'System';
   severity: 'info' | 'warning' | 'success' | 'critical';
   meta?: Record<string, unknown>;
 }
@@ -90,7 +90,7 @@ function uid(): string {
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-// ─── ML: Z-Score Anomaly Detection ───────────────────────────────────
+// ─── Z-Score Anomaly Detection ───────────────────────────────────
 
 function detectAnomalies(values: { date: string; value: number; field: string }[], windowSize = 30): AnomalyInfo[] {
   if (values.length < windowSize + 1) return [];
@@ -127,7 +127,7 @@ function detectAnomalies(values: { date: string; value: number; field: string }[
   return anomalies;
 }
 
-// ─── ML: Linear Regression Trend ─────────────────────────────────────
+// ─── Linear Regression Trend ─────────────────────────────────────
 
 function linearRegression(values: number[]): { slope: number; intercept: number } {
   const n = values.length;
@@ -148,7 +148,7 @@ function linearRegression(values: number[]): { slope: number; intercept: number 
   return { slope, intercept };
 }
 
-// ─── ML: Exponential Smoothing Forecast ──────────────────────────────
+// ─── Exponential Smoothing Forecast ──────────────────────────────
 
 function exponentialSmoothingForecast(
   values: number[],
@@ -250,7 +250,7 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // ── ML Analytics ──
+  // ── Analytics ──
   const anomalies: AnomalyInfo[] = [];
   const insights: string[] = [];
 
@@ -408,7 +408,7 @@ export async function GET(request: NextRequest) {
       description: `14-day regression shows ${trendDirection} trend. Weekly growth: ${weeklyGrowthRate > 0 ? '+' : ''}${weeklyGrowthRate}%`,
       timestamp: now.toISOString(),
       read: false,
-      source: 'ML Engine',
+      source: 'Analytics Engine',
       severity: trendDirection === 'up' ? 'success' : 'warning',
     });
   } else {
@@ -419,7 +419,7 @@ export async function GET(request: NextRequest) {
       description: `14-day regression shows stable trend. Weekly growth: ${weeklyGrowthRate > 0 ? '+' : ''}${weeklyGrowthRate}%`,
       timestamp: now.toISOString(),
       read: false,
-      source: 'ML Engine',
+      source: 'Analytics Engine',
       severity: 'info',
     });
   }
@@ -431,7 +431,7 @@ export async function GET(request: NextRequest) {
     insights.push(`Weekend/weekday ratio: ${weekendWeekdayRatio.toFixed(2)}`);
   }
 
-  // ── Forecast notification ──
+  // ── Projection notification ──
   if (forecast.length >= 1) {
     const lastDate = ktmbLatest;
     const fmtNext = (daysOffset: number) => {
@@ -443,12 +443,12 @@ export async function GET(request: NextRequest) {
 
     notifications.push({
       id: uid(),
-      type: 'forecast',
-      title: '3-day ridership forecast (KTMB)',
+      type: 'projection',
+      title: '3-day ridership projection (KTMB)',
       description: `${fmtNext(1)}: ~${forecast[0]?.toLocaleString()} · ${fmtNext(2)}: ~${forecast[1]?.toLocaleString()} · ${fmtNext(3)}: ~${forecast[2]?.toLocaleString()} (±${stddev.toLocaleString()})`,
       timestamp: now.toISOString(),
       read: false,
-      source: 'ML Engine',
+      source: 'Analytics Engine',
       severity: 'info',
       meta: { forecast, stddev },
     });

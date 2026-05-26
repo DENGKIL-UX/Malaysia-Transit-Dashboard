@@ -131,7 +131,7 @@ export function TransitBreakdown() {
             </div>
           );
         })}
-        {/* BRT Sunway - Real-time data */}
+        {/* BRT Sunway - Batch data */}
         {latestPrasarana && (
           <div className="group">
             <div className="flex items-center justify-between mb-1.5">
@@ -140,7 +140,7 @@ export function TransitBreakdown() {
                 <span className="text-xs font-medium text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors">
                   {BRT_LINE.label}
                 </span>
-                <span className="text-[8px] px-1 py-0.5 rounded bg-sky-400/15 text-sky-300/70 font-medium">live</span>
+                <span className="text-[8px] px-1 py-0.5 rounded bg-sky-400/15 text-sky-300/70 font-medium">T-1</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-semibold text-[var(--text-primary)] tabular-nums">

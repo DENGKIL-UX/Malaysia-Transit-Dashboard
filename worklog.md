@@ -639,3 +639,35 @@ Stage Summary:
 - Manifest: standalone display, portrait orientation, #070e07 theme
 - All meta tags in place: apple-mobile-web-app, msapplication, theme-color
 - Files modified: layout.tsx, manifest.json | Files created: icon-192.png, icon-512.png, apple-touch-icon.png, icon-source.svg | Files deleted: sw.js, icon-192x192.png, icon-512x512.png
+
+---
+Task ID: 1
+Agent: main
+Task: Replace all misleading labels with honest, journalist-proof alternatives
+
+Work Log:
+- Read all 14 target files
+- `busiest-stations-rapid.tsx`: Changed `real-time · ~1 day lag` → `batch-updated · T-1 to T-3 lag`
+- `busiest-stations-ktmb.tsx`: Changed `real-time · ~1 day lag` → `batch-updated · T-1 to T-3 lag`
+- `transit-breakdown.tsx`: Changed BRT comment `Real-time data` → `Batch data`; changed badge text `live` → `T-1`
+- `ktmb-weekly-chart.tsx`: Changed badge text `~1 day lag` → `T-1 to T-3 (calendar dependent)`; changed badge color from teal to amber (bg-teal-400/* → bg-amber-400/*, text-teal-400 → text-amber-400)
+- `prasarana-weekly-chart.tsx`: Changed badge text `~1 day lag` → `T-1 to T-3 (calendar dependent)`
+- `analytics-table.tsx`: Changed `ML Analytics Insights` → `Statistical Insights`; `Auto-refreshes every 5 min` → `Dashboard refreshes every 5 min`; `Forecast` label → `Projected (naïve trend)`; 4 comment references to `ML Insights Panel` → `Statistical Insights Panel`
+- `day-type-analytics.tsx`: Changed window nav label `'Latest'` → `'Latest batch'`
+- `pipeline-status.tsx`: Changed `Real-time lag analysis` → `Batch lag analysis`; `Data overdue — upstream batch may be delayed` → `Data overdue — batch may be delayed (see Holiday Factors)`
+- `page.tsx`: Changed `KTMB Daily (Real-time, Parquet)` → `KTMB Daily (Daily Batch, Parquet)`; `Prasarana Daily (Real-time, Parquet)` → `Prasarana Daily (Daily Batch, Parquet)`; comment `Prasarana Real-Time Daily/Weekly Chart` → `Prasarana Daily/Weekly Chart`
+- `layout.tsx`: Changed metadata description `Real-time data from data.gov.my` → `Batch-updated data from data.gov.my`
+- `notifications/route.ts`: Changed type union `'forecast'` → `'projection'`; source `'ML Engine'` → `'Analytics Engine'` (replace_all); comments `ML: Z-Score`, `ML: Linear Regression`, `ML: Exponential Smoothing` → removed ML prefix; `ML Analytics` comment → `Analytics`; notification title `forecast` → `projection`; forecast notification comment → `Projection notification`
+- `use-prasarana-daily.ts`: Changed JSDoc comment `Fetch real-time Prasarana` → `Fetch Prasarana`; `~1 day lag` → `T-1 to T-3 lag`
+- `store.ts`: Changed source type `'ML Engine'` → `'Analytics Engine'`; type `'forecast'` → `'projection'`
+- `notification-bell.tsx`: Changed source badge key `'ML Engine'` → `'Analytics Engine'`; icon map key `forecast` → `projection`
+- Post-edit grep verification confirmed zero remaining instances of misleading patterns
+- Lint passes clean (2 pre-existing errors in generate-report.js only — unrelated)
+
+Stage Summary:
+- 14 files modified across components, hooks, store, API routes, and layout
+- All `real-time` labels replaced with `batch-updated` or equivalent honest alternatives
+- All `ML` prefixes removed from comments and labels (no ML model documented)
+- All `forecast` references updated to `projection` with type consistency across store, route, and notification bell
+- Badge colors changed from teal to amber in KTMB chart for visual honesty
+- Lint clean — no new errors introduced

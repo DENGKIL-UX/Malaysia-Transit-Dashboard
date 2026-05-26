@@ -28,7 +28,7 @@ function NotificationIcon({ type, severity }: { type: NotificationItem['type']; 
     data_update: Database,
     anomaly: AlertTriangle,
     insight: Brain,
-    forecast: TrendingUp,
+    projection: TrendingUp,
     system: Settings,
   }[type];
 
@@ -58,7 +58,7 @@ function SourceBadge({ source }: { source: NotificationItem['source'] }) {
     'KTMB OD': 'bg-teal-400/10 text-teal-400 border-teal-400/20',
     'Rapid Rail OD': 'bg-amber-400/10 text-amber-400 border-amber-400/20',
     'Headline Audit': 'bg-orange-400/10 text-orange-400 border-orange-400/20',
-    'ML Engine': 'bg-[#85AB8B]/10 text-[#85AB8B] border-[#85AB8B]/20',
+    'Analytics Engine': 'bg-[#85AB8B]/10 text-[#85AB8B] border-[#85AB8B]/20',
     'System': 'bg-[var(--surface-active)] text-[var(--text-muted)] border-[var(--border-subtle)]',
   };
 

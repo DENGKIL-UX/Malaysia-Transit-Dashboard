@@ -53,7 +53,7 @@ function DeltaBadge({ delta }: { delta: number }) {
   );
 }
 
-// ─── ML Insights Panel ──────────────────────────────────────────────
+// ─── Statistical Insights Panel ──────────────────────────────────────────────
 
 function MLInsightsPanel({ analyticsState }: { analyticsState: AnalyticsState | null }) {
   const relativeTime = useMemo(() => {
@@ -107,11 +107,11 @@ function MLInsightsPanel({ analyticsState }: { analyticsState: AnalyticsState | 
         <div className="flex items-center gap-2">
           <Brain className="w-4 h-4 text-[#85AB8B]" />
           <h3 className="text-sm font-semibold text-[var(--text-primary)]">
-            ML Analytics Insights
+            Statistical Insights
           </h3>
         </div>
         <p className="text-[10px] text-[var(--text-faint)] mt-0.5">
-          Last computed: {relativeTime} · Auto-refreshes every 5 min
+          Last computed: {relativeTime} · Dashboard refreshes every 5 min
         </p>
       </div>
 
@@ -164,7 +164,7 @@ function MLInsightsPanel({ analyticsState }: { analyticsState: AnalyticsState | 
           <div className="rounded-xl border bg-sky-400/5 border-sky-400/15 p-3.5">
             <div className="flex items-center gap-1.5 mb-2">
               <TrendingUp className="w-3.5 h-3.5 text-sky-400" />
-              <span className="text-[10px] text-[var(--text-muted)] font-medium">Forecast</span>
+              <span className="text-[10px] text-[var(--text-muted)] font-medium">Projected (naïve trend)</span>
             </div>
             <div className="text-lg font-semibold text-[var(--text-primary)] tabular-nums">
               {forecastNext ? `▲ ${Math.round(forecastNext / 1000)}K` : '—'}
@@ -250,7 +250,7 @@ function MLInsightsPanel({ analyticsState }: { analyticsState: AnalyticsState | 
 export function AnalyticsTable({ analytics, loading }: Props) {
   const analyticsState = useAppStore((s) => s.analyticsState);
 
-  // ML Insights Panel renders independently from Zustand — never gated by analytics prop
+  // Statistical Insights Panel renders independently from Zustand — never gated by analytics prop
   const mlPanel = <MLInsightsPanel analyticsState={analyticsState} />;
 
   if (loading) {
@@ -277,7 +277,7 @@ export function AnalyticsTable({ analytics, loading }: Props) {
     );
   }
 
-  // If day-type analytics data isn't available, still show ML panel
+  // If day-type analytics data isn't available, still show statistical panel
   if (!analytics) {
     return (
       <div className="space-y-5">
@@ -341,7 +341,7 @@ export function AnalyticsTable({ analytics, loading }: Props) {
 
   return (
     <div className="space-y-5">
-      {/* ML Insights Panel */}
+      {/* Statistical Insights Panel */}
       {mlPanel}
 
       {/* Day-Type Analytics Table */}

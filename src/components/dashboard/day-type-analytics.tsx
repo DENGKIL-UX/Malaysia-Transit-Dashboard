@@ -624,7 +624,7 @@ export function DayTypeAnalytics() {
                 </button>
                 <div className="flex items-center px-2.5 min-w-[120px] justify-center">
                   <span className="text-[10px] font-medium text-[var(--text-secondary)] tabular-nums">
-                    {safeOffset === 0 ? 'Latest' : `${windows.length - safeOffset} / ${windows.length}`}
+                    {safeOffset === 0 ? 'Latest batch' : `${windows.length - safeOffset} / ${windows.length}`}
                   </span>
                 </div>
                 <button
