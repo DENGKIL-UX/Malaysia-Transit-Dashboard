@@ -392,6 +392,7 @@ export default function Home() {
     holidayFallback,
     hasLowConfidence,
     availableDates,
+    dataRange,
     loading: analyticsLoading,
   } = useAnalytics();
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
@@ -697,6 +698,7 @@ export default function Home() {
                     holidayMap={holidayMap}
                     availableDates={availableDates}
                     defaultMonth={new Date(latest.date + 'T00:00:00')}
+                    dataRange={dataRange}
                   />
                 ) : (
                   <div className="h-[340px] rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md animate-pulse" />
@@ -708,6 +710,7 @@ export default function Home() {
                     dataA={dataA}
                     dataB={dataB}
                     availableDates={availableDates}
+                    headlineThrough={dataRange?.headlineThrough}
                   />
                 )}
               </div>

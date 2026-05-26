@@ -75,6 +75,14 @@ function classifyDay(
   return { day_type: 'weekday', is_public_holiday: false, confidence: 'unverified', warnings: [] };
 }
 
+export interface DataRangeInfo {
+  headlineThrough: string | null;  // Last date with full 14-service data
+  ktmbThrough: string | null;      // Last date with KTMB data (may extend beyond headline)
+  totalDays: number;
+  minDate: string | null;
+  maxDate: string | null;
+}
+
 export function useAnalytics() {
   const [classifications, setClassifications] = useState<
     Record<string, DayClassification>
@@ -83,6 +91,7 @@ export function useAnalytics() {
   const [loading, setLoading] = useState(true);
   const [holidaySource, setHolidaySource] = useState<string>('');
   const [holidayFallback, setHolidayFallback] = useState(false);
+  const [dataRange, setDataRange] = useState<DataRangeInfo | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -124,6 +133,17 @@ export function useAnalytics() {
       if (comparisonRes.status === 'fulfilled' && comparisonRes.value.ok) {
         const response = await comparisonRes.value.json();
         const rows: Record<string, unknown>[] = response.data ?? [];
+
+        // Store data range metadata
+        if (response.full_range) {
+          setDataRange({
+            headlineThrough: response.full_range.headline_through ?? null,
+            ktmbThrough: response.full_range.ktmb_through ?? null,
+            totalDays: response.full_range.total_days ?? 0,
+            minDate: response.full_range.min ?? null,
+            maxDate: response.full_range.max ?? null,
+          });
+        }
 
         const parsed = rows
           .filter((r) => r.date != null)
@@ -284,6 +304,7 @@ export function useAnalytics() {
     holidayFallback,
     hasLowConfidence,
     availableDates,
+    dataRange,
     loading,
     refetch: fetchData,
   };

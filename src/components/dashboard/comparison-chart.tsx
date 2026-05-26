@@ -19,6 +19,8 @@ interface Props {
   dataB: EnrichedDay | undefined;
   /** Dates that have ridership data available */
   availableDates?: Set<string>;
+  /** Last date with full 14-service data */
+  headlineThrough?: string | null;
 }
 
 const LINES = [
@@ -75,7 +77,7 @@ function ChartTooltip({
   );
 }
 
-export function ComparisonChart({ dateA, dateB, dataA, dataB, availableDates }: Props) {
+export function ComparisonChart({ dateA, dateB, dataA, dataB, availableDates, headlineThrough }: Props) {
   const labelA = format(dateA, 'dd MMM');
   const labelB = format(dateB, 'dd MMM');
   const noDataA = !dataA;
@@ -87,6 +89,13 @@ export function ComparisonChart({ dateA, dateB, dataA, dataB, availableDates }: 
   const dateAInRange = !availableDates || availableDates.size === 0 || availableDates.has(dateAStr);
   const dateBInRange = !availableDates || availableDates.size === 0 || availableDates.has(dateBStr);
   const bothOutOfRange = !dateAInRange && !dateBInRange;
+
+  // Check if dates are beyond headline range (KTMB-only data)
+  const dateAPartial = headlineThrough && dateAStr > headlineThrough;
+  const dateBPartial = headlineThrough && dateBStr > headlineThrough;
+
+  // Prasarana line keys (affected by headline lag)
+  const PRASARANA_KEYS = ['mrtKajang', 'mrtPutrajaya', 'lrtAmpang', 'lrtKelanaJaya', 'monorail'] as const;
 
   // If both dates are completely out of data range, show a helpful empty state
   if (bothOutOfRange) {
@@ -125,6 +134,8 @@ export function ComparisonChart({ dateA, dateB, dataA, dataB, availableDates }: 
     [line.key + 'A']: dataA ? (dataA[line.key] as number) : 0,
     [line.key + 'B']: dataB ? (dataB[line.key] as number) : 0,
     color: line.color,
+    isPartialA: dateAPartial && PRASARANA_KEYS.includes(line.key as typeof PRASARANA_KEYS[number]),
+    isPartialB: dateBPartial && PRASARANA_KEYS.includes(line.key as typeof PRASARANA_KEYS[number]),
   }));
 
   return (
@@ -209,6 +220,24 @@ export function ComparisonChart({ dateA, dateB, dataA, dataB, availableDates }: 
 
       {/* Data availability notes */}
       <div className="mt-3 pt-3 border-t border-[var(--border-faint)]">
+        {/* Partial data warnings (beyond headline range) */}
+        {dateAPartial && (
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[9px] text-teal-400/80 w-16">{labelA}:</span>
+            <span className="text-[9px] text-teal-400/70">
+              ◆ KTMB data only — Prasarana pending monthly audit
+            </span>
+          </div>
+        )}
+        {dateBPartial && (
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[9px] text-teal-400/80 w-16">{labelB}:</span>
+            <span className="text-[9px] text-teal-400/70">
+              ◆ KTMB data only — Prasarana pending monthly audit
+            </span>
+          </div>
+        )}
+
         {/* Out-of-range warnings */}
         {!dateAInRange && (
           <div className="flex items-center gap-2 mb-1">

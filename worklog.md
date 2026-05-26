@@ -529,3 +529,28 @@ Stage Summary:
 - Modified: src/hooks/use-analytics.ts (now uses /api/comparison-data for full dataset)
 - The comparison feature now has ~2,677 days of historical data across all 14 transit services
 - Key services confirmed working: MRT Kajang (114K-318K/day), MRT Putrajaya, LRT KJ, LRT Ampang, Monorail, Komuter, ETS, Intercity, Komuter Utara, Tebrau, Bus KL, Bus Kuantan, Bus Penang
+---
+Task ID: 1
+Agent: main
+Task: Analyze data.gov.my datasets and expand Date Comparisons data range to May 2026
+
+Work Log:
+- Synced workspace with GitHub (already up to date at commit 5892a55)
+- Fetched and analyzed 9 dataset metadata files from data-gov-my/datagovmy-meta
+- Discovered data architecture: headline (14 services, 2019-2026-04-30) + KTMB daily (5 services, extends to 2026-05-25)
+- RapidRail/BRT OD datasets excluded from API (exclude_openapi: true) and direct Parquet files return 404
+- Updated /api/comparison-data/route.ts to dynamically merge headline JSON + KTMB daily API data
+- Added 6-hour in-memory cache for the merged dataset
+- Extended data range from 2,677 days (→Apr 30) to 2,702 days (→May 25)
+- Updated useAnalytics hook to expose DataRangeInfo (headlineThrough, ktmbThrough)
+- Updated CalendarPicker to show KTMB-only dates in teal, with dual-range legend
+- Updated ComparisonChart to indicate partial data (KTMB-only) with ◆ warnings
+- Updated page.tsx to pass dataRange and headlineThrough props
+
+Stage Summary:
+- Date range extended: 2019-01-01 → 2026-05-25 (2,702 days)
+- Full 14-service data through 2026-04-30
+- KTMB 5-service data extending to 2026-05-25
+- Calendar shows teal-colored dates for KTMB-only period
+- Comparison chart shows "◆ KTMB data only — Prasarana pending monthly audit" for partial dates
+- Key files modified: comparison-data/route.ts, use-analytics.ts, calendar-picker.tsx, comparison-chart.tsx, page.tsx
