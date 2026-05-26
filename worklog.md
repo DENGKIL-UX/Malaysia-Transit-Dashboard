@@ -601,3 +601,41 @@ Stage Summary:
 - New Pipeline Status section provides per-pipeline expandable analysis
 - DataStatusBar now shows holiday delay badges when lag is calendar-explained
 - All changes are backward compatible with existing useAnalytics hook
+
+---
+Task ID: 1
+Agent: main
+Task: Implement A2HS (Add to Home Screen) support for mobile — no Service Worker
+
+Work Log:
+- Analyzed current state: layout.tsx already had partial A2HS (manifest ref, appleWebApp config) but also had a ServiceWorkerRegistration component registering sw.js
+- Created `public/icon-source.svg` — train/metro glyph icon design with #070e07 background and #10b981 emerald train body, windows, doors, and pantograph
+- Generated 3 PNG icons via Python cairosvg:
+  - `public/icon-192.png` (192×192, 1743 bytes) — Android home screen
+  - `public/icon-512.png` (512×512, 4948 bytes) — Android splash screen
+  - `public/apple-touch-icon.png` (180×180, 2250 bytes) — iOS Add to Home Screen
+- Updated `public/manifest.json`:
+  - Fixed theme_color from #336443 to #070e07 (matches dashboard base)
+  - Updated short_name to "TransitMY"
+  - Simplified icons array (2 entries with "any maskable" purpose)
+  - Updated icon src paths to new filenames
+- Rewrote `src/app/layout.tsx`:
+  - Removed ServiceWorkerRegistration component entirely (no SW on CF Workers)
+  - Added iOS Safari meta tags: apple-mobile-web-app-capable, apple-mobile-web-app-status-bar-style, apple-mobile-web-app-title
+  - Added apple-touch-icon link
+  - Added Microsoft Edge/Windows tiles meta tags: msapplication-TileColor, msapplication-TileImage
+  - Added theme-color meta fallback
+  - Updated appleWebApp title to "TransitMY"
+  - Updated icons.apple path to /apple-touch-icon.png
+  - Removed duplicate manifest link (Next.js auto-generates from metadata.manifest)
+- Deleted `public/sw.js` (no longer needed — CF Worker is the network layer)
+- Deleted legacy `public/icon-192x192.png` and `public/icon-512x512.png` (replaced by new icons)
+- Verified: manifest.json served correctly with all fields, all 3 icons served as image/png, page loads 200 OK, zero lint errors in app code
+
+Stage Summary:
+- A2HS fully implemented: Android Chrome and iOS Safari "Add to Home Screen" support
+- No Service Worker — CF Workers handle caching via Cache-Control headers
+- 3 icons generated: 192px (Android), 512px (Android splash), 180px (iOS)
+- Manifest: standalone display, portrait orientation, #070e07 theme
+- All meta tags in place: apple-mobile-web-app, msapplication, theme-color
+- Files modified: layout.tsx, manifest.json | Files created: icon-192.png, icon-512.png, apple-touch-icon.png, icon-source.svg | Files deleted: sw.js, icon-192x192.png, icon-512x512.png

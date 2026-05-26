@@ -42,44 +42,22 @@ export const metadata: Metadata = {
     'PWA',
   ],
   authors: [{ name: 'RapidStats MY' }],
-  icons: {
-    icon: '/icon-192x192.png',
-    apple: '/icon-192x192.png',
-  },
   manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'TransitMY',
+  },
+  icons: {
+    icon: '/icon-192.png',
+    apple: '/apple-touch-icon.png',
+  },
   openGraph: {
     title: 'RapidStats MY — Malaysia Transit Dashboard',
     description: 'Live ridership data for Klang Valley rail & bus networks',
     type: 'website',
   },
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'black-translucent',
-    title: 'RapidStats',
-  },
 };
-
-function ServiceWorkerRegistration() {
-  return (
-    <script
-      dangerouslySetInnerHTML={{
-        __html: `
-          if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function() {
-              navigator.serviceWorker.register('/sw.js', { scope: '/' })
-                .then(function(reg) {
-                  console.log('[RapidStats] SW registered, scope:', reg.scope);
-                })
-                .catch(function(err) {
-                  console.error('[RapidStats] SW registration failed:', err);
-                });
-            });
-          }
-        `,
-      }}
-    />
-  );
-}
 
 export default function RootLayout({
   children,
@@ -89,8 +67,18 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <ServiceWorkerRegistration />
-        <link rel="apple-touch-icon" href="/icon-192x192.png" />
+        {/* iOS Safari — Add to Home Screen */}
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="TransitMY" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+        {/* Microsoft Edge / Windows Tiles */}
+        <meta name="msapplication-TileColor" content="#070e07" />
+        <meta name="msapplication-TileImage" content="/icon-192.png" />
+
+        {/* Theme color fallback for browsers that don't support viewport export */}
+        <meta name="theme-color" content="#070e07" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[var(--bg-base)] text-[var(--text-primary)]`}

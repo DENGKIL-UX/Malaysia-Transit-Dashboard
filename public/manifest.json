@@ -1,38 +1,26 @@
 {
-  "name": "RapidStats MY — Malaysia Transit Dashboard",
-  "short_name": "RapidStats",
-  "description": "Daily ridership analytics for Malaysia Klang Valley rail and bus networks from data.gov.my.",
+  "name": "Malaysia Transit Dashboard",
+  "short_name": "TransitMY",
+  "description": "Multi-modal ridership analytics and anomaly detection for Malaysian transit networks.",
   "start_url": "/",
-  "scope": "/",
   "display": "standalone",
   "background_color": "#070e07",
-  "theme_color": "#336443",
-  "orientation": "portrait-primary",
+  "theme_color": "#070e07",
+  "orientation": "portrait",
+  "scope": "/",
   "categories": ["transportation", "data", "analytics"],
   "icons": [
     {
-      "src": "/icon-192x192.png",
+      "src": "/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
-      "src": "/icon-512x512.png",
+      "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icon-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "/icon-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     }
   ]
 }
