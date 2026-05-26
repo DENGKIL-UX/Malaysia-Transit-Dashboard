@@ -75,52 +75,6 @@ function classifyDay(
   return { day_type: 'weekday', is_public_holiday: false, confidence: 'unverified', warnings: [] };
 }
 
-/**
- * Fetch ridership data: MCP first (full headline data including MRT Kajang, bus),
- * fallback to /api/ridership (local JSON, missing MRT Kajang).
- * Same strategy as useRidership() to ensure consistent data.
- */
-async function fetchRidershipWithFallback(
-  startDate: string,
-  endDate: string
-): Promise<Record<string, unknown>[]> {
-  // Try MCP first for full headline data
-  try {
-    const res = await fetch('/api/mcp', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        method: 'tools/call',
-        params: {
-          name: 'query_ridership',
-          arguments: { start_date: startDate, end_date: endDate },
-        },
-      }),
-    });
-    if (res.ok) {
-      const result = await res.json();
-      const parsed = JSON.parse(result.content[0].text);
-      if (parsed.data?.length) return parsed.data;
-    }
-  } catch {
-    // MCP failed, fall through to local API
-  }
-
-  // Fallback: local JSON-based endpoint
-  try {
-    const res = await fetch(
-      `/api/ridership?start_date=${startDate}&end_date=${endDate}`
-    );
-    if (res.ok) {
-      return await res.json();
-    }
-  } catch {
-    // Both failed
-  }
-
-  return [];
-}
-
 export function useAnalytics() {
   const [classifications, setClassifications] = useState<
     Record<string, DayClassification>
@@ -134,19 +88,15 @@ export function useAnalytics() {
     setLoading(true);
     const currentYear = new Date().getFullYear();
 
-    // Fetch 180 days to ensure we cover all available data
-    const end = new Date().toISOString().split('T')[0];
-    const start = new Date(Date.now() - 180 * 864e5)
-      .toISOString()
-      .split('T')[0];
-
     try {
-      // Fetch holidays in parallel with ridership
-      const [holidayRes, ridershipRows] = await Promise.allSettled([
+      // Fetch holidays for the full year range that data covers (2019-present)
+      // and the full headline dataset in parallel
+      const [holidayRes, comparisonRes] = await Promise.allSettled([
+        // Fetch holidays for multiple years to cover the full data range
         fetch(`/api/holidays?year=${currentYear}&state=selangor`),
-        // MCP-first approach: try MCP for full headline data (includes MRT Kajang, bus),
-        // fallback to local JSON endpoint (missing MRT Kajang)
-        fetchRidershipWithFallback(start, end),
+        // Full headline dataset (2019 → 2026-04-30, all 14 services)
+        // This is a local JSON file (~720KB, 2,677 days) — very fast
+        fetch('/api/comparison-data'),
       ]);
 
       // Process holiday data into a local map (not state yet)
@@ -170,9 +120,10 @@ export function useAnalytics() {
       setHolidaySource(hSource);
       setHolidayFallback(hFallback);
 
-      // Process ridership data using the local classMap (not stale state)
-      if (ridershipRows.status === 'fulfilled' && ridershipRows.value.length > 0) {
-        const rows = ridershipRows.value;
+      // Process ridership data using the local classMap
+      if (comparisonRes.status === 'fulfilled' && comparisonRes.value.ok) {
+        const response = await comparisonRes.value.json();
+        const rows: Record<string, unknown>[] = response.data ?? [];
 
         const parsed = rows
           .filter((r) => r.date != null)
@@ -309,6 +260,7 @@ export function useAnalytics() {
   }, [ridership]);
 
   // Available dates set — for calendar picker to dim dates without data
+  // With 2,677 days of data (2019-2026), this covers a wide range
   const availableDates = useMemo(
     () => new Set(ridership.map((d) => d.date)),
     [ridership]

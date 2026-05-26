@@ -506,3 +506,26 @@ Stage Summary:
 - Field mapping bug fixed: brt no longer mislabeled as mrt_kajang
 - Calendar now clearly indicates which dates have data
 - Comparison chart shows meaningful empty states instead of silent zeros
+
+---
+Task ID: 2
+Agent: Main
+Task: Full historical data pipeline — Date Comparison now covers 2019-2026
+
+Work Log:
+- Analyzed all 11 data source JSONs from data-gov-my/datagovmy-meta repo
+- Key finding: ridership_headline CSV covers 2019-01-01 → 2026-04-30 (2,677 days, ALL 14 services including MRT Kajang)
+- Downloaded ridership_headline.csv from storage.data.gov.my → converted to public/headline-daily.json (719KB)
+- Downloaded ridership_ktmb_daily.csv from storage.data.gov.my (8,574 rows, 2020-present)
+- Created /api/comparison-data endpoint that serves the full headline dataset locally
+- Rewrote useAnalytics() to use /api/comparison-data instead of MCP or /api/ridership-extended
+- This means calendar comparison now covers 7+ years of data (Jan 2019 → Apr 2026)
+- Previous year comparisons (e.g. Feb 17 vs Feb 18, any year) now work correctly
+- CalendarPicker automatically dims dates before 2019-01-01 and after 2026-04-30
+- Data analysis report saved at data-analysis-report.md
+
+Stage Summary:
+- New files: public/headline-daily.json (2,677 days), src/app/api/comparison-data/route.ts, data-analysis-report.md
+- Modified: src/hooks/use-analytics.ts (now uses /api/comparison-data for full dataset)
+- The comparison feature now has ~2,677 days of historical data across all 14 transit services
+- Key services confirmed working: MRT Kajang (114K-318K/day), MRT Putrajaya, LRT KJ, LRT Ampang, Monorail, Komuter, ETS, Intercity, Komuter Utara, Tebrau, Bus KL, Bus Kuantan, Bus Penang
