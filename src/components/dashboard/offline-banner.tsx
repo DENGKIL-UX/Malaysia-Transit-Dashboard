@@ -1,12 +1,18 @@
 'use client';
 
+/* eslint-disable react-hooks/set-state-in-effect */
+
 import { useEffect, useState } from 'react';
 import { WifiOff } from 'lucide-react';
 
 export function OfflineBanner() {
-  const [isOffline, setIsOffline] = useState(() => !navigator.onLine);
+  const [isOffline, setIsOffline] = useState(false);
 
   useEffect(() => {
+    // Sync initial online status on client (navigator.onLine undefined during SSR)
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      setIsOffline(true);
+    }
 
     const handleOffline = () => setIsOffline(true);
     const handleOnline = () => setIsOffline(false);

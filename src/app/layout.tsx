@@ -79,6 +79,19 @@ export default function RootLayout({
 
         {/* Theme color fallback for browsers that don't support viewport export */}
         <meta name="theme-color" content="#070e07" />
+
+        {/* Unregister any legacy service workers (removed in A2HS cleanup) */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(regs) {
+                  regs.forEach(function(reg) { reg.unregister(); });
+                });
+              }
+            `,
+          }}
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[var(--bg-base)] text-[var(--text-primary)]`}
