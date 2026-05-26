@@ -9,9 +9,12 @@ import {
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
+  Brush,
+  BrushStartIndex,
+  BrushEndIndex,
 } from 'recharts';
 import { useRidership } from '@/hooks/use-ridership';
-import { TrainFront, Train, ChevronLeft, ChevronRight } from 'lucide-react';
+import { TrainFront, Train, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react';
 import { format, subDays } from 'date-fns';
 
 // Deterministic pseudo-random heights (no Math.random to avoid hydration mismatch)
@@ -138,6 +141,11 @@ const WINDOW_DAYS = 30;
 export function RidershipChart() {
   const { data: allData, loading } = useRidership(90);
   const [pageOffset, setPageOffset] = useState(0); // 0 = latest 30 days, 1 = previous, etc.
+  const [zoomed, setZoomed] = useState(false); // controls brush visibility
+  const [brushRange, setBrushRange] = useState<{
+    startIndex: number | undefined;
+    endIndex: number | undefined;
+  }>({ startIndex: undefined, endIndex: undefined });
 
   // Compute all available 30-day windows from the data
   const { windows, maxPages } = useMemo(() => {
@@ -187,11 +195,41 @@ export function RidershipChart() {
     };
   }, [chartData]);
 
+  // Compute visible stats when brush is active
+  const visibleStats = useMemo(() => {
+    const { startIndex, endIndex } = brushRange;
+    if (!zoomed || startIndex === undefined || endIndex === undefined || !chartData.length) return null;
+    const visible = chartData.slice(startIndex, endIndex + 1);
+    if (!visible.length) return null;
+    return {
+      avg: visible.reduce((s, d) => s + d.totalRail, 0) / visible.length,
+      days: visible.length,
+      startDate: visible[0].date,
+      endDate: visible[visible.length - 1].date,
+    };
+  }, [brushRange, zoomed, chartData]);
+
   const canGoPrev = safeOffset < maxPages;
   const canGoNext = safeOffset > 0;
 
   const goPrev = useCallback(() => { if (canGoPrev) setPageOffset((o) => o + 1); }, [canGoPrev]);
   const goNext = useCallback(() => { if (canGoNext) setPageOffset((o) => o - 1); }, [canGoNext]);
+
+  // Reset zoom when changing pages
+  const handlePageChange = useCallback((newOffset: number) => {
+    setPageOffset(newOffset);
+    setZoomed(false);
+    setBrushRange({ startIndex: undefined, endIndex: undefined });
+  }, []);
+
+  const handleZoomIn = useCallback(() => {
+    setZoomed(true);
+  }, []);
+
+  const handleZoomOut = useCallback(() => {
+    setZoomed(false);
+    setBrushRange({ startIndex: undefined, endIndex: undefined });
+  }, []);
 
   const fmtAvg = (v: number) => {
     if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
@@ -207,6 +245,20 @@ export function RidershipChart() {
     }
   };
 
+  // X-axis tick formatter — expanded when zoomed
+  const xAxisFormatter = useCallback((d: string) => {
+    if (zoomed) {
+      // Show full day name + date when zoomed
+      try {
+        return format(new Date(d + 'T00:00:00'), 'dd MMM');
+      } catch {
+        return d;
+      }
+    }
+    const parts = d.split('-');
+    return `${parts[1]}/${parts[2]}`;
+  }, [zoomed]);
+
   if (loading) return <ChartSkeleton />;
 
   if (!chartData.length) {
@@ -221,6 +273,12 @@ export function RidershipChart() {
     ? 'Latest 30 Days'
     : `${fmtDate(stats.minDate)} – ${fmtDate(stats.maxDate)}`;
 
+  // Active stats label — either window-wide or zoomed subset
+  const activeStats = visibleStats ?? { avg: stats.avgTotalRail, days: stats.dayCount };
+  const subtitleLabel = zoomed && visibleStats
+    ? `${fmtDate(visibleStats.startDate)} – ${fmtDate(visibleStats.endDate)} · Zoomed`
+    : `${windowLabel} · Stacked by service`;
+
   return (
     <div
       data-chart
@@ -234,14 +292,36 @@ export function RidershipChart() {
             30-Day Rail Ridership
           </h3>
           <p className="text-[10px] text-[var(--text-faint)] mt-0.5">
-            {windowLabel} · Stacked by service
+            {subtitleLabel}
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {/* Zoom controls */}
+          <div className="flex items-center rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] overflow-hidden">
+            <button
+              onClick={handleZoomIn}
+              disabled={zoomed}
+              className="flex items-center justify-center w-8 h-8 transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[var(--surface-active)] active:bg-[var(--border-subtle)]"
+              aria-label="Zoom in"
+              title="Drag to zoom on chart"
+            >
+              <ZoomIn className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+            </button>
+            <div className="w-px h-4 bg-[var(--border-subtle)]" />
+            <button
+              onClick={handleZoomOut}
+              disabled={!zoomed}
+              className="flex items-center justify-center w-8 h-8 transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[var(--surface-active)] active:bg-[var(--border-subtle)]"
+              aria-label="Zoom out"
+              title="Reset zoom"
+            >
+              <ZoomOut className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+            </button>
+          </div>
           {/* Pagination controls */}
           <div className="flex items-center rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] overflow-hidden">
             <button
-              onClick={goPrev}
+              onClick={() => handlePageChange(safeOffset + 1)}
               disabled={!canGoPrev}
               className="flex items-center justify-center w-8 h-8 transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[var(--surface-active)] active:bg-[var(--border-subtle)]"
               aria-label="Previous 30 days"
@@ -254,7 +334,7 @@ export function RidershipChart() {
               </span>
             </div>
             <button
-              onClick={goNext}
+              onClick={() => handlePageChange(safeOffset - 1)}
               disabled={!canGoNext}
               className="flex items-center justify-center w-8 h-8 transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[var(--surface-active)] active:bg-[var(--border-subtle)]"
               aria-label="Next 30 days"
@@ -264,9 +344,18 @@ export function RidershipChart() {
           </div>
           {/* Avg badge */}
           <span
-            className="text-xs font-bold text-[#85AB8B] px-2.5 py-1 rounded-lg bg-[#85AB8B]/10 border border-[#85AB8B]/20 whitespace-nowrap"
+            className={`text-xs font-bold px-2.5 py-1 rounded-lg border whitespace-nowrap transition-colors duration-200 ${
+              zoomed
+                ? 'text-sky-400 bg-sky-400/10 border-sky-400/20'
+                : 'text-[#85AB8B] bg-[#85AB8B]/10 border-[#85AB8B]/20'
+            }`}
           >
-            Avg: {fmtAvg(stats.avgTotalRail)}/day
+            Avg: {fmtAvg(activeStats.avg)}/day
+            {zoomed && visibleStats && (
+              <span className="ml-1 text-[9px] font-normal opacity-70">
+                ({visibleStats.days}d)
+              </span>
+            )}
           </span>
         </div>
       </div>
@@ -299,10 +388,10 @@ export function RidershipChart() {
         </div>
       </div>
 
-      {/* Chart */}
-      <div className="h-56 sm:h-72 md:h-80 w-full">
+      {/* Chart — dynamic height: taller when brush is visible */}
+      <div className={`w-full transition-all duration-300 ${zoomed ? 'h-64 sm:h-72' : 'h-56 sm:h-72 md:h-80'}`}>
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+          <AreaChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: zoomed ? 50 : 0 }}>
             <defs>
               {RAIL_LINES.map((line) => (
                 <linearGradient key={line.key} id={`stackGrad-${line.key}`} x1="0" y1="0" x2="0" y2="1">
@@ -319,14 +408,12 @@ export function RidershipChart() {
             <XAxis
               dataKey="date"
               stroke="var(--chart-axis)"
-              fontSize={10}
-              tickFormatter={(d: string) => {
-                const parts = d.split('-');
-                return `${parts[1]}/${parts[2]}`;
-              }}
+              fontSize={zoomed ? 11 : 10}
+              tickFormatter={xAxisFormatter}
               tickLine={false}
               axisLine={false}
               dy={8}
+              interval={zoomed ? 0 : undefined}
             />
             <YAxis
               stroke="var(--chart-axis)"
@@ -350,13 +437,49 @@ export function RidershipChart() {
                 strokeWidth={1}
                 fill={`url(#stackGrad-${line.key})`}
                 name={line.label}
-                dot={false}
+                dot={zoomed}
+                activeDot={{ r: 3, strokeWidth: 0 }}
                 stackId="rail"
               />
             ))}
+            {/* Brush — drag-to-zoom slider, only visible in zoom mode */}
+            {zoomed && chartData.length > 1 && (
+              <Brush
+                dataKey="date"
+                startIndex={brushRange.startIndex ?? 0}
+                endIndex={brushRange.endIndex ?? chartData.length - 1}
+                tickFormatter={(d: string) => {
+                  try {
+                    return format(new Date(d + 'T00:00:00'), 'dd MMM');
+                  } catch {
+                    return d;
+                  }
+                }}
+                height={30}
+                stroke="var(--chart-axis)"
+                fill="var(--surface-card)"
+                travellerWidth={8}
+                gap={2}
+                onChange={(range: { startIndex?: number; endIndex?: number }) => {
+                  if (range.startIndex !== undefined && range.endIndex !== undefined) {
+                    setBrushRange({ startIndex: range.startIndex, endIndex: range.endIndex });
+                  }
+                }}
+              >
+                <BrushStartIndex />
+                <BrushEndIndex />
+              </Brush>
+            )}
           </AreaChart>
         </ResponsiveContainer>
       </div>
+
+      {/* Zoom hint */}
+      {zoomed && (
+        <p className="text-[9px] text-sky-400/60 text-center mt-1">
+          Drag the slider handles to select a date range · Tap <ZoomOut className="inline w-2.5 h-2.5 mx-0.5 -mt-0.5" /> to reset
+        </p>
+      )}
 
       {/* Footer */}
       <div className="flex items-center justify-between mt-4 pt-3 border-t border-[var(--border-faint)]">
