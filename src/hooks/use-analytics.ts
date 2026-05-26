@@ -2,23 +2,9 @@
 
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import type { DayClassification } from '@/app/api/holidays/route';
+import { parseRidershipRow } from '@/lib/parse-ridership';
 
-export interface EnrichedDay {
-  date: string;
-  mrtKajang: number;
-  mrtPutrajaya: number;
-  lrtKelanaJaya: number;
-  lrtAmpang: number;
-  monorail: number;
-  komuter: number;
-  ets: number;
-  intercity: number;
-  komuterUtara: number;
-  tebrau: number;
-  busKl: number;
-  busKuantan: number;
-  busRpn: number;
-  total: number;
+export interface EnrichedDay extends Omit<import('@/lib/parse-ridership').ParsedRidershipRow, never> {
   day_type: 'holiday' | 'friday' | 'weekend' | 'weekday';
   is_public_holiday: boolean;
   holiday_name?: string;
@@ -152,51 +138,11 @@ export function useAnalytics() {
           .map((r) => {
             const dateStr = r.date as string;
             const cls = classifyDay(dateStr, classMap);
-
-            const mrtKajang = Number(r['rail_mrt_kajang'] ?? 0);
-            const mrtPutrajaya = Number(r['rail_mrt_pjy'] ?? 0);
-            const lrtKelanaJaya = Number(r['rail_lrt_kj'] ?? 0);
-            const lrtAmpang = Number(r['rail_lrt_ampang'] ?? 0);
-            const monorail = Number(r['rail_monorail'] ?? 0);
-            const komuter = Number(r['rail_komuter'] ?? 0);
-            const ets = Number(r['rail_ets'] ?? 0);
-            const intercity = Number(r['rail_intercity'] ?? 0);
-            const komuterUtara = Number(r['rail_komuter_utara'] ?? 0);
-            const tebrau = Number(r['rail_tebrau'] ?? 0);
-            const busKl = Number(r['bus_rkl'] ?? 0);
-            const busKuantan = Number(r['bus_rkn'] ?? 0);
-            const busRpn = Number(r['bus_rpn'] ?? 0);
-            const total =
-              mrtKajang +
-              mrtPutrajaya +
-              lrtKelanaJaya +
-              lrtAmpang +
-              monorail +
-              komuter +
-              ets +
-              intercity +
-              komuterUtara +
-              tebrau +
-              busKl +
-              busKuantan +
-              busRpn;
+            const base = parseRidershipRow(r);
 
             return {
+              ...base,
               date: dateStr,
-              mrtKajang,
-              mrtPutrajaya,
-              lrtKelanaJaya,
-              lrtAmpang,
-              monorail,
-              komuter,
-              ets,
-              intercity,
-              komuterUtara,
-              tebrau,
-              busKl,
-              busKuantan,
-              busRpn,
-              total,
               ...cls,
             };
           })
