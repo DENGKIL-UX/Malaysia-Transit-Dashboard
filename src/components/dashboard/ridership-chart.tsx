@@ -10,8 +10,6 @@ import {
   ResponsiveContainer,
   CartesianGrid,
   Brush,
-  BrushStartIndex,
-  BrushEndIndex,
 } from 'recharts';
 import { useRidership } from '@/hooks/use-ridership';
 import { TrainFront, Train, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react';
@@ -465,10 +463,7 @@ export function RidershipChart() {
                     setBrushRange({ startIndex: range.startIndex, endIndex: range.endIndex });
                   }
                 }}
-              >
-                <BrushStartIndex />
-                <BrushEndIndex />
-              </Brush>
+              />
             )}
           </AreaChart>
         </ResponsiveContainer>
