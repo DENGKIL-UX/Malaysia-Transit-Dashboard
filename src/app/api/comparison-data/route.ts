@@ -148,7 +148,11 @@ export async function GET(request: NextRequest) {
         endDate,
         datesParam
       );
-      return NextResponse.json(buildResponse(filtered, cachedResponse.data));
+      return NextResponse.json(buildResponse(filtered, cachedResponse.data), {
+        headers: noCache
+          ? { 'Cache-Control': 'no-cache' }
+          : { 'Cache-Control': 'public, s-maxage=21600, stale-while-revalidate=86400' },
+      });
     }
 
     // 1. Load base headline data from local JSON
@@ -157,7 +161,7 @@ export async function GET(request: NextRequest) {
     if (!res.ok) {
       return NextResponse.json(
         { error: 'Failed to load headline data' },
-        { status: 500 }
+        { status: 500, headers: { 'Cache-Control': 'no-cache' } }
       );
     }
 
@@ -211,12 +215,16 @@ export async function GET(request: NextRequest) {
 
     // 7. Filter and return
     const filtered = filterData(merged, startDate, endDate, datesParam);
-    return NextResponse.json(buildResponse(filtered, merged));
+    return NextResponse.json(buildResponse(filtered, merged), {
+      headers: noCache
+        ? { 'Cache-Control': 'no-cache' }
+        : { 'Cache-Control': 'public, s-maxage=21600, stale-while-revalidate=86400' },
+    });
   } catch (error) {
     console.error('Comparison data API error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch comparison data' },
-      { status: 502 }
+      { status: 502, headers: { 'Cache-Control': 'no-cache' } }
     );
   }
 }

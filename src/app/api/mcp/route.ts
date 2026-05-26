@@ -238,13 +238,13 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const result = await handleMCPRequest(body);
-    return NextResponse.json(result, { headers: corsHeaders });
+    return NextResponse.json(result, { headers: { ...corsHeaders, 'Cache-Control': 'public, s-maxage=300' } });
   } catch (err: unknown) {
     const message =
       err instanceof Error ? err.message : 'Internal server error';
     return NextResponse.json(
       { jsonrpc: '2.0', error: { code: -32000, message } },
-      { status: 500, headers: corsHeaders }
+      { status: 500, headers: { ...corsHeaders, 'Cache-Control': 'no-cache' } }
     );
   }
 }

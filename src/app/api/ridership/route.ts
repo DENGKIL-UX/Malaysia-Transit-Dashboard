@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
   if (!startDate || !endDate) {
     return NextResponse.json(
       { error: 'start_date and end_date query parameters are required' },
-      { status: 400 }
+      { status: 400, headers: { 'Cache-Control': 'no-cache' } }
     );
   }
 
@@ -139,12 +139,16 @@ export async function GET(request: NextRequest) {
     // Sort by date ascending
     merged.sort((a, b) => a.date.localeCompare(b.date));
 
-    return NextResponse.json(merged);
+    return NextResponse.json(merged, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=3600',
+      },
+    });
   } catch (error) {
     console.error('Ridership API error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch ridership data' },
-      { status: 502 }
+      { status: 502, headers: { 'Cache-Control': 'no-cache' } }
     );
   }
 }

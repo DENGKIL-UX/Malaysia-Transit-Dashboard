@@ -3,11 +3,12 @@
   "version": "0.2.1",
   "private": true,
   "scripts": {
-    "build": "next build",
+    "build": "node scripts/build-holidays.js && next build",
     "dev": "next dev -p 3000 2>&1 | tee dev.log",
     "start": "NODE_ENV=production bun .next/standalone/server.js 2>&1 | tee server.log",
     "lint": "eslint .",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "predeploy": "node scripts/build-holidays.js && opennextjs-cloudflare build && npx wrangler deploy",
     "deploy": "opennextjs-cloudflare build && npx wrangler deploy",
     "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"

@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   if (!startDate || !endDate) {
     return NextResponse.json(
       { error: 'start_date and end_date query parameters are required' },
-      { status: 400 }
+      { status: 400, headers: { 'Cache-Control': 'no-cache' } }
     );
   }
 
@@ -27,17 +27,21 @@ export async function GET(request: NextRequest) {
     if (!res.ok) {
       return NextResponse.json(
         { error: `Upstream API returned ${res.status}` },
-        { status: res.status }
+        { status: res.status, headers: { 'Cache-Control': 'no-cache' } }
       );
     }
 
     const data = await res.json();
-    return NextResponse.json(data);
+    return NextResponse.json(data, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=21600',
+      },
+    });
   } catch (error) {
     console.error('KTMB Daily API proxy error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch KTMB daily ridership data' },
-      { status: 502 }
+      { status: 502, headers: { 'Cache-Control': 'no-cache' } }
     );
   }
 }

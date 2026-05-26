@@ -489,5 +489,9 @@ export async function GET(request: NextRequest) {
     analytics: analyticsState,
     freshness,
     generatedAt: now.toISOString(),
+  }, {
+    headers: {
+      'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=3600',
+    },
   });
 }
