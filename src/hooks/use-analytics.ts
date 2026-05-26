@@ -80,7 +80,7 @@ export function useAnalytics() {
   const [holidayFallback, setHolidayFallback] = useState(false);
   const [dataRange, setDataRange] = useState<DataRangeInfo | null>(null);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (forceRefresh = false) => {
     setLoading(true);
     const currentYear = new Date().getFullYear();
 
@@ -90,9 +90,9 @@ export function useAnalytics() {
       const [holidayRes, comparisonRes] = await Promise.allSettled([
         // Fetch holidays for multiple years to cover the full data range
         fetch(`/api/holidays?year=${currentYear}&state=selangor`),
-        // Full headline dataset (2019 → 2026-04-30, all 14 services)
-        // This is a local JSON file (~720KB, 2,677 days) — very fast
-        fetch('/api/comparison-data'),
+        // Full headline dataset (2019 → present, all 14 services)
+        // When forceRefresh=true, bypass server-side 6-hour cache
+        fetch(`/api/comparison-data${forceRefresh ? '?nocache=1' : ''}`),
       ]);
 
       // Process holiday data into a local map (not state yet)
@@ -254,6 +254,6 @@ export function useAnalytics() {
     availableDates,
     dataRange,
     loading,
-    refetch: fetchData,
+    refetch: (forceRefresh = false) => fetchData(forceRefresh),
   };
 }

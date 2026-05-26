@@ -88,8 +88,8 @@ export function TransitBreakdown() {
         </p>
       </div>
 
-      {/* Scrollable line list — constrained height to match chart card */}
-      <div className="space-y-3 overflow-y-auto flex-1 min-h-0 max-h-[380px] pr-1 custom-scrollbar">
+      {/* Scrollable line list */}
+      <div className="space-y-3 overflow-y-auto flex-1 min-h-0 max-h-[320px] pr-1 custom-scrollbar">
         {lines.map((line) => {
           const value = latest?.[line.key] ?? 0;
           const pct = maxVal > 0 ? (value / maxVal) * 100 : 0;

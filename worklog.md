@@ -671,3 +671,25 @@ Stage Summary:
 - All `forecast` references updated to `projection` with type consistency across store, route, and notification bell
 - Badge colors changed from teal to amber in KTMB chart for visual honesty
 - Lint clean — no new errors introduced
+---
+Task ID: 1
+Agent: Main
+Task: Fix Line Breakdown layout height + implement dynamic data refresh system
+
+Work Log:
+- **Layout fix**: Diagnosed CSS Grid `align-items: stretch` default causing equal-height stretching of Line Breakdown and 30-Day Rail Ridership cards. Added `items-start` to grid container in page.tsx line 599. Reduced TransitBreakdown inner scroll area from `max-h-[380px]` to `max-h-[320px]`.
+- **Dynamic data refresh — architecture**: Built a polling + cascade refresh system that auto-detects new data from data.gov.my and refreshes the entire dashboard:
+  1. `useDataMetadata` now polls `/api/metadata` every 5 minutes (singleton interval — no duplicate polling across multiple hook instances)
+  2. When `freshest_date` changes (new data detected), it calls `triggerDataRefresh()` on Zustand store
+  3. `page.tsx` watches `pendingRefresh` and cascades refetch to `useRidership()` + `useAnalytics(true)` in parallel
+  4. `useAnalytics` refetch now supports `forceRefresh` parameter which appends `?nocache=1` to bypass the 6-hour server-side cache
+- **Zustand store updates**: Added `lastKnownFreshestDate`, `dataRefreshKey`, `pendingRefresh`, `dataUpdateTimestamp` fields + `setLastKnownFreshestDate`, `triggerDataRefresh`, `clearPendingRefresh`, `setDataUpdateTimestamp` actions
+- **Data update toast**: Created `src/components/dashboard/data-update-toast.tsx` — subtle fixed-bottom toast showing "Data updated" with freshest date and source. Uses store-driven visibility (no effect setState to satisfy strict linter). Dismissed by user click.
+- **OpenDOSM meta fetching**: Confirmed existing implementation — `/api/metadata` already checks live data.gov.my API for headline dates + scrapes "Data as of" from HTML page + fetches prasarana.json from datagovmy-meta GitHub. This was already in place but the hooks were NOT polling — they only fetched once on mount. Now they poll.
+
+Stage Summary:
+- Layout bug fixed: Line Breakdown card now uses its natural height instead of stretching to match 30-Day chart
+- Dynamic data refresh: Dashboard auto-detects new data every 5 minutes and refreshes all components
+- Files modified: page.tsx, transit-breakdown.tsx, store.ts, use-data-metadata.ts, use-analytics.ts
+- Files created: data-update-toast.tsx
+- Lint clean (0 new errors)

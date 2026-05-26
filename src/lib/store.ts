@@ -57,6 +57,11 @@ interface AppState {
   // Centralized metadata (eliminates 3 independent /api/metadata fetches)
   metadata: DataMetadata | null;
   metadataLoading: boolean;
+  // Dynamic data refresh — tracks freshest date to detect new data
+  lastKnownFreshestDate: string | null;
+  dataRefreshKey: number; // incremented when new data is detected
+  pendingRefresh: boolean; // signals consumers to re-fetch
+  dataUpdateTimestamp: number | null; // epoch ms when last auto-refresh completed
   // UI
   lastSynced: string | null;
   loadingNotifications: boolean;
@@ -71,6 +76,10 @@ interface AppState {
   setMetadataLoading: (loading: boolean) => void;
   setLastSynced: (ts: string) => void;
   setLoadingNotifications: (loading: boolean) => void;
+  setLastKnownFreshestDate: (date: string | null) => void;
+  triggerDataRefresh: () => void;
+  clearPendingRefresh: () => void;
+  setDataUpdateTimestamp: (ts: number | null) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -80,6 +89,10 @@ export const useAppStore = create<AppState>((set) => ({
   analyticsState: null,
   metadata: null,
   metadataLoading: false,
+  lastKnownFreshestDate: null,
+  dataRefreshKey: 0,
+  pendingRefresh: false,
+  dataUpdateTimestamp: null,
   lastSynced: null,
   loadingNotifications: false,
 
@@ -124,6 +137,18 @@ export const useAppStore = create<AppState>((set) => ({
   setMetadata: (data) => set({ metadata: data }),
 
   setMetadataLoading: (loading) => set({ metadataLoading: loading }),
+
+  setLastKnownFreshestDate: (date) => set({ lastKnownFreshestDate: date }),
+
+  triggerDataRefresh: () =>
+    set((state) => ({
+      dataRefreshKey: state.dataRefreshKey + 1,
+      pendingRefresh: true,
+    })),
+
+  clearPendingRefresh: () => set({ pendingRefresh: false }),
+
+  setDataUpdateTimestamp: (ts) => set({ dataUpdateTimestamp: ts }),
 
   setLastSynced: (ts) => set({ lastSynced: ts }),
 

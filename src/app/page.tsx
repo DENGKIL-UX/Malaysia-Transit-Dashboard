@@ -34,8 +34,10 @@ import { DayTypeAnalytics } from '@/components/dashboard/day-type-analytics';
 import { FeatureCardsSection } from '@/components/dashboard/feature-cards';
 import { OfflineBanner } from '@/components/dashboard/offline-banner';
 import { InstallPrompt } from '@/components/dashboard/install-prompt';
+import { DataUpdateToast } from '@/components/dashboard/data-update-toast';
 import { PipelineStatusPanel } from '@/components/dashboard/pipeline-status';
 import { useRidership } from '@/hooks/use-ridership';
+import { useAppStore } from '@/lib/store';
 import { useAnalytics } from '@/hooks/use-analytics';
 import { useNotifications } from '@/hooks/use-notifications';
 import { useDataMetadata } from '@/hooks/use-data-metadata';
@@ -391,7 +393,7 @@ function AboutSection() {
 }
 
 export default function Home() {
-  const { data, loading } = useRidership();
+  const { data, loading, refetch: refetchRidership } = useRidership();
   const { metadata: meta } = useDataMetadata();
   useNotifications(); // triggers initial fetch + auto-refresh, syncs to Zustand store
   const {
@@ -404,8 +406,29 @@ export default function Home() {
     availableDates,
     dataRange,
     loading: analyticsLoading,
+    refetch: refetchAnalytics,
   } = useAnalytics();
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
+
+  // Dynamic data refresh: when metadata detects a new freshest_date,
+  // cascade refetch ridership + analytics (with cache-busting)
+  const pendingRefresh = useAppStore((s) => s.pendingRefresh);
+  const dataRefreshKey = useAppStore((s) => s.dataRefreshKey);
+  const clearPendingRefresh = useAppStore((s) => s.clearPendingRefresh);
+  const setDataUpdateTimestamp = useAppStore((s) => s.setDataUpdateTimestamp);
+
+  useEffect(() => {
+    if (!pendingRefresh) return;
+
+    // Refetch all data sources in parallel with cache-busting
+    Promise.allSettled([
+      refetchRidership(),
+      refetchAnalytics(true), // forceRefresh=true bypasses 6-hour server cache
+    ]).finally(() => {
+      clearPendingRefresh();
+      setDataUpdateTimestamp(Date.now()); // trigger toast via store
+    });
+  }, [dataRefreshKey, pendingRefresh, clearPendingRefresh, setDataUpdateTimestamp, refetchRidership, refetchAnalytics]);
 
   // Find the ridership data for selected dates
   const selectedDateA = selectedDates[0];
@@ -450,6 +473,9 @@ export default function Home() {
 
       {/* A2HS install prompt (Chrome Android only) */}
       <InstallPrompt />
+
+      {/* Data update toast — appears when auto-refresh detects new data */}
+      <DataUpdateToast />
 
       {/* Ambient orbs */}
       <div className="fixed inset-0 pointer-events-none" aria-hidden="true">
@@ -595,8 +621,8 @@ export default function Home() {
                 <KpiCards data={data} loading={loading} />
               </div>
 
-              {/* Main Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 mb-6">
+              {/* Main Grid — items-start prevents both cards from stretching to equal height */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 mb-6 items-start">
                 <div className="lg:col-span-7 xl:col-span-8">
                   <RidershipChart />
                 </div>
