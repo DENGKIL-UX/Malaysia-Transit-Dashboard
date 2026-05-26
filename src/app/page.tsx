@@ -31,6 +31,7 @@ import { BusiestStationsRapidRail } from '@/components/dashboard/busiest-station
 import { BusiestStationsKTMB } from '@/components/dashboard/busiest-stations-ktmb';
 import { TopRoutesRapidRail, TopRoutesKTMB } from '@/components/dashboard/top-routes';
 import { DayTypeAnalytics } from '@/components/dashboard/day-type-analytics';
+import { FeatureCardsSection } from '@/components/dashboard/feature-cards';
 import { OfflineBanner } from '@/components/dashboard/offline-banner';
 import { useRidership } from '@/hooks/use-ridership';
 import { useAnalytics } from '@/hooks/use-analytics';
@@ -518,6 +519,12 @@ export default function Home() {
           {/* Dashboard Panels */}
           <div className="px-4 sm:px-6 md:px-10 pb-8">
             <div className="max-w-[1400px] mx-auto">
+
+              {/* Glowing Feature Cards */}
+              <div className="mb-10">
+                <FeatureCardsSection />
+              </div>
+
               {/* Summary Stats */}
               <div
                 className="-mt-4 mb-6 grid grid-cols-2 sm:grid-cols-4 gap-3 animate-fade-in-up"
