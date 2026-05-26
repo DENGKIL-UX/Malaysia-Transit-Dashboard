@@ -579,3 +579,25 @@ Stage Summary:
 - Prasarana data fills the "monthly audit gap" with daily OD totals
 - Only 2-day gap remains (May 24-25) where KTMB-only data is available
 - When June headline publishes (~Jun 12), full May data will replace pre-audit data
+
+---
+Task ID: 1
+Agent: main
+Task: Implement holiday-aware data freshness system with pipeline lag analysis
+
+Work Log:
+- Created `src/lib/holidays.ts` — shared holiday utility library with cuti ganti, Selangor/FT state filtering, data blackout detection, working day navigation
+- Enhanced `src/app/api/holidays/route.ts` — added holiday list in response, today blackout status, next working day, blackout days before today; now uses shared library
+- Rewrote `src/app/api/metadata/route.ts` — added holiday-aware freshness computation for all 3 pipelines (KTMB OD, Rapid Rail OD, Headline Audit); computes expected vs actual lag, lag explanation, overdue detection; returns HolidayContext with today blackout status, upcoming holidays, next/prev working day; generates pipeline insights
+- Updated `src/hooks/use-data-metadata.ts` — new PipelineFreshness, HolidayContext interfaces; updated DataMetadata to include holiday_context, pipeline_insights, status per pipeline
+- Created `src/components/dashboard/pipeline-status.tsx` — new PipelineStatusPanel with per-pipeline status rows (expandable lag analysis), LagFactorsCard (explains 3 delay factors: ETL batch, calendar blackout, Islamic uncertainty), expandable calendar status
+- Rewrote `src/components/dashboard/data-status-bar.tsx` — 4-state freshness badges (fresh/expected/delayed/overdue), holiday delay badges on status pills, today blackout indicator, enhanced tooltip with holiday-aware lag explanation
+- Updated `src/app/page.tsx` — imported PipelineStatusPanel, added new Pipeline Status section between Analytics and About; enhanced About section Data Freshness card with status badges, freshest OD data, next batch expected, today blackout indicator
+
+Stage Summary:
+- API returns holiday-aware freshness: KTMB (2d lag, delayed), Rapid Rail OD (3d lag, overdue), Headline (26d lag, overdue)
+- Pipeline insights auto-detect overdue data and explain lag factors
+- UI shows 3-factor lag explanation (ETL batch window, calendar blackout, Islamic uncertainty)
+- New Pipeline Status section provides per-pipeline expandable analysis
+- DataStatusBar now shows holiday delay badges when lag is calendar-explained
+- All changes are backward compatible with existing useAnalytics hook

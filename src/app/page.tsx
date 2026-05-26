@@ -33,6 +33,7 @@ import { TopRoutesRapidRail, TopRoutesKTMB } from '@/components/dashboard/top-ro
 import { DayTypeAnalytics } from '@/components/dashboard/day-type-analytics';
 import { FeatureCardsSection } from '@/components/dashboard/feature-cards';
 import { OfflineBanner } from '@/components/dashboard/offline-banner';
+import { PipelineStatusPanel } from '@/components/dashboard/pipeline-status';
 import { useRidership } from '@/hooks/use-ridership';
 import { useAnalytics } from '@/hooks/use-analytics';
 import { useNotifications } from '@/hooks/use-notifications';
@@ -123,7 +124,7 @@ function AboutSection() {
 
       {/* About grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {/* Data Freshness */}
+        {/* Data Freshness — now holiday-aware */}
         <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 animate-fade-in-up">
           <div className="w-9 h-9 rounded-xl bg-amber-400/10 border border-amber-400/20 flex items-center justify-center mb-4">
             <Clock className="w-4 h-4 text-amber-400" />
@@ -133,36 +134,44 @@ function AboutSection() {
           </h3>
           <div className="space-y-2 text-xs">
             <div className="flex items-center justify-between">
-              <span className="text-[var(--text-muted)]">Latest headline data</span>
+              <span className="text-[var(--text-muted)]">Latest headline</span>
               <span className="font-medium text-[var(--text-secondary)] tabular-nums">
                 {meta?.headline.latest_date ?? '—'}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-[var(--text-muted)]">Publication lag</span>
+              <span className="text-[var(--text-muted)]">Headline lag</span>
               <span className={`font-medium tabular-nums ${
+                (meta?.headline.lag_days ?? 0) > 30 ? 'text-red-400' :
                 (meta?.headline.lag_days ?? 0) > 15 ? 'text-orange-400' :
                 (meta?.headline.lag_days ?? 0) > 5 ? 'text-yellow-400' : 'text-emerald-400'
               }`}>
-                ~{(meta?.headline.lag_days ?? 0)} days
+                ~{(meta?.headline.lag_days ?? 0)}d
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-[var(--text-muted)]">Next expected update</span>
-              <span className={
-                meta?.headline.next_update_approx
-                  ? new Date(meta.headline.next_update_approx.replace('~', '')) < new Date()
-                    ? 'font-medium text-orange-400'
-                    : 'font-medium text-[var(--text-muted)]'
-                  : 'font-medium text-[var(--text-muted)]'
-              }>
-                {meta?.headline.next_update_approx
-                  ? new Date(meta.headline.next_update_approx.replace('~', '')) < new Date()
-                    ? `⚠ Overdue (expected ${format(new Date(meta.headline.next_update_approx.replace('~', '')), 'dd MMM')})`
-                    : meta.headline.next_update_approx
-                  : '—'}
+              <span className="text-[var(--text-muted)]">Freshest OD data</span>
+              <span className="font-medium text-emerald-400 tabular-nums">
+                {meta?.freshest_date ?? '—'}
+                <span className="ml-1 text-[9px] text-[var(--text-faint)]">
+                  ({meta?.freshest_source})
+                </span>
               </span>
             </div>
+            {meta?.holiday_context && (
+              <div className="pt-2 border-t border-[var(--border-faint)]">
+                <div className="flex items-center gap-1.5 text-[10px] text-[var(--text-faint)]">
+                  <Clock className="w-3 h-3" />
+                  <span>Next batch expected: <span className="text-[var(--text-muted)] font-medium tabular-nums">{meta.holiday_context.nextWorkingDay}</span></span>
+                </div>
+                {meta.holiday_context.todayIsBlackout && (
+                  <div className="flex items-center gap-1.5 text-[10px] text-orange-400 mt-1">
+                    <AlertCircle className="w-3 h-3" />
+                    <span>Today is a non-working day</span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -716,6 +725,13 @@ export default function Home() {
                 )}
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* ═══ PIPELINE STATUS SECTION ═══ */}
+        <div className="px-4 sm:px-6 md:px-10">
+          <div className="max-w-[1400px] mx-auto">
+            <PipelineStatusPanel meta={meta} />
           </div>
         </div>
 
