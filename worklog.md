@@ -554,3 +554,28 @@ Stage Summary:
 - Calendar shows teal-colored dates for KTMB-only period
 - Comparison chart shows "◆ KTMB data only — Prasarana pending monthly audit" for partial dates
 - Key files modified: comparison-data/route.ts, use-analytics.ts, calendar-picker.tsx, comparison-chart.tsx, page.tsx
+---
+Task ID: 2
+Agent: main
+Task: Implement opinion-based refinement - bypass headline lag via Prasarana OD parquet
+
+Work Log:
+- Analyzed data.gov.my two-tier architecture: headline (monthly audited) vs OD (daily raw)
+- Discovered prasarana_timeseries.parquet (2.1MB) at data.gov.my dashboard storage
+- Found station code prefixes map to lines: AG=Ampang, KJ=Kelana Jaya, KG=SBK, SP=SSP, MR=Monorail, BRT=BRT
+- Installed parquet-wasm + apache-arrow for Parquet parsing
+- Created generate-prasarana.js build script to extract per-line daily totals
+- Extracted 57 days of per-line Prasarana data (Mar 28 - May 23, 2026)
+- Saved as public/prasarana-daily-totals.json (consumed by API route)
+- Updated /api/comparison-data to merge 3 data tiers: headline + Prasarana OD + KTMB API
+- Updated calendar picker with 3-tier legend (green/teal/orange)
+- Updated comparison chart with tier-specific warnings
+
+Stage Summary:
+- Three-tier data pipeline now operational:
+  - Tier 1: Audited headline (2019 → Apr 30) - 14 services
+  - Tier 2: Prasarana OD parquet (May 1 → May 23) - 6 Rapid Rail services + BRT
+  - Tier 3: KTMB daily API (May 1 → May 25) - 5 KTMB services
+- Prasarana data fills the "monthly audit gap" with daily OD totals
+- Only 2-day gap remains (May 24-25) where KTMB-only data is available
+- When June headline publishes (~Jun 12), full May data will replace pre-audit data
