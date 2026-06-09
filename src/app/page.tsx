@@ -36,6 +36,8 @@ import { OfflineBanner } from '@/components/dashboard/offline-banner';
 import { InstallPrompt } from '@/components/dashboard/install-prompt';
 import { DataUpdateToast } from '@/components/dashboard/data-update-toast';
 import { PipelineStatusPanel } from '@/components/dashboard/pipeline-status';
+import { ScrollToTop } from '@/components/dashboard/scroll-to-top';
+import { ScrollProgress } from '@/components/dashboard/scroll-progress';
 import { useRidership } from '@/hooks/use-ridership';
 import { useAppStore } from '@/lib/store';
 import { useAnalytics } from '@/hooks/use-analytics';
@@ -468,6 +470,9 @@ export default function Home() {
 
   return (
     <section className="relative w-full min-h-screen overflow-hidden bg-[var(--bg-base)]">
+      {/* Scroll progress indicator */}
+      <ScrollProgress />
+
       {/* Offline banner */}
       <OfflineBanner />
 
@@ -820,6 +825,9 @@ export default function Home() {
           </div>
         </footer>
       </main>
+
+      {/* Scroll to top button */}
+      <ScrollToTop />
     </section>
   );
 }

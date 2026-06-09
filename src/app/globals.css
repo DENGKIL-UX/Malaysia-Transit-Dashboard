@@ -108,6 +108,7 @@
   /* Charts */
   --chart-grid: rgba(0, 0, 0, 0.06);
   --chart-axis: #888888;
+  --chart-hover: rgba(0, 0, 0, 0.06);
 
   /* Skeleton & misc */
   --skeleton-bg: rgba(0, 0, 0, 0.06);
@@ -178,6 +179,7 @@
   /* Charts */
   --chart-grid: rgba(255, 255, 255, 0.04);
   --chart-axis: #4b5b47;
+  --chart-hover: rgba(255, 255, 255, 0.06);
 
   /* Skeleton & misc */
   --skeleton-bg: rgba(255, 255, 255, 0.05);

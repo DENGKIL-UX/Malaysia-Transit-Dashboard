@@ -36,20 +36,20 @@ function FeatureCard({ title, description, icon, gradient, delay }: FeatureCardP
         className="relative self-stretch h-[260px] md:h-[300px] rounded-[40px] z-10 overflow-hidden"
         style={{
           border: '8px solid transparent',
-          background: `linear-gradient(#0e140e, #0e140e) padding-box, ${gradient} border-box`,
+          background: `linear-gradient(var(--bg-surface-1), var(--bg-surface-2)) padding-box, ${gradient} border-box`,
         }}
       >
         {/* Content */}
         <div className="w-full h-full p-7 flex flex-col justify-between">
           {/* Icon */}
-          <div className="text-white/90">{icon}</div>
+          <div className="text-[var(--text-primary)]">{icon}</div>
 
           {/* Text */}
           <div>
-            <h3 className="text-white font-medium text-xl mb-3 tracking-tight">
+            <h3 className="text-[var(--text-primary)] font-medium text-xl mb-3 tracking-tight">
               {title}
             </h3>
-            <p className="text-gray-400 text-[14px] leading-[1.6] font-normal selection:bg-emerald-500/20">
+            <p className="text-[var(--text-secondary)] text-[14px] leading-[1.6] font-normal selection:bg-[var(--accent-primary)]/20">
               {description}
             </p>
           </div>
