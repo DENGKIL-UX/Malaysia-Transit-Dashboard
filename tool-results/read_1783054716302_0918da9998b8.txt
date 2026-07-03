@@ -1,0 +1,1543 @@
+     1→{
+     2→  "sha": "40e50d9e03242aa5dd53ac771950f9127362b25f",
+     3→  "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/40e50d9e03242aa5dd53ac771950f9127362b25f",
+     4→  "tree": [
+     5→    {
+     6→      "path": ".agents",
+     7→      "mode": "040000",
+     8→      "type": "tree",
+     9→      "sha": "9e72a5708e59cfbb9ddd398c2bbbf9a89dd6edca",
+    10→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/9e72a5708e59cfbb9ddd398c2bbbf9a89dd6edca"
+    11→    },
+    12→    {
+    13→      "path": ".agents/plugins",
+    14→      "mode": "040000",
+    15→      "type": "tree",
+    16→      "sha": "06f92692fafb7facb53084ecbd5bf0216dbf83a7",
+    17→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/06f92692fafb7facb53084ecbd5bf0216dbf83a7"
+    18→    },
+    19→    {
+    20→      "path": ".agents/plugins/marketplace.json",
+    21→      "mode": "100644",
+    22→      "type": "blob",
+    23→      "sha": "971136332887afc4fec21345b0a4d1f7152c01be",
+    24→      "size": 410,
+    25→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/971136332887afc4fec21345b0a4d1f7152c01be"
+    26→    },
+    27→    {
+    28→      "path": ".agents/rules",
+    29→      "mode": "040000",
+    30→      "type": "tree",
+    31→      "sha": "09ac76b78f4c92e858f8da7bd3e13bc05a207f98",
+    32→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/09ac76b78f4c92e858f8da7bd3e13bc05a207f98"
+    33→    },
+    34→    {
+    35→      "path": ".agents/rules/ponytail.md",
+    36→      "mode": "100644",
+    37→      "type": "blob",
+    38→      "sha": "84d7ccc5e6dbd926c3abfd775979abe4c836c0a4",
+    39→      "size": 2505,
+    40→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/84d7ccc5e6dbd926c3abfd775979abe4c836c0a4"
+    41→    },
+    42→    {
+    43→      "path": ".claude-plugin",
+    44→      "mode": "040000",
+    45→      "type": "tree",
+    46→      "sha": "5cd75c5c75734f601e4e8950d6b12ff5f4f063c8",
+    47→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/5cd75c5c75734f601e4e8950d6b12ff5f4f063c8"
+    48→    },
+    49→    {
+    50→      "path": ".claude-plugin/marketplace.json",
+    51→      "mode": "100644",
+    52→      "type": "blob",
+    53→      "sha": "c50900aa43389f9c788358715a150d1eb992ad95",
+    54→      "size": 513,
+    55→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/c50900aa43389f9c788358715a150d1eb992ad95"
+    56→    },
+    57→    {
+    58→      "path": ".claude-plugin/plugin.json",
+    59→      "mode": "100644",
+    60→      "type": "blob",
+    61→      "sha": "6e66da15dd47e4b51adfe43db64a73ef7a5c7e22",
+    62→      "size": 342,
+    63→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/6e66da15dd47e4b51adfe43db64a73ef7a5c7e22"
+    64→    },
+    65→    {
+    66→      "path": ".clinerules",
+    67→      "mode": "040000",
+    68→      "type": "tree",
+    69→      "sha": "09ac76b78f4c92e858f8da7bd3e13bc05a207f98",
+    70→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/09ac76b78f4c92e858f8da7bd3e13bc05a207f98"
+    71→    },
+    72→    {
+    73→      "path": ".clinerules/ponytail.md",
+    74→      "mode": "100644",
+    75→      "type": "blob",
+    76→      "sha": "84d7ccc5e6dbd926c3abfd775979abe4c836c0a4",
+    77→      "size": 2505,
+    78→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/84d7ccc5e6dbd926c3abfd775979abe4c836c0a4"
+    79→    },
+    80→    {
+    81→      "path": ".codex-plugin",
+    82→      "mode": "040000",
+    83→      "type": "tree",
+    84→      "sha": "89427504ba9f7ff3f11b2db65282163464705fa9",
+    85→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/89427504ba9f7ff3f11b2db65282163464705fa9"
+    86→    },
+    87→    {
+    88→      "path": ".codex-plugin/plugin.json",
+    89→      "mode": "100644",
+    90→      "type": "blob",
+    91→      "sha": "bc982fcefaf7f5cf698616dfb18f83ef3ae20054",
+    92→      "size": 1280,
+    93→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/bc982fcefaf7f5cf698616dfb18f83ef3ae20054"
+    94→    },
+    95→    {
+    96→      "path": ".cursor",
+    97→      "mode": "040000",
+    98→      "type": "tree",
+    99→      "sha": "8f93906c0e5c6fb4f5596aa7621edc6880ee8eca",
+   100→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/8f93906c0e5c6fb4f5596aa7621edc6880ee8eca"
+   101→    },
+   102→    {
+   103→      "path": ".cursor/rules",
+   104→      "mode": "040000",
+   105→      "type": "tree",
+   106→      "sha": "35ce150a8155688dfff417e1ec3fce7bd97257f3",
+   107→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/35ce150a8155688dfff417e1ec3fce7bd97257f3"
+   108→    },
+   109→    {
+   110→      "path": ".cursor/rules/ponytail.mdc",
+   111→      "mode": "100644",
+   112→      "type": "blob",
+   113→      "sha": "db435a75d58e8d7f3478ef3150aafea0d3495c64",
+   114→      "size": 2630,
+   115→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/db435a75d58e8d7f3478ef3150aafea0d3495c64"
+   116→    },
+   117→    {
+   118→      "path": ".devin-plugin",
+   119→      "mode": "040000",
+   120→      "type": "tree",
+   121→      "sha": "450dfd827f49dcd4dacd9d3f1219b69d2800ec86",
+   122→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/450dfd827f49dcd4dacd9d3f1219b69d2800ec86"
+   123→    },
+   124→    {
+   125→      "path": ".devin-plugin/plugin.json",
+   126→      "mode": "100644",
+   127→      "type": "blob",
+   128→      "sha": "f21f5760dac48a5d81a607f4e3abf91506542497",
+   129→      "size": 508,
+   130→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/f21f5760dac48a5d81a607f4e3abf91506542497"
+   131→    },
+   132→    {
+   133→      "path": ".env.example",
+   134→      "mode": "100644",
+   135→      "type": "blob",
+   136→      "sha": "87bcc637930277df8ddaedd1cc085c29404aa1cc",
+   137→      "size": 106,
+   138→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/87bcc637930277df8ddaedd1cc085c29404aa1cc"
+   139→    },
+   140→    {
+   141→      "path": ".github",
+   142→      "mode": "040000",
+   143→      "type": "tree",
+   144→      "sha": "812ca7d8c89a3b2f43cf8c6d3b4b4258e2d32d65",
+   145→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/812ca7d8c89a3b2f43cf8c6d3b4b4258e2d32d65"
+   146→    },
+   147→    {
+   148→      "path": ".github/FUNDING.yml",
+   149→      "mode": "100644",
+   150→      "type": "blob",
+   151→      "sha": "41da57b06f38e2a4564e9d153fe0d8078b3499ff",
+   152→      "size": 25,
+   153→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/41da57b06f38e2a4564e9d153fe0d8078b3499ff"
+   154→    },
+   155→    {
+   156→      "path": ".github/copilot-instructions.md",
+   157→      "mode": "100644",
+   158→      "type": "blob",
+   159→      "sha": "84d7ccc5e6dbd926c3abfd775979abe4c836c0a4",
+   160→      "size": 2505,
+   161→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/84d7ccc5e6dbd926c3abfd775979abe4c836c0a4"
+   162→    },
+   163→    {
+   164→      "path": ".github/plugin",
+   165→      "mode": "040000",
+   166→      "type": "tree",
+   167→      "sha": "0c05370bf3dbbe605f8f0568eac1c58ffe8a8271",
+   168→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/0c05370bf3dbbe605f8f0568eac1c58ffe8a8271"
+   169→    },
+   170→    {
+   171→      "path": ".github/plugin/marketplace.json",
+   172→      "mode": "100644",
+   173→      "type": "blob",
+   174→      "sha": "7f28d300b6d2e998eb8352c8ea9d65228102f75e",
+   175→      "size": 610,
+   176→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/7f28d300b6d2e998eb8352c8ea9d65228102f75e"
+   177→    },
+   178→    {
+   179→      "path": ".github/plugin/plugin.json",
+   180→      "mode": "100644",
+   181→      "type": "blob",
+   182→      "sha": "0866851ba7d2c9e008bfa7470614c34a21401269",
+   183→      "size": 597,
+   184→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/0866851ba7d2c9e008bfa7470614c34a21401269"
+   185→    },
+   186→    {
+   187→      "path": ".github/workflows",
+   188→      "mode": "040000",
+   189→      "type": "tree",
+   190→      "sha": "25c04669492900c89b1db187c286127a66182768",
+   191→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/25c04669492900c89b1db187c286127a66182768"
+   192→    },
+   193→    {
+   194→      "path": ".github/workflows/publish.yml",
+   195→      "mode": "100644",
+   196→      "type": "blob",
+   197→      "sha": "c249c4ad12ccaa95f6421b28c5bcefcd945af4c2",
+   198→      "size": 575,
+   199→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/c249c4ad12ccaa95f6421b28c5bcefcd945af4c2"
+   200→    },
+   201→    {
+   202→      "path": ".github/workflows/test.yml",
+   203→      "mode": "100644",
+   204→      "type": "blob",
+   205→      "sha": "4bb17c0162783d8d21d09cba1518d3fec5f84367",
+   206→      "size": 633,
+   207→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/4bb17c0162783d8d21d09cba1518d3fec5f84367"
+   208→    },
+   209→    {
+   210→      "path": ".gitignore",
+   211→      "mode": "100644",
+   212→      "type": "blob",
+   213→      "sha": "7c818a20b03eb46a9f91bcca2056995854198bb8",
+   214→      "size": 506,
+   215→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/7c818a20b03eb46a9f91bcca2056995854198bb8"
+   216→    },
+   217→    {
+   218→      "path": ".kiro",
+   219→      "mode": "040000",
+   220→      "type": "tree",
+   221→      "sha": "5a3eb629bdbe225c1b1aeeac272dd0078aeb6efc",
+   222→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/5a3eb629bdbe225c1b1aeeac272dd0078aeb6efc"
+   223→    },
+   224→    {
+   225→      "path": ".kiro/steering",
+   226→      "mode": "040000",
+   227→      "type": "tree",
+   228→      "sha": "6e33ce76e9c96c273b76358024f7fbd655f586ee",
+   229→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/6e33ce76e9c96c273b76358024f7fbd655f586ee"
+   230→    },
+   231→    {
+   232→      "path": ".kiro/steering/ponytail.md",
+   233→      "mode": "100644",
+   234→      "type": "blob",
+   235→      "sha": "15d50a8b42ae643cf4ed77821a1d2c4aaeab5343",
+   236→      "size": 2570,
+   237→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/15d50a8b42ae643cf4ed77821a1d2c4aaeab5343"
+   238→    },
+   239→    {
+   240→      "path": ".openclaw",
+   241→      "mode": "040000",
+   242→      "type": "tree",
+   243→      "sha": "d45b1537d8729858dfde7c641a8e92976b719013",
+   244→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/d45b1537d8729858dfde7c641a8e92976b719013"
+   245→    },
+   246→    {
+   247→      "path": ".openclaw/skills",
+   248→      "mode": "040000",
+   249→      "type": "tree",
+   250→      "sha": "afe69f5ba23d9395639049d66b0b3461f83d9d92",
+   251→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/afe69f5ba23d9395639049d66b0b3461f83d9d92"
+   252→    },
+   253→    {
+   254→      "path": ".openclaw/skills/ponytail-audit",
+   255→      "mode": "040000",
+   256→      "type": "tree",
+   257→      "sha": "c93029efafeaa4a246bcc97ef46e65b7c842b496",
+   258→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/c93029efafeaa4a246bcc97ef46e65b7c842b496"
+   259→    },
+   260→    {
+   261→      "path": ".openclaw/skills/ponytail-audit/SKILL.md",
+   262→      "mode": "100644",
+   263→      "type": "blob",
+   264→      "sha": "07ead9e6dc4893cf80826f965fbcd37aaca0c2c4",
+   265→      "size": 1434,
+   266→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/07ead9e6dc4893cf80826f965fbcd37aaca0c2c4"
+   267→    },
+   268→    {
+   269→      "path": ".openclaw/skills/ponytail-debt",
+   270→      "mode": "040000",
+   271→      "type": "tree",
+   272→      "sha": "73cd5fb8ff28f7f8e13c25cf143af4a0ac46d35f",
+   273→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/73cd5fb8ff28f7f8e13c25cf143af4a0ac46d35f"
+   274→    },
+   275→    {
+   276→      "path": ".openclaw/skills/ponytail-debt/SKILL.md",
+   277→      "mode": "100644",
+   278→      "type": "blob",
+   279→      "sha": "24e06ea0402c51302667d0a68fb6dd8c3ab12de8",
+   280→      "size": 1499,
+   281→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/24e06ea0402c51302667d0a68fb6dd8c3ab12de8"
+   282→    },
+   283→    {
+   284→      "path": ".openclaw/skills/ponytail-gain",
+   285→      "mode": "040000",
+   286→      "type": "tree",
+   287→      "sha": "770da37f26797376b7ad567aa52dc5471b1eff3e",
+   288→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/770da37f26797376b7ad567aa52dc5471b1eff3e"
+   289→    },
+   290→    {
+   291→      "path": ".openclaw/skills/ponytail-gain/SKILL.md",
+   292→      "mode": "100644",
+   293→      "type": "blob",
+   294→      "sha": "1fdb04d175a1149ba21ad4837f29de8ea6ed4ff1",
+   295→      "size": 1853,
+   296→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/1fdb04d175a1149ba21ad4837f29de8ea6ed4ff1"
+   297→    },
+   298→    {
+   299→      "path": ".openclaw/skills/ponytail-help",
+   300→      "mode": "040000",
+   301→      "type": "tree",
+   302→      "sha": "e7b3e88e4a35a1f51d9707ad7e6cc08ae54ff5b8",
+   303→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/e7b3e88e4a35a1f51d9707ad7e6cc08ae54ff5b8"
+   304→    },
+   305→    {
+   306→      "path": ".openclaw/skills/ponytail-help/SKILL.md",
+   307→      "mode": "100644",
+   308→      "type": "blob",
+   309→      "sha": "50ff0f1ef97752ac7f275ffc798a89a9a07631ee",
+   310→      "size": 2733,
+   311→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/50ff0f1ef97752ac7f275ffc798a89a9a07631ee"
+   312→    },
+   313→    {
+   314→      "path": ".openclaw/skills/ponytail-review",
+   315→      "mode": "040000",
+   316→      "type": "tree",
+   317→      "sha": "7589bbd9f9027631e153b9ad72067b349dfd4da2",
+   318→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/7589bbd9f9027631e153b9ad72067b349dfd4da2"
+   319→    },
+   320→    {
+   321→      "path": ".openclaw/skills/ponytail-review/SKILL.md",
+   322→      "mode": "100644",
+   323→      "type": "blob",
+   324→      "sha": "284b7830f78599bd3599a948c2580e6afa17487e",
+   325→      "size": 2118,
+   326→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/284b7830f78599bd3599a948c2580e6afa17487e"
+   327→    },
+   328→    {
+   329→      "path": ".openclaw/skills/ponytail",
+   330→      "mode": "040000",
+   331→      "type": "tree",
+   332→      "sha": "445dd4eb5f838b430ad621f0af5dd05a72674337",
+   333→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/445dd4eb5f838b430ad621f0af5dd05a72674337"
+   334→    },
+   335→    {
+   336→      "path": ".openclaw/skills/ponytail/SKILL.md",
+   337→      "mode": "100644",
+   338→      "type": "blob",
+   339→      "sha": "459ff25c01143cab43009b86c6791d9b302918f8",
+   340→      "size": 6027,
+   341→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/459ff25c01143cab43009b86c6791d9b302918f8"
+   342→    },
+   343→    {
+   344→      "path": ".opencode",
+   345→      "mode": "040000",
+   346→      "type": "tree",
+   347→      "sha": "9d31212c1d7aa7a70d5b3bebae522deb2b5ba3d3",
+   348→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/9d31212c1d7aa7a70d5b3bebae522deb2b5ba3d3"
+   349→    },
+   350→    {
+   351→      "path": ".opencode/command",
+   352→      "mode": "040000",
+   353→      "type": "tree",
+   354→      "sha": "7a1efb577178610d6c971049c40e6d32c6f67f13",
+   355→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/7a1efb577178610d6c971049c40e6d32c6f67f13"
+   356→    },
+   357→    {
+   358→      "path": ".opencode/command/ponytail-audit.md",
+   359→      "mode": "100644",
+   360→      "type": "blob",
+   361→      "sha": "4722747fe4c874466e4e4798e4e3d2853a83f4ca",
+   362→      "size": 587,
+   363→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/4722747fe4c874466e4e4798e4e3d2853a83f4ca"
+   364→    },
+   365→    {
+   366→      "path": ".opencode/command/ponytail-debt.md",
+   367→      "mode": "100644",
+   368→      "type": "blob",
+   369→      "sha": "d853778ea9bde8b57e2c015bd4dbed23a9a36213",
+   370→      "size": 689,
+   371→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/d853778ea9bde8b57e2c015bd4dbed23a9a36213"
+   372→    },
+   373→    {
+   374→      "path": ".opencode/command/ponytail-gain.md",
+   375→      "mode": "100644",
+   376→      "type": "blob",
+   377→      "sha": "9243a0e980ced41984a3b4170e57cf62ee407eb8",
+   378→      "size": 897,
+   379→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/9243a0e980ced41984a3b4170e57cf62ee407eb8"
+   380→    },
+   381→    {
+   382→      "path": ".opencode/command/ponytail-help.md",
+   383→      "mode": "100644",
+   384→      "type": "blob",
+   385→      "sha": "bf186a89c9778a8b3744abe040c1696548794426",
+   386→      "size": 1077,
+   387→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/bf186a89c9778a8b3744abe040c1696548794426"
+   388→    },
+   389→    {
+   390→      "path": ".opencode/command/ponytail-review.md",
+   391→      "mode": "100644",
+   392→      "type": "blob",
+   393→      "sha": "119cda5f3b5e717bf2b165d486cd5a1c255d5989",
+   394→      "size": 510,
+   395→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/119cda5f3b5e717bf2b165d486cd5a1c255d5989"
+   396→    },
+   397→    {
+   398→      "path": ".opencode/command/ponytail.md",
+   399→      "mode": "100644",
+   400→      "type": "blob",
+   401→      "sha": "6c21c1e393e0a761ecc937541f713135c61de0e4",
+   402→      "size": 463,
+   403→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/6c21c1e393e0a761ecc937541f713135c61de0e4"
+   404→    },
+   405→    {
+   406→      "path": ".opencode/plugins",
+   407→      "mode": "040000",
+   408→      "type": "tree",
+   409→      "sha": "8124d46617e5a4bd393253516a28d827b3ee12b1",
+   410→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/8124d46617e5a4bd393253516a28d827b3ee12b1"
+   411→    },
+   412→    {
+   413→      "path": ".opencode/plugins/ponytail.mjs",
+   414→      "mode": "100644",
+   415→      "type": "blob",
+   416→      "sha": "2d452e2fb9cd84ea56edd5848eb0c81162e4cb1e",
+   417→      "size": 3876,
+   418→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/2d452e2fb9cd84ea56edd5848eb0c81162e4cb1e"
+   419→    },
+   420→    {
+   421→      "path": ".windsurf",
+   422→      "mode": "040000",
+   423→      "type": "tree",
+   424→      "sha": "ad17d8ab968772881ffdfd8d81fa55291f21a18b",
+   425→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/ad17d8ab968772881ffdfd8d81fa55291f21a18b"
+   426→    },
+   427→    {
+   428→      "path": ".windsurf/rules",
+   429→      "mode": "040000",
+   430→      "type": "tree",
+   431→      "sha": "09ac76b78f4c92e858f8da7bd3e13bc05a207f98",
+   432→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/09ac76b78f4c92e858f8da7bd3e13bc05a207f98"
+   433→    },
+   434→    {
+   435→      "path": ".windsurf/rules/ponytail.md",
+   436→      "mode": "100644",
+   437→      "type": "blob",
+   438→      "sha": "84d7ccc5e6dbd926c3abfd775979abe4c836c0a4",
+   439→      "size": 2505,
+   440→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/84d7ccc5e6dbd926c3abfd775979abe4c836c0a4"
+   441→    },
+   442→    {
+   443→      "path": "AGENTS.md",
+   444→      "mode": "100644",
+   445→      "type": "blob",
+   446→      "sha": "426109e6f0542171c2aa18da169bd311508684e6",
+   447→      "size": 2603,
+   448→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/426109e6f0542171c2aa18da169bd311508684e6"
+   449→    },
+   450→    {
+   451→      "path": "LICENSE",
+   452→      "mode": "100644",
+   453→      "type": "blob",
+   454→      "sha": "715d483338cea4365f0d91a27799cf61226d6bcf",
+   455→      "size": 1071,
+   456→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/715d483338cea4365f0d91a27799cf61226d6bcf"
+   457→    },
+   458→    {
+   459→      "path": "README.es.md",
+   460→      "mode": "100644",
+   461→      "type": "blob",
+   462→      "sha": "a0f9566c7e8e1039e6ce62a66c57fd23ad767a02",
+   463→      "size": 15772,
+   464→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/a0f9566c7e8e1039e6ce62a66c57fd23ad767a02"
+   465→    },
+   466→    {
+   467→      "path": "README.ko.md",
+   468→      "mode": "100644",
+   469→      "type": "blob",
+   470→      "sha": "df8469ca05b3da9daf234ca9023e634b204bfbfa",
+   471→      "size": 18076,
+   472→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/df8469ca05b3da9daf234ca9023e634b204bfbfa"
+   473→    },
+   474→    {
+   475→      "path": "README.md",
+   476→      "mode": "100644",
+   477→      "type": "blob",
+   478→      "sha": "597adf84b4207edd47ff2d1a9d11e0ff27d445ab",
+   479→      "size": 17323,
+   480→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/597adf84b4207edd47ff2d1a9d11e0ff27d445ab"
+   481→    },
+   482→    {
+   483→      "path": "__init__.py",
+   484→      "mode": "100644",
+   485→      "type": "blob",
+   486→      "sha": "caefe7629493c22d86008ad0c2853d6ad41610b4",
+   487→      "size": 7865,
+   488→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/caefe7629493c22d86008ad0c2853d6ad41610b4"
+   489→    },
+   490→    {
+   491→      "path": "after-install.md",
+   492→      "mode": "100644",
+   493→      "type": "blob",
+   494→      "sha": "d58644eca947b23d89547b8258e94cebade92618",
+   495→      "size": 662,
+   496→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/d58644eca947b23d89547b8258e94cebade92618"
+   497→    },
+   498→    {
+   499→      "path": "assets",
+   500→      "mode": "040000",
+   501→      "type": "tree",
+   502→      "sha": "4ef215ac7d284323cc6aa70af436bb4cdb8c9348",
+   503→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/4ef215ac7d284323cc6aa70af436bb4cdb8c9348"
+   504→    },
+   505→    {
+   506→      "path": "assets/benchmark-3model.svg",
+   507→      "mode": "100644",
+   508→      "type": "blob",
+   509→      "sha": "bfaedb0e36f229eb486bd408a102629e6972262b",
+   510→      "size": 2753,
+   511→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/bfaedb0e36f229eb486bd408a102629e6972262b"
+   512→    },
+   513→    {
+   514→      "path": "assets/benchmark-agentic.svg",
+   515→      "mode": "100644",
+   516→      "type": "blob",
+   517→      "sha": "9ab4d28589734fd537791c7ebd9779157df78057",
+   518→      "size": 6295,
+   519→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/9ab4d28589734fd537791c7ebd9779157df78057"
+   520→    },
+   521→    {
+   522→      "path": "assets/logo-dark.png",
+   523→      "mode": "100644",
+   524→      "type": "blob",
+   525→      "sha": "fc901d4801e5139c1cafe0a116f25cddf8b4ea97",
+   526→      "size": 132499,
+   527→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/fc901d4801e5139c1cafe0a116f25cddf8b4ea97"
+   528→    },
+   529→    {
+   530→      "path": "assets/logo-dark.svg",
+   531→      "mode": "100644",
+   532→      "type": "blob",
+   533→      "sha": "17178cb37162879c2b057a7a1dcb03b255572761",
+   534→      "size": 86402,
+   535→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/17178cb37162879c2b057a7a1dcb03b255572761"
+   536→    },
+   537→    {
+   538→      "path": "assets/logo-greenpt-dark.svg",
+   539→      "mode": "100644",
+   540→      "type": "blob",
+   541→      "sha": "cbcfd6aad21c8a9cc26121389811e8f79c08c7b1",
+   542→      "size": 5851,
+   543→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/cbcfd6aad21c8a9cc26121389811e8f79c08c7b1"
+   544→    },
+   545→    {
+   546→      "path": "assets/logo-greenpt.svg",
+   547→      "mode": "100644",
+   548→      "type": "blob",
+   549→      "sha": "b41521048a3db0d2e3ae2a98b186190d0e2fcf82",
+   550→      "size": 5851,
+   551→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/b41521048a3db0d2e3ae2a98b186190d0e2fcf82"
+   552→    },
+   553→    {
+   554→      "path": "assets/logo.png",
+   555→      "mode": "100644",
+   556→      "type": "blob",
+   557→      "sha": "e132980a0f97c8335e7c38a0d3500a7d617f2d76",
+   558→      "size": 567655,
+   559→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/e132980a0f97c8335e7c38a0d3500a7d617f2d76"
+   560→    },
+   561→    {
+   562→      "path": "assets/social-preview.png",
+   563→      "mode": "100644",
+   564→      "type": "blob",
+   565→      "sha": "3bc968673c991d8c5b6262738e5a81dd0dd74011",
+   566→      "size": 59380,
+   567→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/3bc968673c991d8c5b6262738e5a81dd0dd74011"
+   568→    },
+   569→    {
+   570→      "path": "assets/waitlist-banner-es.png",
+   571→      "mode": "100644",
+   572→      "type": "blob",
+   573→      "sha": "ca30a06cc2edab8baecba415b17994c663f8d0d8",
+   574→      "size": 70620,
+   575→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/ca30a06cc2edab8baecba415b17994c663f8d0d8"
+   576→    },
+   577→    {
+   578→      "path": "assets/waitlist-banner-ko.png",
+   579→      "mode": "100644",
+   580→      "type": "blob",
+   581→      "sha": "6407e95eef7aa7d27617c017a580306287d8d3ea",
+   582→      "size": 67380,
+   583→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/6407e95eef7aa7d27617c017a580306287d8d3ea"
+   584→    },
+   585→    {
+   586→      "path": "assets/waitlist-banner.png",
+   587→      "mode": "100644",
+   588→      "type": "blob",
+   589→      "sha": "fc7087bbcfc9624a8a54aa51b068ca62f30bbc24",
+   590→      "size": 69148,
+   591→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/fc7087bbcfc9624a8a54aa51b068ca62f30bbc24"
+   592→    },
+   593→    {
+   594→      "path": "benchmarks",
+   595→      "mode": "040000",
+   596→      "type": "tree",
+   597→      "sha": "58ff06b4f4bbff904a6139d9e0ba0a48845d6ecd",
+   598→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/58ff06b4f4bbff904a6139d9e0ba0a48845d6ecd"
+   599→    },
+   600→    {
+   601→      "path": "benchmarks/README.md",
+   602→      "mode": "100644",
+   603→      "type": "blob",
+   604→      "sha": "79c1d0edf21709093c9c419f58960a381d74e822",
+   605→      "size": 6135,
+   606→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/79c1d0edf21709093c9c419f58960a381d74e822"
+   607→    },
+   608→    {
+   609→      "path": "benchmarks/agentic",
+   610→      "mode": "040000",
+   611→      "type": "tree",
+   612→      "sha": "95db5fc45309e3007f786dcef6b822dd48e1c089",
+   613→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/95db5fc45309e3007f786dcef6b822dd48e1c089"
+   614→    },
+   615→    {
+   616→      "path": "benchmarks/agentic/README.md",
+   617→      "mode": "100644",
+   618→      "type": "blob",
+   619→      "sha": "f39d68c4d9794512eb5d5ae591e1c29d7e44fd75",
+   620→      "size": 10112,
+   621→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/f39d68c4d9794512eb5d5ae591e1c29d7e44fd75"
+   622→    },
+   623→    {
+   624→      "path": "benchmarks/agentic/complete.py",
+   625→      "mode": "100644",
+   626→      "type": "blob",
+   627→      "sha": "831ae306a04274bdf04123c5d4759c80a7f27a0f",
+   628→      "size": 7944,
+   629→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/831ae306a04274bdf04123c5d4759c80a7f27a0f"
+   630→    },
+   631→    {
+   632→      "path": "benchmarks/agentic/judge.py",
+   633→      "mode": "100644",
+   634→      "type": "blob",
+   635→      "sha": "63a3b7f38681731baed4e22fb914dc11bb380813",
+   636→      "size": 9987,
+   637→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/63a3b7f38681731baed4e22fb914dc11bb380813"
+   638→    },
+   639→    {
+   640→      "path": "benchmarks/agentic/run.py",
+   641→      "mode": "100644",
+   642→      "type": "blob",
+   643→      "sha": "f63c144a0b78f6b3ab690dfe9ad292d9c6ee7d6a",
+   644→      "size": 25627,
+   645→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/f63c144a0b78f6b3ab690dfe9ad292d9c6ee7d6a"
+   646→    },
+   647→    {
+   648→      "path": "benchmarks/agentic/tasks.py",
+   649→      "mode": "100644",
+   650→      "type": "blob",
+   651→      "sha": "6e0fa6a1c3e3dc0a442d13e8a2d3d72f5b1b8a20",
+   652→      "size": 50431,
+   653→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/6e0fa6a1c3e3dc0a442d13e8a2d3d72f5b1b8a20"
+   654→    },
+   655→    {
+   656→      "path": "benchmarks/arms",
+   657→      "mode": "040000",
+   658→      "type": "tree",
+   659→      "sha": "e2215775cc401ea20a4c0eb7ecd072dcf3b4baa6",
+   660→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/e2215775cc401ea20a4c0eb7ecd072dcf3b4baa6"
+   661→    },
+   662→    {
+   663→      "path": "benchmarks/arms/baseline.js",
+   664→      "mode": "100644",
+   665→      "type": "blob",
+   666→      "sha": "14690357e2f515dd8587a9af84b2c921671b7c06",
+   667→      "size": 113,
+   668→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/14690357e2f515dd8587a9af84b2c921671b7c06"
+   669→    },
+   670→    {
+   671→      "path": "benchmarks/arms/caveman-SKILL.md",
+   672→      "mode": "100644",
+   673→      "type": "blob",
+   674→      "sha": "561069b4ac264077e0680f8cf3c087f170a3ccd8",
+   675→      "size": 3654,
+   676→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/561069b4ac264077e0680f8cf3c087f170a3ccd8"
+   677→    },
+   678→    {
+   679→      "path": "benchmarks/arms/caveman.js",
+   680→      "mode": "100644",
+   681→      "type": "blob",
+   682→      "sha": "930eeca4603aa0a9bbba5b312a4e08bc37d0d5fc",
+   683→      "size": 315,
+   684→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/930eeca4603aa0a9bbba5b312a4e08bc37d0d5fc"
+   685→    },
+   686→    {
+   687→      "path": "benchmarks/arms/ponytail.js",
+   688→      "mode": "100644",
+   689→      "type": "blob",
+   690→      "sha": "6a218834b7c9b73dc52e45debd80da612fd816a7",
+   691→      "size": 373,
+   692→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/6a218834b7c9b73dc52e45debd80da612fd816a7"
+   693→    },
+   694→    {
+   695→      "path": "benchmarks/behavior.js",
+   696→      "mode": "100644",
+   697→      "type": "blob",
+   698→      "sha": "41787aeebae32622cc79150038c27b63a54f1604",
+   699→      "size": 2912,
+   700→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/41787aeebae32622cc79150038c27b63a54f1604"
+   701→    },
+   702→    {
+   703→      "path": "benchmarks/behavior.yaml",
+   704→      "mode": "100644",
+   705→      "type": "blob",
+   706→      "sha": "bba1c82c139b5897d8e9b03c1029f03599eaab7f",
+   707→      "size": 1685,
+   708→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/bba1c82c139b5897d8e9b03c1029f03599eaab7f"
+   709→    },
+   710→    {
+   711→      "path": "benchmarks/benchmark-local.py",
+   712→      "mode": "100644",
+   713→      "type": "blob",
+   714→      "sha": "8ffe58a44156e26b7a0cf5f8de5ae02c358ae6c3",
+   715→      "size": 6173,
+   716→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/8ffe58a44156e26b7a0cf5f8de5ae02c358ae6c3"
+   717→    },
+   718→    {
+   719→      "path": "benchmarks/claude-email.js",
+   720→      "mode": "100644",
+   721→      "type": "blob",
+   722→      "sha": "4a73512409971c43fcafd6550bb62ce04fc2d341",
+   723→      "size": 1952,
+   724→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/4a73512409971c43fcafd6550bb62ce04fc2d341"
+   725→    },
+   726→    {
+   727→      "path": "benchmarks/correctness.js",
+   728→      "mode": "100644",
+   729→      "type": "blob",
+   730→      "sha": "fc566114112216efaf565871b33ecc3f826383cb",
+   731→      "size": 10024,
+   732→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/fc566114112216efaf565871b33ecc3f826383cb"
+   733→    },
+   734→    {
+   735→      "path": "benchmarks/correctness.test.js",
+   736→      "mode": "100644",
+   737→      "type": "blob",
+   738→      "sha": "e3103c472f71d902567c8c30f0ee507f40053c03",
+   739→      "size": 1583,
+   740→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/e3103c472f71d902567c8c30f0ee507f40053c03"
+   741→    },
+   742→    {
+   743→      "path": "benchmarks/generate-examples.mjs",
+   744→      "mode": "100644",
+   745→      "type": "blob",
+   746→      "sha": "4cda7161dd9bc2f3ec009bc792277e1681d9b520",
+   747→      "size": 2566,
+   748→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/4cda7161dd9bc2f3ec009bc792277e1681d9b520"
+   749→    },
+   750→    {
+   751→      "path": "benchmarks/loc.js",
+   752→      "mode": "100644",
+   753→      "type": "blob",
+   754→      "sha": "93e13dd99dea88401c7131ededc1e5b1b4843470",
+   755→      "size": 932,
+   756→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/93e13dd99dea88401c7131ededc1e5b1b4843470"
+   757→    },
+   758→    {
+   759→      "path": "benchmarks/loc.test.js",
+   760→      "mode": "100644",
+   761→      "type": "blob",
+   762→      "sha": "de302814edbaa1928f80aa9370bd3b9ef82822b2",
+   763→      "size": 1102,
+   764→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/de302814edbaa1928f80aa9370bd3b9ef82822b2"
+   765→    },
+   766→    {
+   767→      "path": "benchmarks/model-email.js",
+   768→      "mode": "100644",
+   769→      "type": "blob",
+   770→      "sha": "ea8ee8c1d5d807b1f21c5ab5fe9e0fefcb98f2b0",
+   771→      "size": 1924,
+   772→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/ea8ee8c1d5d807b1f21c5ab5fe9e0fefcb98f2b0"
+   773→    },
+   774→    {
+   775→      "path": "benchmarks/promptfooconfig.gemini.yaml",
+   776→      "mode": "100644",
+   777→      "type": "blob",
+   778→      "sha": "00c2e2d15f0da666b64f3d4bbfe00109b21bbc44",
+   779→      "size": 1400,
+   780→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/00c2e2d15f0da666b64f3d4bbfe00109b21bbc44"
+   781→    },
+   782→    {
+   783→      "path": "benchmarks/promptfooconfig.gpt-newest.yaml",
+   784→      "mode": "100644",
+   785→      "type": "blob",
+   786→      "sha": "7055d5cfff0cf1f9caf221c8c9a97e2729f7ce78",
+   787→      "size": 1399,
+   788→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/7055d5cfff0cf1f9caf221c8c9a97e2729f7ce78"
+   789→    },
+   790→    {
+   791→      "path": "benchmarks/promptfooconfig.gpt.yaml",
+   792→      "mode": "100644",
+   793→      "type": "blob",
+   794→      "sha": "f939723382eb8f590b27c15304f5ed69da36663c",
+   795→      "size": 1390,
+   796→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/f939723382eb8f590b27c15304f5ed69da36663c"
+   797→    },
+   798→    {
+   799→      "path": "benchmarks/promptfooconfig.yaml",
+   800→      "mode": "100644",
+   801→      "type": "blob",
+   802→      "sha": "b624c3f8c5e05e6e858fbec17dbf95a25aefd526",
+   803→      "size": 1815,
+   804→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/b624c3f8c5e05e6e858fbec17dbf95a25aefd526"
+   805→    },
+   806→    {
+   807→      "path": "benchmarks/prompts.json",
+   808→      "mode": "100644",
+   809→      "type": "blob",
+   810→      "sha": "1e66c2c7414beb8a9f37e22fc062d32231448247",
+   811→      "size": 1029,
+   812→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/1e66c2c7414beb8a9f37e22fc062d32231448247"
+   813→    },
+   814→    {
+   815→      "path": "benchmarks/results",
+   816→      "mode": "040000",
+   817→      "type": "tree",
+   818→      "sha": "131fbfddc7258c1b64b52dfd1ec86fcd4a7ff007",
+   819→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/131fbfddc7258c1b64b52dfd1ec86fcd4a7ff007"
+   820→    },
+   821→    {
+   822→      "path": "benchmarks/results/2026-06-12-caveman-vs-ponytail.md",
+   823→      "mode": "100644",
+   824→      "type": "blob",
+   825→      "sha": "b3dd3815c2d785dc13e44fb3d67ea23ea8eb696d",
+   826→      "size": 3658,
+   827→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/b3dd3815c2d785dc13e44fb3d67ea23ea8eb696d"
+   828→    },
+   829→    {
+   830→      "path": "benchmarks/results/2026-06-12-v4-hardening-vs-caveman.md",
+   831→      "mode": "100644",
+   832→      "type": "blob",
+   833→      "sha": "49f8d8ec8fa304336c569397e9c6c7634f41fbc8",
+   834→      "size": 6758,
+   835→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/49f8d8ec8fa304336c569397e9c6c7634f41fbc8"
+   836→    },
+   837→    {
+   838→      "path": "benchmarks/results/2026-06-15-llama3.2-local.md",
+   839→      "mode": "100644",
+   840→      "type": "blob",
+   841→      "sha": "55ed4e08de18a3cc61538b0ff369bf4954c28827",
+   842→      "size": 3167,
+   843→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/55ed4e08de18a3cc61538b0ff369bf4954c28827"
+   844→    },
+   845→    {
+   846→      "path": "benchmarks/results/2026-06-16-correctness-gate-fix.md",
+   847→      "mode": "100644",
+   848→      "type": "blob",
+   849→      "sha": "7fa12dbdfc019d5dea071fe9bd8dd56aed1bd1d6",
+   850→      "size": 5284,
+   851→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/7fa12dbdfc019d5dea071fe9bd8dd56aed1bd1d6"
+   852→    },
+   853→    {
+   854→      "path": "benchmarks/results/2026-06-16-robustness-audit.md",
+   855→      "mode": "100644",
+   856→      "type": "blob",
+   857→      "sha": "c30bf73a62c9e89d894f06d88650286027d1660e",
+   858→      "size": 6509,
+   859→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/c30bf73a62c9e89d894f06d88650286027d1660e"
+   860→    },
+   861→    {
+   862→      "path": "benchmarks/results/2026-06-17-agentic-safety.md",
+   863→      "mode": "100644",
+   864→      "type": "blob",
+   865→      "sha": "4a48681b2280843279e4ff3618479a1f56af1e51",
+   866→      "size": 8109,
+   867→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/4a48681b2280843279e4ff3618479a1f56af1e51"
+   868→    },
+   869→    {
+   870→      "path": "benchmarks/results/2026-06-17-cost-verification.md",
+   871→      "mode": "100644",
+   872→      "type": "blob",
+   873→      "sha": "859455b6ce0ee3fcf2123e88282a5488bacf75e7",
+   874→      "size": 4849,
+   875→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/859455b6ce0ee3fcf2123e88282a5488bacf75e7"
+   876→    },
+   877→    {
+   878→      "path": "benchmarks/results/2026-06-18-agentic.md",
+   879→      "mode": "100644",
+   880→      "type": "blob",
+   881→      "sha": "1a602f7e49369841cef39d5b764e1247f78d2bb9",
+   882→      "size": 12226,
+   883→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/1a602f7e49369841cef39d5b764e1247f78d2bb9"
+   884→    },
+   885→    {
+   886→      "path": "benchmarks/results/2026-06-22-issue-245-217-comprehension.md",
+   887→      "mode": "100644",
+   888→      "type": "blob",
+   889→      "sha": "17e09e8653c9a8d35da5deb9d6ad2ba69b6bb6ac",
+   890→      "size": 5566,
+   891→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/17e09e8653c9a8d35da5deb9d6ad2ba69b6bb6ac"
+   892→    },
+   893→    {
+   894→      "path": "benchmarks/robustness-audit.js",
+   895→      "mode": "100644",
+   896→      "type": "blob",
+   897→      "sha": "16b9e9960d3de4b885a13e042832aff35d4108d6",
+   898→      "size": 14150,
+   899→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/16b9e9960d3de4b885a13e042832aff35d4108d6"
+   900→    },
+   901→    {
+   902→      "path": "commands",
+   903→      "mode": "040000",
+   904→      "type": "tree",
+   905→      "sha": "d80a4a1fb4c387f6b0538479c66dfa44169465e1",
+   906→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/d80a4a1fb4c387f6b0538479c66dfa44169465e1"
+   907→    },
+   908→    {
+   909→      "path": "commands/ponytail-audit.toml",
+   910→      "mode": "100644",
+   911→      "type": "blob",
+   912→      "sha": "4ebc3b291983f766b94e708759726102e954b4d3",
+   913→      "size": 592,
+   914→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/4ebc3b291983f766b94e708759726102e954b4d3"
+   915→    },
+   916→    {
+   917→      "path": "commands/ponytail-debt.toml",
+   918→      "mode": "100644",
+   919→      "type": "blob",
+   920→      "sha": "fe41f09b02c9b12e795431cb593a6001602fa6c7",
+   921→      "size": 695,
+   922→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/fe41f09b02c9b12e795431cb593a6001602fa6c7"
+   923→    },
+   924→    {
+   925→      "path": "commands/ponytail-gain.toml",
+   926→      "mode": "100644",
+   927→      "type": "blob",
+   928→      "sha": "17b36f3272f78dcb9d050cb250e3d880ed075e60",
+   929→      "size": 902,
+   930→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/17b36f3272f78dcb9d050cb250e3d880ed075e60"
+   931→    },
+   932→    {
+   933→      "path": "commands/ponytail-help.toml",
+   934→      "mode": "100644",
+   935→      "type": "blob",
+   936→      "sha": "ebb589f08455f234459b7438a6c6268f92aeeaa9",
+   937→      "size": 1152,
+   938→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/ebb589f08455f234459b7438a6c6268f92aeeaa9"
+   939→    },
+   940→    {
+   941→      "path": "commands/ponytail-review.toml",
+   942→      "mode": "100644",
+   943→      "type": "blob",
+   944→      "sha": "81769d861100899872dd94760d18b42645bc8c53",
+   945→      "size": 515,
+   946→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/81769d861100899872dd94760d18b42645bc8c53"
+   947→    },
+   948→    {
+   949→      "path": "commands/ponytail.toml",
+   950→      "mode": "100644",
+   951→      "type": "blob",
+   952→      "sha": "8f3934a1f0139e29e5e515833050f2e50e4cd2f0",
+   953→      "size": 466,
+   954→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/8f3934a1f0139e29e5e515833050f2e50e4cd2f0"
+   955→    },
+   956→    {
+   957→      "path": "docs",
+   958→      "mode": "040000",
+   959→      "type": "tree",
+   960→      "sha": "362653a64d9bee7b5db26e5553dde68da8604a82",
+   961→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/362653a64d9bee7b5db26e5553dde68da8604a82"
+   962→    },
+   963→    {
+   964→      "path": "docs/agent-portability.md",
+   965→      "mode": "100644",
+   966→      "type": "blob",
+   967→      "sha": "bdae71116c1a17d592f0ddc3739ef9c5fba9a553",
+   968→      "size": 4434,
+   969→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/bdae71116c1a17d592f0ddc3739ef9c5fba9a553"
+   970→    },
+   971→    {
+   972→      "path": "docs/platform-native.md",
+   973→      "mode": "100644",
+   974→      "type": "blob",
+   975→      "sha": "11e7d6e11ee3b0ae0533a938cdb5dd0fa3ac9017",
+   976→      "size": 9434,
+   977→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/11e7d6e11ee3b0ae0533a938cdb5dd0fa3ac9017"
+   978→    },
+   979→    {
+   980→      "path": "examples",
+   981→      "mode": "040000",
+   982→      "type": "tree",
+   983→      "sha": "543bb10efde6d47d8c6795d5849b1467d13b359f",
+   984→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/543bb10efde6d47d8c6795d5849b1467d13b359f"
+   985→    },
+   986→    {
+   987→      "path": "examples/README.md",
+   988→      "mode": "100644",
+   989→      "type": "blob",
+   990→      "sha": "dc4524fa0f278e9ac1478ad1b20156de1c7a76ca",
+   991→      "size": 771,
+   992→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/dc4524fa0f278e9ac1478ad1b20156de1c7a76ca"
+   993→    },
+   994→    {
+   995→      "path": "examples/csv-sum.md",
+   996→      "mode": "100644",
+   997→      "type": "blob",
+   998→      "sha": "99da7d8f5fdff36285bf6f5ad294983a6cc69510",
+   999→      "size": 1742,
+  1000→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/99da7d8f5fdff36285bf6f5ad294983a6cc69510"
+  1001→    },
+  1002→    {
+  1003→      "path": "examples/debounce.md",
+  1004→      "mode": "100644",
+  1005→      "type": "blob",
+  1006→      "sha": "371fc33fb601d36804db86fa9261f26e35c4a0fb",
+  1007→      "size": 5109,
+  1008→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/371fc33fb601d36804db86fa9261f26e35c4a0fb"
+  1009→    },
+  1010→    {
+  1011→      "path": "examples/deep-clone.md",
+  1012→      "mode": "100644",
+  1013→      "type": "blob",
+  1014→      "sha": "f9b7d3f1b2e5ae73b5ce49475d0c24d0ce7b3908",
+  1015→      "size": 783,
+  1016→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/f9b7d3f1b2e5ae73b5ce49475d0c24d0ce7b3908"
+  1017→    },
+  1018→    {
+  1019→      "path": "examples/email-validation.md",
+  1020→      "mode": "100644",
+  1021→      "type": "blob",
+  1022→      "sha": "43b05bb403b5b05096c3c64f3027181819c35f26",
+  1023→      "size": 4621,
+  1024→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/43b05bb403b5b05096c3c64f3027181819c35f26"
+  1025→    },
+  1026→    {
+  1027→      "path": "examples/group-by.md",
+  1028→      "mode": "100644",
+  1029→      "type": "blob",
+  1030→      "sha": "90d014a27b004761f5f27f94135c88ee7f0409a9",
+  1031→      "size": 937,
+  1032→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/90d014a27b004761f5f27f94135c88ee7f0409a9"
+  1033→    },
+  1034→    {
+  1035→      "path": "examples/infinite-scroll.md",
+  1036→      "mode": "100644",
+  1037→      "type": "blob",
+  1038→      "sha": "039b12918e4cd8740f77a77c1383a2ab7a95d843",
+  1039→      "size": 1498,
+  1040→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/039b12918e4cd8740f77a77c1383a2ab7a95d843"
+  1041→    },
+  1042→    {
+  1043→      "path": "examples/modal-dialog.md",
+  1044→      "mode": "100644",
+  1045→      "type": "blob",
+  1046→      "sha": "db54e7cffee1ee32cf0a54b2c9fe715816d8c512",
+  1047→      "size": 1962,
+  1048→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/db54e7cffee1ee32cf0a54b2c9fe715816d8c512"
+  1049→    },
+  1050→    {
+  1051→      "path": "examples/number-formatting.md",
+  1052→      "mode": "100644",
+  1053→      "type": "blob",
+  1054→      "sha": "4773fa50a60ffd2c072531f7f75cafa8240e2259",
+  1055→      "size": 1049,
+  1056→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/4773fa50a60ffd2c072531f7f75cafa8240e2259"
+  1057→    },
+  1058→    {
+  1059→      "path": "examples/rate-limit.md",
+  1060→      "mode": "100644",
+  1061→      "type": "blob",
+  1062→      "sha": "e86cabe9690ec6f4cfa5b9f73e5809f5bf5b8e96",
+  1063→      "size": 7055,
+  1064→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/e86cabe9690ec6f4cfa5b9f73e5809f5bf5b8e96"
+  1065→    },
+  1066→    {
+  1067→      "path": "examples/react-countdown.md",
+  1068→      "mode": "100644",
+  1069→      "type": "blob",
+  1070→      "sha": "8ad7ccfff6234750c6a785d837f40a84bd351b8c",
+  1071→      "size": 8998,
+  1072→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/8ad7ccfff6234750c6a785d837f40a84bd351b8c"
+  1073→    },
+  1074→    {
+  1075→      "path": "examples/url-params.md",
+  1076→      "mode": "100644",
+  1077→      "type": "blob",
+  1078→      "sha": "e2ed5549cb2a2d91d61a480b73b4a3e35a49196c",
+  1079→      "size": 1057,
+  1080→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/e2ed5549cb2a2d91d61a480b73b4a3e35a49196c"
+  1081→    },
+  1082→    {
+  1083→      "path": "gemini-extension.json",
+  1084→      "mode": "100644",
+  1085→      "type": "blob",
+  1086→      "sha": "151847e0e49bc79ef37b699131be9f048a795f60",
+  1087→      "size": 233,
+  1088→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/151847e0e49bc79ef37b699131be9f048a795f60"
+  1089→    },
+  1090→    {
+  1091→      "path": "hooks",
+  1092→      "mode": "040000",
+  1093→      "type": "tree",
+  1094→      "sha": "2003fceb85d9c2749416931dea362dc3bf7db171",
+  1095→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/2003fceb85d9c2749416931dea362dc3bf7db171"
+  1096→    },
+  1097→    {
+  1098→      "path": "hooks/claude-codex-hooks.json",
+  1099→      "mode": "100644",
+  1100→      "type": "blob",
+  1101→      "sha": "2cb796c6a230a34fe685ffe9818e493d41f1a081",
+  1102→      "size": 1438,
+  1103→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/2cb796c6a230a34fe685ffe9818e493d41f1a081"
+  1104→    },
+  1105→    {
+  1106→      "path": "hooks/copilot-hooks.json",
+  1107→      "mode": "100644",
+  1108→      "type": "blob",
+  1109→      "sha": "1210c35a4546765a5d0e34f306e95d865c74d2b9",
+  1110→      "size": 539,
+  1111→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/1210c35a4546765a5d0e34f306e95d865c74d2b9"
+  1112→    },
+  1113→    {
+  1114→      "path": "hooks/ponytail-activate.js",
+  1115→      "mode": "100644",
+  1116→      "type": "blob",
+  1117→      "sha": "25f4e48e201769f7de2cb5167ae090b992662c7b",
+  1118→      "size": 3563,
+  1119→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/25f4e48e201769f7de2cb5167ae090b992662c7b"
+  1120→    },
+  1121→    {
+  1122→      "path": "hooks/ponytail-config.js",
+  1123→      "mode": "100644",
+  1124→      "type": "blob",
+  1125→      "sha": "1838b87f60c3c09201f8b82773675b3dc7184fd6",
+  1126→      "size": 4058,
+  1127→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/1838b87f60c3c09201f8b82773675b3dc7184fd6"
+  1128→    },
+  1129→    {
+  1130→      "path": "hooks/ponytail-instructions.js",
+  1131→      "mode": "100644",
+  1132→      "type": "blob",
+  1133→      "sha": "a516b7577ddd83315e0685effb2ed039b8085e9e",
+  1134→      "size": 5170,
+  1135→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/a516b7577ddd83315e0685effb2ed039b8085e9e"
+  1136→    },
+  1137→    {
+  1138→      "path": "hooks/ponytail-mode-tracker.js",
+  1139→      "mode": "100644",
+  1140→      "type": "blob",
+  1141→      "sha": "7f025ceaedaa1e4bf78082cb34e6eba2e0a5de97",
+  1142→      "size": 2569,
+  1143→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/7f025ceaedaa1e4bf78082cb34e6eba2e0a5de97"
+  1144→    },
+  1145→    {
+  1146→      "path": "hooks/ponytail-runtime.js",
+  1147→      "mode": "100644",
+  1148→      "type": "blob",
+  1149→      "sha": "2aa61a312e86bc28aab6781a00e7490e2b7ffebd",
+  1150→      "size": 1920,
+  1151→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/2aa61a312e86bc28aab6781a00e7490e2b7ffebd"
+  1152→    },
+  1153→    {
+  1154→      "path": "hooks/ponytail-statusline.ps1",
+  1155→      "mode": "100644",
+  1156→      "type": "blob",
+  1157→      "sha": "2caac54e922ca2aa8eee8bca968cfb86b94fa94a",
+  1158→      "size": 664,
+  1159→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/2caac54e922ca2aa8eee8bca968cfb86b94fa94a"
+  1160→    },
+  1161→    {
+  1162→      "path": "hooks/ponytail-statusline.sh",
+  1163→      "mode": "100644",
+  1164→      "type": "blob",
+  1165→      "sha": "95f75c740ef8985bc2c754445fe2be131a2f06b0",
+  1166→      "size": 448,
+  1167→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/95f75c740ef8985bc2c754445fe2be131a2f06b0"
+  1168→    },
+  1169→    {
+  1170→      "path": "hooks/ponytail-subagent.js",
+  1171→      "mode": "100644",
+  1172→      "type": "blob",
+  1173→      "sha": "96cd10bafff7465a85fb5c4ba9474dbc7f236839",
+  1174→      "size": 769,
+  1175→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/96cd10bafff7465a85fb5c4ba9474dbc7f236839"
+  1176→    },
+  1177→    {
+  1178→      "path": "opencode.json",
+  1179→      "mode": "100644",
+  1180→      "type": "blob",
+  1181→      "sha": "2c0be9923fbdd25fdee8e35ab310b3dc84ec954f",
+  1182→      "size": 101,
+  1183→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/2c0be9923fbdd25fdee8e35ab310b3dc84ec954f"
+  1184→    },
+  1185→    {
+  1186→      "path": "package.json",
+  1187→      "mode": "100644",
+  1188→      "type": "blob",
+  1189→      "sha": "fa7bfc3b6accc0e4e9119f42c3b63778215ddd11",
+  1190→      "size": 1142,
+  1191→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/fa7bfc3b6accc0e4e9119f42c3b63778215ddd11"
+  1192→    },
+  1193→    {
+  1194→      "path": "pi-extension",
+  1195→      "mode": "040000",
+  1196→      "type": "tree",
+  1197→      "sha": "dc3e72d89e525ee3957ee78b5c94edc4f9e1bc40",
+  1198→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/dc3e72d89e525ee3957ee78b5c94edc4f9e1bc40"
+  1199→    },
+  1200→    {
+  1201→      "path": "pi-extension/index.js",
+  1202→      "mode": "100644",
+  1203→      "type": "blob",
+  1204→      "sha": "5f17627026a474f26398f275048b26d3f751c3c3",
+  1205→      "size": 6164,
+  1206→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/5f17627026a474f26398f275048b26d3f751c3c3"
+  1207→    },
+  1208→    {
+  1209→      "path": "pi-extension/package.json",
+  1210→      "mode": "100644",
+  1211→      "type": "blob",
+  1212→      "sha": "745bde2573b724e61e1526c87a3fdbb4e571c757",
+  1213→      "size": 144,
+  1214→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/745bde2573b724e61e1526c87a3fdbb4e571c757"
+  1215→    },
+  1216→    {
+  1217→      "path": "pi-extension/test",
+  1218→      "mode": "040000",
+  1219→      "type": "tree",
+  1220→      "sha": "c8b94e9283bbfbf9ca9c3b8aaaf05da73ce6e145",
+  1221→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/c8b94e9283bbfbf9ca9c3b8aaaf05da73ce6e145"
+  1222→    },
+  1223→    {
+  1224→      "path": "pi-extension/test/extension.test.js",
+  1225→      "mode": "100644",
+  1226→      "type": "blob",
+  1227→      "sha": "b5f3918dd8a9c6c0d17ad7012c0361f8061aad2c",
+  1228→      "size": 6006,
+  1229→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/b5f3918dd8a9c6c0d17ad7012c0361f8061aad2c"
+  1230→    },
+  1231→    {
+  1232→      "path": "pi-extension/test/helpers.test.js",
+  1233→      "mode": "100644",
+  1234→      "type": "blob",
+  1235→      "sha": "57e3bc3ab5d533bcc34e970671e92311ffb2cd00",
+  1236→      "size": 4098,
+  1237→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/57e3bc3ab5d533bcc34e970671e92311ffb2cd00"
+  1238→    },
+  1239→    {
+  1240→      "path": "plugin.yaml",
+  1241→      "mode": "100644",
+  1242→      "type": "blob",
+  1243→      "sha": "701d3dbdb2b474cbd25955d01fc0d03a2ef55081",
+  1244→      "size": 461,
+  1245→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/701d3dbdb2b474cbd25955d01fc0d03a2ef55081"
+  1246→    },
+  1247→    {
+  1248→      "path": "ponytail-mcp",
+  1249→      "mode": "040000",
+  1250→      "type": "tree",
+  1251→      "sha": "671b114e49e36a1f877ed75a3cd962a52bfcae50",
+  1252→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/671b114e49e36a1f877ed75a3cd962a52bfcae50"
+  1253→    },
+  1254→    {
+  1255→      "path": "ponytail-mcp/README.md",
+  1256→      "mode": "100644",
+  1257→      "type": "blob",
+  1258→      "sha": "17dc67ea92b4d6694d72933100773f5f200db22b",
+  1259→      "size": 1507,
+  1260→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/17dc67ea92b4d6694d72933100773f5f200db22b"
+  1261→    },
+  1262→    {
+  1263→      "path": "ponytail-mcp/index.js",
+  1264→      "mode": "100644",
+  1265→      "type": "blob",
+  1266→      "sha": "4978398126afcf43d08de98c2f1ff3b2eb726aa9",
+  1267→      "size": 1788,
+  1268→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/4978398126afcf43d08de98c2f1ff3b2eb726aa9"
+  1269→    },
+  1270→    {
+  1271→      "path": "ponytail-mcp/instructions.js",
+  1272→      "mode": "100644",
+  1273→      "type": "blob",
+  1274→      "sha": "1cb1c73928db564fcad77b2b737cc940eafa7c74",
+  1275→      "size": 1181,
+  1276→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/1cb1c73928db564fcad77b2b737cc940eafa7c74"
+  1277→    },
+  1278→    {
+  1279→      "path": "ponytail-mcp/package.json",
+  1280→      "mode": "100644",
+  1281→      "type": "blob",
+  1282→      "sha": "ed42414e0b9f04c9b4941adf4204c8f4f057cf29",
+  1283→      "size": 364,
+  1284→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/ed42414e0b9f04c9b4941adf4204c8f4f057cf29"
+  1285→    },
+  1286→    {
+  1287→      "path": "ponytail-mcp/test",
+  1288→      "mode": "040000",
+  1289→      "type": "tree",
+  1290→      "sha": "05a6069beacce0f86ad714101272d1807a520895",
+  1291→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/05a6069beacce0f86ad714101272d1807a520895"
+  1292→    },
+  1293→    {
+  1294→      "path": "ponytail-mcp/test/instructions.test.js",
+  1295→      "mode": "100644",
+  1296→      "type": "blob",
+  1297→      "sha": "5c6125a9d2e3cd936d7ed650293a1c20bc406d42",
+  1298→      "size": 909,
+  1299→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/5c6125a9d2e3cd936d7ed650293a1c20bc406d42"
+  1300→    },
+  1301→    {
+  1302→      "path": "scripts",
+  1303→      "mode": "040000",
+  1304→      "type": "tree",
+  1305→      "sha": "4ef336dd469bb21f16db6a7a68b4e4cc1c11522e",
+  1306→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/4ef336dd469bb21f16db6a7a68b4e4cc1c11522e"
+  1307→    },
+  1308→    {
+  1309→      "path": "scripts/build-openclaw-skills.js",
+  1310→      "mode": "100644",
+  1311→      "type": "blob",
+  1312→      "sha": "29318031a7e213213835b96f5acd19d127da0aec",
+  1313→      "size": 2873,
+  1314→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/29318031a7e213213835b96f5acd19d127da0aec"
+  1315→    },
+  1316→    {
+  1317→      "path": "scripts/check-rule-copies.js",
+  1318→      "mode": "100644",
+  1319→      "type": "blob",
+  1320→      "sha": "280ce4978fe8cf6ba898b65a5ac86a430f86dd00",
+  1321→      "size": 2836,
+  1322→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/280ce4978fe8cf6ba898b65a5ac86a430f86dd00"
+  1323→    },
+  1324→    {
+  1325→      "path": "scripts/check-versions.js",
+  1326→      "mode": "100644",
+  1327→      "type": "blob",
+  1328→      "sha": "5c6e04c07e3fb555269b22fd531f2a46e80830d9",
+  1329→      "size": 3261,
+  1330→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/5c6e04c07e3fb555269b22fd531f2a46e80830d9"
+  1331→    },
+  1332→    {
+  1333→      "path": "scripts/publish-openclaw-skills.js",
+  1334→      "mode": "100644",
+  1335→      "type": "blob",
+  1336→      "sha": "1df9d1df48b3883f66b24e784f15b28488f97a45",
+  1337→      "size": 3088,
+  1338→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/1df9d1df48b3883f66b24e784f15b28488f97a45"
+  1339→    },
+  1340→    {
+  1341→      "path": "scripts/uninstall.js",
+  1342→      "mode": "100644",
+  1343→      "type": "blob",
+  1344→      "sha": "3cb170c037fb88c9c2795e490ca0634c4842e0b4",
+  1345→      "size": 2459,
+  1346→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/3cb170c037fb88c9c2795e490ca0634c4842e0b4"
+  1347→    },
+  1348→    {
+  1349→      "path": "skills",
+  1350→      "mode": "040000",
+  1351→      "type": "tree",
+  1352→      "sha": "983213e7d1dd44098a63d3616d5859d2284070da",
+  1353→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/983213e7d1dd44098a63d3616d5859d2284070da"
+  1354→    },
+  1355→    {
+  1356→      "path": "skills/ponytail-audit",
+  1357→      "mode": "040000",
+  1358→      "type": "tree",
+  1359→      "sha": "19744a9490abb0f5d0f18c6e39e3a3eb50f4daa1",
+  1360→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/19744a9490abb0f5d0f18c6e39e3a3eb50f4daa1"
+  1361→    },
+  1362→    {
+  1363→      "path": "skills/ponytail-audit/SKILL.md",
+  1364→      "mode": "100644",
+  1365→      "type": "blob",
+  1366→      "sha": "5582d10335daff5b5947f9b77927fbc97f2047f3",
+  1367→      "size": 1652,
+  1368→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/5582d10335daff5b5947f9b77927fbc97f2047f3"
+  1369→    },
+  1370→    {
+  1371→      "path": "skills/ponytail-debt",
+  1372→      "mode": "040000",
+  1373→      "type": "tree",
+  1374→      "sha": "fe9ea82cad2b42a9c244acc275c9091c414ff528",
+  1375→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/fe9ea82cad2b42a9c244acc275c9091c414ff528"
+  1376→    },
+  1377→    {
+  1378→      "path": "skills/ponytail-debt/SKILL.md",
+  1379→      "mode": "100644",
+  1380→      "type": "blob",
+  1381→      "sha": "ecbc0ca8161b25ced3b4f728398c2ec33988a777",
+  1382→      "size": 1703,
+  1383→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/ecbc0ca8161b25ced3b4f728398c2ec33988a777"
+  1384→    },
+  1385→    {
+  1386→      "path": "skills/ponytail-gain",
+  1387→      "mode": "040000",
+  1388→      "type": "tree",
+  1389→      "sha": "13724e1903f76456164f00ec2a3074848433588f",
+  1390→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/13724e1903f76456164f00ec2a3074848433588f"
+  1391→    },
+  1392→    {
+  1393→      "path": "skills/ponytail-gain/SKILL.md",
+  1394→      "mode": "100644",
+  1395→      "type": "blob",
+  1396→      "sha": "012e37b6bf31da1ed4bf936ec8aff53974d5291e",
+  1397→      "size": 1973,
+  1398→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/012e37b6bf31da1ed4bf936ec8aff53974d5291e"
+  1399→    },
+  1400→    {
+  1401→      "path": "skills/ponytail-help",
+  1402→      "mode": "040000",
+  1403→      "type": "tree",
+  1404→      "sha": "b7df7bc32b6e4e8bbde8acb2ef3c97ee7e7638f7",
+  1405→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/b7df7bc32b6e4e8bbde8acb2ef3c97ee7e7638f7"
+  1406→    },
+  1407→    {
+  1408→      "path": "skills/ponytail-help/SKILL.md",
+  1409→      "mode": "100644",
+  1410→      "type": "blob",
+  1411→      "sha": "ba145c0ebb7c7e5682bb2f36047af3bf2030d470",
+  1412→      "size": 2796,
+  1413→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/ba145c0ebb7c7e5682bb2f36047af3bf2030d470"
+  1414→    },
+  1415→    {
+  1416→      "path": "skills/ponytail-review",
+  1417→      "mode": "040000",
+  1418→      "type": "tree",
+  1419→      "sha": "dc6d9660c4297496a9220de377f6f7df38ab1a53",
+  1420→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/dc6d9660c4297496a9220de377f6f7df38ab1a53"
+  1421→    },
+  1422→    {
+  1423→      "path": "skills/ponytail-review/SKILL.md",
+  1424→      "mode": "100644",
+  1425→      "type": "blob",
+  1426→      "sha": "e137a855bd87119a4517895a1000a59b0999e1b8",
+  1427→      "size": 2383,
+  1428→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/e137a855bd87119a4517895a1000a59b0999e1b8"
+  1429→    },
+  1430→    {
+  1431→      "path": "skills/ponytail",
+  1432→      "mode": "040000",
+  1433→      "type": "tree",
+  1434→      "sha": "f2a46af45b7c0a57edf990bd43ed2e79782c31ef",
+  1435→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/f2a46af45b7c0a57edf990bd43ed2e79782c31ef"
+  1436→    },
+  1437→    {
+  1438→      "path": "skills/ponytail/SKILL.md",
+  1439→      "mode": "100644",
+  1440→      "type": "blob",
+  1441→      "sha": "5f999d780367bbb5ac143f53e1487e52ca445b50",
+  1442→      "size": 6707,
+  1443→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/5f999d780367bbb5ac143f53e1487e52ca445b50"
+  1444→    },
+  1445→    {
+  1446→      "path": "tests",
+  1447→      "mode": "040000",
+  1448→      "type": "tree",
+  1449→      "sha": "c27c099b30771a538ee46ebf517014831980f6b9",
+  1450→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/trees/c27c099b30771a538ee46ebf517014831980f6b9"
+  1451→    },
+  1452→    {
+  1453→      "path": "tests/behavior.test.js",
+  1454→      "mode": "100644",
+  1455→      "type": "blob",
+  1456→      "sha": "04502cf047a8840f828cfd05e777ad9b544f62aa",
+  1457→      "size": 3196,
+  1458→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/04502cf047a8840f828cfd05e777ad9b544f62aa"
+  1459→    },
+  1460→    {
+  1461→      "path": "tests/commands.test.js",
+  1462→      "mode": "100644",
+  1463→      "type": "blob",
+  1464→      "sha": "ef47a86cc6b841aedc61d4b17b4a4f05ef96ad12",
+  1465→      "size": 1489,
+  1466→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/ef47a86cc6b841aedc61d4b17b4a4f05ef96ad12"
+  1467→    },
+  1468→    {
+  1469→      "path": "tests/copilot-plugin.test.js",
+  1470→      "mode": "100644",
+  1471→      "type": "blob",
+  1472→      "sha": "c1246692a2282004f85c2f40ac994acad2b59663",
+  1473→      "size": 1049,
+  1474→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/c1246692a2282004f85c2f40ac994acad2b59663"
+  1475→    },
+  1476→    {
+  1477→      "path": "tests/correctness.test.js",
+  1478→      "mode": "100644",
+  1479→      "type": "blob",
+  1480→      "sha": "a3facc8329e8f5fe1236bc76855ba01a2fc60cc3",
+  1481→      "size": 5423,
+  1482→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/a3facc8329e8f5fe1236bc76855ba01a2fc60cc3"
+  1483→    },
+  1484→    {
+  1485→      "path": "tests/gemini-extension.test.js",
+  1486→      "mode": "100644",
+  1487→      "type": "blob",
+  1488→      "sha": "db0966172371b186699c341ea8de98e2a83e59a2",
+  1489→      "size": 3748,
+  1490→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/db0966172371b186699c341ea8de98e2a83e59a2"
+  1491→    },
+  1492→    {
+  1493→      "path": "tests/hermes-plugin.test.js",
+  1494→      "mode": "100644",
+  1495→      "type": "blob",
+  1496→      "sha": "74f0016d36f1b548ea4dd9ca46f5fc7709f6e998",
+  1497→      "size": 9068,
+  1498→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/74f0016d36f1b548ea4dd9ca46f5fc7709f6e998"
+  1499→    },
+  1500→    {
+  1501→      "path": "tests/hooks-windows.test.js",
+  1502→      "mode": "100644",
+  1503→      "type": "blob",
+  1504→      "sha": "50a16b49d449486fff0b47974b8cfbf27fe655ec",
+  1505→      "size": 4627,
+  1506→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/50a16b49d449486fff0b47974b8cfbf27fe655ec"
+  1507→    },
+  1508→    {
+  1509→      "path": "tests/hooks.test.js",
+  1510→      "mode": "100644",
+  1511→      "type": "blob",
+  1512→      "sha": "53465dcdbde67c0c129ba2c519c21a6c34c50a86",
+  1513→      "size": 7816,
+  1514→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/53465dcdbde67c0c129ba2c519c21a6c34c50a86"
+  1515→    },
+  1516→    {
+  1517→      "path": "tests/openclaw-skills.test.js",
+  1518→      "mode": "100644",
+  1519→      "type": "blob",
+  1520→      "sha": "64443da87b6381cfe74327abd7361294c21017f2",
+  1521→      "size": 1219,
+  1522→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/64443da87b6381cfe74327abd7361294c21017f2"
+  1523→    },
+  1524→    {
+  1525→      "path": "tests/opencode-plugin.test.js",
+  1526→      "mode": "100644",
+  1527→      "type": "blob",
+  1528→      "sha": "a2fad9311bc7c58db3858bf74f1945f70ef20247",
+  1529→      "size": 3684,
+  1530→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/a2fad9311bc7c58db3858bf74f1945f70ef20247"
+  1531→    },
+  1532→    {
+  1533→      "path": "tests/uninstall.test.js",
+  1534→      "mode": "100644",
+  1535→      "type": "blob",
+  1536→      "sha": "e4ff58378830cd1b00dc3d270c32184b5dc2bd59",
+  1537→      "size": 3993,
+  1538→      "url": "https://api.github.com/repos/DietrichGebert/ponytail/git/blobs/e4ff58378830cd1b00dc3d270c32184b5dc2bd59"
+  1539→    }
+  1540→  ],
+  1541→  "truncated": false
+  1542→}
+  1543→
