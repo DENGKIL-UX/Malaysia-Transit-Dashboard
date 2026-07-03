@@ -60,3 +60,26 @@ Stage Summary:
 - New files: headline-recent.json, holidays-2025.json (updated), holidays-2026.json (updated)
 - All changes are backend-only, zero frontend impact
 - Full backwards compatibility maintained (Nager API still works as fallback)
+
+---
+Task ID: 2
+Agent: Main
+Task: Create AGENT.md using ponytail principles + test on dashboard
+
+Work Log:
+- Synced workspace to commit b015a8dfb69d5037c7bc1bf0346d364eda6beb0c
+- Read ponytail repo (github.com/DietrichGebert/ponytail) — lazy senior dev philosophy, the ladder, rules, safety guards
+- Deep-explored full codebase architecture (API routes, components, hooks, store, data pipeline, deployment)
+- Merged ponytail principles with project-specific knowledge into AGENT.md
+- Key sections: The Ladder, Rules, Not-lazy-about, Codebase Reality, Anti-Patterns, Coding Conventions, Execution Protocol (4 phases), Deployment constraints, Output Format
+- Added DataMetadata/PipelineFreshness type shapes (gap found during testing)
+- Tested AGENT.md by having a subagent execute a real task: "Add tooltips to pipeline freshness badges"
+- Subagent followed protocol correctly: Phase 0 (read files, stated assumptions) → Phase 1 (change plan) → Phase 2 (surgical impl) → Phase 3 (lint clean)
+- One gap identified and fixed: DataMetadata type shape was missing from AGENT.md
+- Test change (tooltips on DataStatusBar) verified: lint clean, dev server compiles with zero errors, HTTP 200
+
+Stage Summary:
+- Created: AGENT.md (ponytail-mode project guide for AI agents)
+- Modified: src/components/dashboard/data-status-bar.tsx (tooltip addition as AGENT.md test)
+- Dev server: compiles clean, HTTP 200, 105KB HTML rendered, no runtime errors
+- AGENT.md is production-ready for guiding future AI agents on this codebase

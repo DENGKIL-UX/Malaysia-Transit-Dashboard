@@ -2,13 +2,16 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { CheckCircle2, Clock, HelpCircle, X, Calendar, AlertTriangle } from 'lucide-react';
+import { format } from 'date-fns';
 import { useAppStore } from '@/lib/store';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 interface SourceStatus {
   label: string;
   lastDate: string;
   freshness: 'fresh' | 'expected' | 'delayed' | 'overdue';
   hoursAgo: number;
+  lagDays: number;
   lagExplainedBy: string[];
   isOverdue: boolean;
 }
@@ -17,6 +20,12 @@ export function DataStatusBar() {
   const [showTooltip, setShowTooltip] = useState(false);
   const metadata = useAppStore((s) => s.metadata);
   const metadataLoading = useAppStore((s) => s.metadataLoading);
+  const dataUpdateTimestamp = useAppStore((s) => s.dataUpdateTimestamp);
+
+  const lastCheckedStr = useMemo(() => {
+    if (!dataUpdateTimestamp) return null;
+    return format(dataUpdateTimestamp, 'dd MMM yyyy, HH:mm');
+  }, [dataUpdateTimestamp]);
 
   const sources = useMemo<SourceStatus[]>(() => {
     if (!metadata) return [];
@@ -28,7 +37,8 @@ export function DataStatusBar() {
       dateStr: string,
       status: string,
       lagExplainedBy: string[] = [],
-      isOverdue = false
+      isOverdue = false,
+      lagDays = 0
     ): SourceStatus | null => {
       if (!dateStr) return null;
       const dateMs = new Date(dateStr + 'T00:00:00').getTime();
@@ -42,6 +52,7 @@ export function DataStatusBar() {
         lastDate: dateStr,
         freshness,
         hoursAgo: hours,
+        lagDays,
         lagExplainedBy,
         isOverdue,
       };
@@ -55,7 +66,8 @@ export function DataStatusBar() {
       metadata.ktmb?.latest_date,
       metadata.ktmb?.status ?? 'unknown',
       metadata.ktmb?.lag_explained_by ?? [],
-      metadata.ktmb?.is_overdue ?? false
+      metadata.ktmb?.is_overdue ?? false,
+      metadata.ktmb?.lag_days ?? 0
     );
     if (ktmb) srcs.push(ktmb);
 
@@ -65,7 +77,8 @@ export function DataStatusBar() {
       metadata.prasarana_od?.latest_date,
       metadata.prasarana_od?.status ?? 'unknown',
       metadata.prasarana_od?.lag_explained_by ?? [],
-      metadata.prasarana_od?.is_overdue ?? false
+      metadata.prasarana_od?.is_overdue ?? false,
+      metadata.prasarana_od?.lag_days ?? 0
     );
     if (pras) srcs.push(pras);
 
@@ -75,7 +88,8 @@ export function DataStatusBar() {
       metadata.headline?.latest_date,
       metadata.headline?.status ?? 'unknown',
       metadata.headline?.lag_explained_by ?? [],
-      metadata.headline?.is_overdue ?? false
+      metadata.headline?.is_overdue ?? false,
+      metadata.headline?.lag_days ?? 0
     );
     if (headline) srcs.push(headline);
 
@@ -127,35 +141,51 @@ export function DataStatusBar() {
   return (
     <div className="relative w-full px-4 sm:px-6 md:px-10 py-2.5 flex items-center gap-4 sm:gap-6 overflow-x-auto">
       {sources.map((s) => (
-        <div
-          key={s.label}
-          className="flex items-center gap-2 shrink-0 rounded-lg bg-[var(--surface-card)] border border-[var(--border-faint)] px-3 py-1.5"
-        >
-          {freshnessIcon(s.freshness)}
-          <div className="flex items-center gap-1.5">
-            <span className="text-[11px] sm:text-xs text-[var(--text-muted)] font-medium">
-              {s.label}
-            </span>
-            <span className="w-px h-3 bg-[var(--border-subtle)]" />
-            <span
-              className={`text-[11px] sm:text-xs font-semibold tabular-nums ${
-                freshnessColor(s.freshness)
-              }`}
+        <Tooltip key={s.label}>
+          <TooltipTrigger asChild>
+            <div
+              className="flex items-center gap-2 shrink-0 rounded-lg bg-[var(--surface-card)] border border-[var(--border-faint)] px-3 py-1.5 cursor-default"
             >
-              {s.lastDate}
-            </span>
-            <span className="text-[10px] text-[var(--text-ghost)] tabular-nums">
-              ({formatLag(s.hoursAgo)})
-            </span>
-          </div>
-          {/* Holiday indicator when lag is explained by calendar */}
-          {s.lagExplainedBy.length > 0 && s.lagExplainedBy[0] !== 'normal T-1 batch' && (
-            <span className="text-[9px] px-1 py-0.5 rounded bg-orange-400/10 text-orange-400 border border-orange-400/20 flex items-center gap-0.5">
-              <Calendar className="w-2.5 h-2.5" />
-              {s.lagExplainedBy[0].length > 10 ? 'holiday delay' : s.lagExplainedBy[0]}
-            </span>
-          )}
-        </div>
+              {freshnessIcon(s.freshness)}
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] sm:text-xs text-[var(--text-muted)] font-medium">
+                  {s.label}
+                </span>
+                <span className="w-px h-3 bg-[var(--border-subtle)]" />
+                <span
+                  className={`text-[11px] sm:text-xs font-semibold tabular-nums ${
+                    freshnessColor(s.freshness)
+                  }`}
+                >
+                  {s.lastDate}
+                </span>
+                <span className="text-[10px] text-[var(--text-ghost)] tabular-nums">
+                  ({formatLag(s.hoursAgo)})
+                </span>
+              </div>
+              {/* Holiday indicator when lag is explained by calendar */}
+              {s.lagExplainedBy.length > 0 && s.lagExplainedBy[0] !== 'normal T-1 batch' && (
+                <span className="text-[9px] px-1 py-0.5 rounded bg-orange-400/10 text-orange-400 border border-orange-400/20 flex items-center gap-0.5">
+                  <Calendar className="w-2.5 h-2.5" />
+                  {s.lagExplainedBy[0].length > 10 ? 'holiday delay' : s.lagExplainedBy[0]}
+                </span>
+              )}
+            </div>
+          </TooltipTrigger>
+          <TooltipContent
+            side="bottom"
+            sideOffset={6}
+            className="bg-[var(--bg-tooltip)] text-[var(--text-primary)] border border-[var(--border-subtle)] rounded-lg shadow-xl backdrop-blur-xl px-3 py-2.5 text-[11px] leading-relaxed max-w-[240px]"
+          >
+            <div className="space-y-1">
+              <div className="font-semibold text-[var(--text-secondary)]">{s.label}</div>
+              <div>Lag: {s.lagDays} {s.lagDays === 1 ? 'day' : 'days'}</div>
+              {lastCheckedStr && (
+                <div className="text-[var(--text-muted)]">Checked: {lastCheckedStr}</div>
+              )}
+            </div>
+          </TooltipContent>
+        </Tooltip>
       ))}
 
       {/* Today's blackout indicator */}
