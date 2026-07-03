@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { CalendarRange } from 'lucide-react';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import type { EnrichedDay } from '@/hooks/use-analytics';
 
 // ─── Types ───────────────────────────────────────────────────────────
@@ -93,36 +94,37 @@ function HeatmapCell({
     : textCls;
 
   return (
-    <div className="group relative">
-      <div
-        className="rounded-md border border-transparent hover:border-[var(--border-subtle)] hover:scale-[1.04] transition-all duration-150 p-1.5 sm:p-2 min-h-[52px] sm:min-h-[60px] flex items-center justify-center cursor-default"
-        style={{ backgroundColor: `rgba(133, 171, 139, ${opacity})` }}
-      >
-        <span className={`text-[10px] sm:text-[11px] font-semibold tabular-nums leading-tight text-center ${relColorCls}`}>
-          {displayText}
-        </span>
-      </div>
-
-      {/* Tooltip */}
-      <div className="pointer-events-none absolute z-30 bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block">
-        <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] shadow-xl px-3 py-2 whitespace-nowrap text-[10px]">
-          <div className="font-semibold text-[var(--text-primary)] tabular-nums">
-            {data.avg.toLocaleString()} avg daily
-          </div>
-          <div className="text-[var(--text-muted)] mt-0.5">
-            {data.count} day{data.count !== 1 ? 's' : ''} · {MONTH_LABELS[data.month]}
-          </div>
-          {yearAvg > 0 && (
-            <div
-              className={`mt-0.5 font-medium ${deviation >= 0 ? 'text-emerald-400' : 'text-red-400'}`}
-            >
-              {formatPct(deviation)} vs year avg
-            </div>
-          )}
-          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45 bg-[var(--bg-elevated)] border-b border-r border-[var(--border-subtle)]" />
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div
+          className="rounded-md border border-transparent hover:border-[var(--border-subtle)] hover:scale-[1.04] transition-all duration-150 p-1.5 sm:p-2 min-h-[52px] sm:min-h-[60px] flex items-center justify-center cursor-default"
+          style={{ backgroundColor: `rgba(133, 171, 139, ${opacity})` }}
+        >
+          <span className={`text-[10px] sm:text-[11px] font-semibold tabular-nums leading-tight text-center ${relColorCls}`}>
+            {displayText}
+          </span>
         </div>
-      </div>
-    </div>
+      </TooltipTrigger>
+      <TooltipContent
+        side="top"
+        sideOffset={8}
+        className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] shadow-xl px-3 py-2 text-[10px] z-50"
+      >
+        <div className="font-semibold text-[var(--text-primary)] tabular-nums">
+          {data.avg.toLocaleString()} avg daily
+        </div>
+        <div className="text-[var(--text-muted)] mt-0.5">
+          {data.count} day{data.count !== 1 ? 's' : ''} · {MONTH_LABELS[data.month]}
+        </div>
+        {yearAvg > 0 && (
+          <div
+            className={`mt-0.5 font-medium ${deviation >= 0 ? 'text-emerald-400' : 'text-red-400'}`}
+          >
+            {formatPct(deviation)} vs year avg
+          </div>
+        )}
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
