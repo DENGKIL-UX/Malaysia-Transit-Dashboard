@@ -30,7 +30,7 @@ self.addEventListener('activate', (event) => {
 });
 
 // Minimal fetch handler — Chrome checks for this during installability audit
+// Must NOT be empty or Chrome logs a "no-op" warning
 self.addEventListener('fetch', (event) => {
-  // Let all requests pass through to the network / CF Worker
-  // No interception, no caching — pure passthrough
+  event.respondWith(fetch(event.request));
 });
