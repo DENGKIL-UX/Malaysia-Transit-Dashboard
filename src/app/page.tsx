@@ -41,6 +41,9 @@ import { ScrollToTop } from '@/components/dashboard/scroll-to-top';
 import { ScrollProgress } from '@/components/dashboard/scroll-progress';
 import { QuickInsights } from '@/components/dashboard/quick-insights';
 import { PeriodComparison } from '@/components/dashboard/period-comparison';
+import { SeasonalityHeatmap } from '@/components/dashboard/seasonality-heatmap';
+import { ModeShareTrend } from '@/components/dashboard/mode-share-trend';
+import { GrowthRankings } from '@/components/dashboard/growth-rankings';
 import { useRidership } from '@/hooks/use-ridership';
 import { useAppStore } from '@/lib/store';
 import { useAnalytics } from '@/hooks/use-analytics';
@@ -681,6 +684,30 @@ export default function Home() {
                   </div>
                 </div>
                 <DayTypeAnalytics />
+              </div>
+
+              {/* Demand Analytics — Decision Layer */}
+              <div className="mb-6">
+                <div className="flex items-center gap-3 mb-5 animate-fade-in-up">
+                  <div className="w-1 h-6 rounded-full bg-amber-400/40" />
+                  <div>
+                    <h2 className="text-base font-semibold text-[var(--text-primary)]">Demand Analytics</h2>
+                    <p className="text-[10px] text-[var(--text-faint)] mt-0.5">Seasonality patterns · Mode share evolution · Growth rankings</p>
+                  </div>
+                </div>
+
+                {/* Seasonality + Growth side by side */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 mb-5">
+                  <div className="lg:col-span-7 xl:col-span-8">
+                    <SeasonalityHeatmap ridership={analyticsData} loading={analyticsLoading} />
+                  </div>
+                  <div className="lg:col-span-5 xl:col-span-4">
+                    <GrowthRankings ridership={analyticsData} loading={analyticsLoading} />
+                  </div>
+                </div>
+
+                {/* Mode Share Trend — full width */}
+                <ModeShareTrend ridership={analyticsData} loading={analyticsLoading} />
               </div>
             </div>
           </div>
