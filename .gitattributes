@@ -1,0 +1,8 @@
+# GitHub Linguist — exclude non-dashboard files from language stats
+skills/ linguist-generated
+tool-results/ linguist-generated
+upload/ linguist-generated
+docs/ linguist-generated
+download/ linguist-generated
+*.docx linguist-generated
+*.mp4 linguist-vendored
