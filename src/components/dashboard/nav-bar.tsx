@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Menu, X, Activity, Github } from 'lucide-react';
+import { Menu, X, Activity, Github, Home } from 'lucide-react';
 import { CommandPalette } from '@/components/dashboard/command-palette';
 import { NotificationBell } from '@/components/dashboard/notification-bell';
 import { SettingsPanel } from '@/components/dashboard/settings-panel';
@@ -65,6 +65,11 @@ export function NavBar() {
     []
   );
 
+  const returnToHero = useCallback(() => {
+    localStorage.removeItem('rapidstats-landing-dismissed');
+    window.location.reload();
+  }, []);
+
   return (
     <>
       <nav className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-4 sm:px-6 md:px-10 py-4 sm:py-5">
@@ -113,6 +118,14 @@ export function NavBar() {
           <NotificationBell />
           <ExportDropdown />
           <SettingsPanel />
+          <button
+            onClick={returnToHero}
+            className="hidden sm:flex items-center justify-center w-9 h-9 rounded-full bg-[var(--surface-hover)] border border-[var(--border-subtle)] text-[var(--text-muted)] hover:text-[#85AB8B] hover:bg-[var(--surface-active)] hover:border-[#85AB8B]/30 transition-all duration-200"
+            aria-label="Return to hero page"
+            title="Return to hero"
+          >
+            <Home className="w-4 h-4" />
+          </button>
           <a
             href="https://github.com/data-gov-my/datagovmy-meta"
             target="_blank"
@@ -194,6 +207,13 @@ export function NavBar() {
               transitionDelay: menuOpen ? '400ms' : '0ms',
             }}
           >
+            <button
+              onClick={returnToHero}
+              className="flex items-center gap-3 text-sm font-medium text-[var(--text-muted)] hover:text-[#85AB8B] py-3 transition-colors text-left"
+            >
+              <Home className="w-4 h-4" />
+              Return to Hero
+            </button>
             <a
               href="https://github.com/data-gov-my/datagovmy-meta"
               target="_blank"
