@@ -1,0 +1,806 @@
+     1→# DESIGN.md — RapidStats MY Design System
+     2→
+     3→> A plain-text design system document (Stitch format) for AI coding agents.
+     4→> When fed to any AI agent, this document produces a consistent, production-quality
+     5→> UI for the RapidStats MY Malaysia Transit Dashboard.
+     6→
+     7→---
+     8→
+     9→## 1. Visual Theme & Atmosphere
+    10→
+    11→**Product:** RapidStats MY — Malaysian public transit ridership dashboard
+    12→**Mood:** Cinematic dark, data-dense, honest, authoritative
+    13→**Density:** High information density with clear visual hierarchy
+    14→**Reference:** Dark-mode data observability dashboards (Grafana dark, Linear dark)
+    15→
+    16→**Philosophy:**
+    17→- Dark surfaces reduce eye strain during extended data monitoring sessions
+    18→- Green accents signal "transit / GO" without implying false positivity or urgency
+    19→- Every data claim is attributed — source badges, confidence flags, freshness timestamps
+    20→- No fake "real-time" claims — data age is always visible in the status bar
+    21→- Glassmorphism adds perceived depth without heavy drop shadows
+    22→- CSS-only animations preserve 60fps performance (no JS animation libraries)
+    23→
+    24→**Signature element:** CSS train animation — a 12-second looping silhouette that
+    25→passes horizontally through the hero section. Zero JavaScript, pure keyframes.
+    26→This is the brand's visual identity and must never be replaced with a GIF,
+    27→SVG animation, or JavaScript library.
+    28→
+    29→---
+    30→
+    31→## 2. Color Palette & Roles
+    32→
+    33→### 2.1 Surface Tokens (Backgrounds)
+    34→
+    35→| Token | Hex | Role | Where Used |
+    36→|-------|-----|------|------------|
+    37→| `--bg-base` | `#070e07` | Deepest background | Page shell, hero bottom fade |
+    38→| `--bg-surface-1` | `#0a120a` | Primary card background | Nav, status bar, summary stat cards |
+    39→| `--bg-surface-2` | `#1f2a1d` | Elevated surfaces | Ambient orbs, hover states |
+    40→| `--bg-surface-3` | `#2d3a2a` | Active / selected states | (Reserved for future active states) |
+    41→| `--bg-tooltip` | `#0f1a0d` | Tooltip / popover background | Chart tooltip, "Why the gap?" tooltip |
+    42→| `--bg-dropdown` | `#1a2418` | Dropdown / modal background | Status bar tooltip panel |
+    43→
+    44→### 2.2 Accent Tokens (Brand & Transit)
+    45→
+    46→| Token | Hex | Role | Where Used |
+    47→|-------|-----|------|------------|
+    48→| `--accent-heading` | `#336443` | Primary heading color | Ambient orbs, brand emphasis |
+    49→| `--accent-primary` | `#85AB8B` | Highlights, live indicators | Active nav, ping dots, CTA borders |
+    50→| `--accent-body` | `#6b7f68` | Subtitle / description text | Hero subtitle |
+    51→| `--accent-muted` | `#4b5b47` | Muted body text, chart axes | Recharts X/Y axis strokes |
+    52→
+    53→### 2.3 Transit Line Tokens
+    54→
+    55→| Token | Hex | Tailwind Equivalent | Line |
+    56→|-------|-----|---------------------|------|
+    57→| `--line-kajang` | `#fbbf24` | `amber-400` | MRT Kajang Line (SBK) |
+    58→| `--line-putrajaya` | `#38bdf8` | `sky-400` | MRT Putrajaya Line (SSP) |
+    59→| `--line-kelana-jaya` | `#a78bfa` | `violet-400` | LRT Kelana Jaya Line |
+    60→| `--line-ampang` | `#fb7185` | `rose-400` | LRT Ampang Line |
+    61→| `--line-monorail` | `#34d399` | `emerald-400` | Monorail Line |
+    62→| `--line-komuter` | `#2dd4bf` | `teal-400` | KTM Komuter |
+    63→| `--line-bus` | `#fb923c` | `orange-400` | RapidKL Bus (KL) |
+    64→
+    65→### 2.4 Semantic / Status Tokens
+    66→
+    67→| Token | Hex | Tailwind | Role |
+    68→|-------|-----|----------|------|
+    69→| `--status-holiday` | `#ef4444` | `red-400` | Confirmed holiday calendar dot |
+    70→| `--status-estimated` | `#f97316` | `orange-400` | Estimated date, stale data warning |
+    71→| `--status-friday` | `#facc15` | `yellow-400` | Friday calendar dot |
+    72→| `--status-weekend` | `#60a5fa` | `blue-400` | Weekend calendar dot |
+    73→| `--status-fresh` | `#85AB8B` | (accent) | Fresh data indicator |
+    74→| `--status-overdue` | `#ef4444` | `red-400` | Critical data delay |
+    75→| `--status-positive` | `#34d399` | `emerald-400` | Positive delta (ridership up) |
+    76→| `--status-negative` | `#ef4444` | `red-400` | Negative delta (ridership down) |
+    77→
+    78→### 2.5 Opacity Tokens (White on dark)
+    79→
+    80→These are not CSS variables but a standardized set of `white/N` values used
+    81→throughout the codebase. AI agents must use these exact opacities — no others.
+    82→
+    83→| Opacity | Token Name | Usage |
+    84→|---------|-----------|-------|
+    85→| `white/90` | `text-primary` | Card titles, section headings |
+    86→| `white/80` | `text-secondary` | Card subtitles, key info |
+    87→| `white/70` | `text-body` | Body text, chart labels, hover text |
+    88→| `white/60` | `text-muted` | Month nav, secondary values |
+    89→| `white/50` | `text-label` | Data labels, descriptive text |
+    90→| `white/40` | `text-caption` | Captions, descriptions, sub-labels |
+    91→| `white/30` | `text-hint` | Hints, placeholders, "no dot = weekday" |
+    92→| `white/25` | `text-metadata` | Footer text, source attribution |
+    93→| `white/20` | `text-faint` | Source lines, very muted links |
+    94→| `white/15` | `border-divider` | Separator dots (`·`), subtle dividers |
+    95→| `white/10` | `border-card` | **Default card border** — most common |
+    96→| `white/[0.06]` | `border-subtle` | Section dividers, footer top border |
+    97→| `white/[0.04]` | `border-faint` | Very subtle separators, progress bar bg |
+    98→| `white/[0.03]` | `border-barely` | Track lines in train animation |
+    99→| `white/5` | `bg-glass` | **Default glassmorphism card fill** |
+   100→| `white/15` | `border-elevated` | Hover state borders |
+   101→
+   102→### 2.6 Color Rules
+   103→
+   104→1. **Never use pure black** (`#000000`). Always use `--bg-base` (`#070e07`) as the darkest surface.
+   105→2. **All card borders** use `border border-white/10`. Never solid white borders.
+   106→3. **Glassmorphism formula:** `bg-white/5 backdrop-blur-md border border-white/10`
+   107→4. **Transit line colors** are reserved for their respective lines. Do not reuse `--line-kajang` for a generic "warning" state.
+   108→5. **Green accent** (`#85AB8B`) is for the brand and positive indicators only. It does NOT mean "real-time" or "live."
+   109→6. **Orange** is the universal warning color — estimated holidays, stale data, overdue dates.
+   110→7. **Red** is reserved for critical states — overdue >30 days, confirmed holidays, negative deltas.
+   111→
+   112→---
+   113→
+   114→## 3. Typography
+   115→
+   116→### 3.1 Font Stack
+   117→
+   118→```
+   119→Primary:  Geist Sans ( bundled with Next.js 16 ), fallback Inter
+   120→Tabular:  Geist Mono ( bundled with Next.js 16 ), fallback JetBrains Mono
+   121→System:   'Geist Sans', 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif
+   122→```
+   123→
+   124→**Tailwind integration:** The project uses `--font-geist-sans` and `--font-geist-mono`
+   125→CSS variables already declared in `globals.css` via `@theme inline`.
+   126→
+   127→### 3.2 Type Scale
+   128→
+   129→| Token | Size (px) | Weight | Line Height | Letter Spacing | Tailwind Classes | Usage |
+   130→|-------|-----------|--------|-------------|----------------|-----------------|-------|
+   131→| `display-xl` | 36–72 | 600 | 1.02 | -0.025em | `text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight` | Hero H1 |
+   132→| `heading-section` | 16 | 600 | 1.4 | 0 | `text-base font-semibold` | Section headers (Analytics, About) |
+   133→| `heading-card` | 14 | 600 | 1.4 | 0 | `text-sm font-semibold` | Card titles |
+   134→| `heading-card-sub` | 14 | 500 | 1.4 | 0 | `text-sm font-medium` | Card sub-titles (Date Comparison) |
+   135→| `body-sm` | 14 | 400 | 1.5 | 0 | `text-sm` | Body descriptions |
+   136→| `body-xs` | 12 | 400–500 | 1.5 | 0 | `text-xs font-medium` | Line labels, values |
+   137→| `label` | 11 | 500 | 1.3 | 0.01em | `text-[11px] font-medium` | Descriptions, fine print |
+   138→| `caption` | 10 | 600 | 1.2 | 0.05em | `text-[10px] font-semibold uppercase tracking-widest` | Uppercase labels, KPI labels |
+   139→| `caption-sm` | 10 | 400–500 | 1.4 | 0 | `text-[10px] font-medium` | Footer text, sub-text |
+   140→| `micro` | 9 | 500 | 1.2 | 0.05em | `text-[9px] font-medium uppercase tracking-[0.15em]` | Train loop label, source info |
+   141→| `tabular-xl` | 24–30 | 600 | 1.0 | -0.02em | `text-2xl sm:text-3xl font-semibold tabular-nums tracking-tight` | KPI card values |
+   142→| `tabular-lg` | 18 | 600 | 1.0 | -0.02em | `text-lg font-semibold tabular-nums tracking-tight` | Summary stat values |
+   143→| `tabular-sm` | 12 | 500 | 1.0 | 0 | `text-xs tabular-nums font-medium` | Delta percentages, dates |
+   144→| `tabular-caption` | 10–11 | 500–600 | 1.0 | 0 | `text-[10px] sm:text-[11px] tabular-nums font-semibold` | Status bar dates |
+   145→
+   146→### 3.3 Typography Rules
+   147→
+   148→1. **All numeric values** must use `tabular-nums` — no proportional digits anywhere.
+   149→   This ensures columns of numbers align vertically.
+   150→2. **Headings** use negative letter-spacing (`tracking-tight`) for visual density.
+   151→3. **Captions and micro text** use positive letter-spacing + `uppercase` for scannability.
+   152→4. **No bold on body text.** Weight 600 is reserved for headings and KPI values.
+   153→5. **Text color** always uses the opacity tokens from section 2.5. Never hardcode
+   154→   `text-[#6b7f68]` directly — use the semantic role.
+   155→
+   156→---
+   157→
+   158→## 4. Component Stylings
+   159→
+   160→### 4.1 KPI Card
+   161→
+   162→```
+   163→Container:
+   164→  background:   bg-white/5 (glassmorphism)
+   165→  border:       1px solid white/10
+   166→  border-radius: 16px (rounded-2xl)
+   167→  padding:      20px (p-5)
+   168→  shadow:       none — depth via border + backdrop-blur-md
+   169→  hover:        border-color transitions to white/15, translateY(-1px)
+   170→
+   171→Layout:
+   172→  icon:         top-right, 16x16px, transit line color
+   173→  label:        caption token, white/50, uppercase
+   174→  value:        tabular-xl token, white, font-semibold
+   175→  delta:        DeltaBadge component — emerald/red/neutral
+   176→  "vs prior day": caption-sm token, white/30, native title tooltip
+   177→  source badge: micro token, orange-400/15 bg, orange-300/70 text, pill
+   178→
+   179→Animation:
+   180→  entrance:     animate-fade-in-up, staggered 100ms per card
+   181→```
+   182→
+   183→### 4.2 Summary Stat Card
+   184→
+   185→```
+   186→Container:
+   187→  background:   bg-[var(--bg-surface-1)] (#0a120a)
+   188→  border:       1px solid white/[0.06]
+   189→  border-radius: 12px (rounded-xl)
+   190→  padding:      16px (px-4 py-3)
+   191→  shadow:       shadow-lg (subtle)
+   192→
+   193→Layout:
+   194→  label:        caption token, white/40
+   195→  value:        tabular-lg token, white
+   196→  sub:          micro token, white/30
+   197→```
+   198→
+   199→### 4.3 Data Status Bar
+   200→
+   201→```
+   202→Container:
+   203→  background:   bg-[var(--bg-surface-1)]/70 + backdrop-blur-xl
+   204→  border:       1px solid white/[0.04] (bottom only)
+   205→  height:       ~40px
+   206→  padding:      0 16px (mobile) / 0 24px (tablet) / 0 40px (desktop)
+   207→  position:     fixed, below nav (z-20)
+   208→
+   209→Items:
+   210→  icon:         CheckCircle2 (fresh, #85AB8B) or Clock (stale, orange-400)
+   211→  source label: caption-sm, white/40
+   212→  date:         tabular-caption, green (fresh) or orange-300 (stale)
+   213→  lag text:     micro token, white/25, "Data recorded Xd ago"
+   214→  separator:    invisible gap, no visible dot
+   215→
+   216→Tooltip ("Why the gap?"):
+   217→  position:     absolute, top-full, right-aligned
+   218→  background:   bg-[var(--bg-dropdown)]/95 + backdrop-blur-xl
+   219→  border:       1px solid white/10
+   220→  border-radius: 12px (rounded-xl)
+   221→  padding:      16px (p-4)
+   222→```
+   223→
+   224→### 4.4 Ridership Chart
+   225→
+   226→```
+   227→Container:
+   228→  background:   bg-white/5 (glassmorphism)
+   229→  border:       1px solid white/10
+   230→  border-radius: 16px (rounded-2xl)
+   231→  padding:      24px (p-6)
+   232→  shadow:       shadow-lg
+   233→
+   234→Header:
+   235→  title:        heading-card, white/90
+   236→  subtitle:     caption-sm, white/40
+   237→  legend:       inline, right-aligned, color dot + text-[10px] per line
+   238→
+   239→Chart area:
+   240→  height:       288px mobile, 320px tablet+ (h-72 sm:h-80)
+   241→  grid:         stroke white/[0.04], dashed, no vertical lines
+   242→  X-axis:       --accent-muted (#4b5b47), 10px, MM/DD format, no tick line
+   243→  Y-axis:       --accent-muted (#4b5b47), 10px, auto-format (1.2M, 450k), no tick line
+   244→
+   245→Strokes (Recharts Area):
+   246→  Total:        #85AB8B, strokeWidth 1.5, gradient fill (opacity 0.15 → 0)
+   247→  Kajang:       #fbbf24, strokeWidth 2, gradient fill (opacity 0.25 → 0)
+   248→  Putrajaya:    #38bdf8, strokeWidth 2, gradient fill (opacity 0.25 → 0)
+   249→  Dots:         none (dot={false})
+   250→
+   251→Tooltip (CustomTooltip):
+   252→  background:   #0f1a0d/95 + backdrop-blur-md
+   253→  border:       1px solid white/10
+   254→  border-radius: 12px
+   255→  padding:      12px
+   256→
+   257→Footer:
+   258→  left:         "Source: data.gov.my · CC-BY 4.0", caption-sm, white/30
+   259→  right:        "{data.length} days of data", caption-sm, white/30
+   260→  separator:    border-t border-white/5, pt-3
+   261→```
+   262→
+   263→### 4.5 Transit Breakdown (Line Breakdown)
+   264→
+   265→```
+   266→Container:
+   267→  background:   bg-white/5 (glassmorphism)
+   268→  border:       1px solid white/10
+   269→  border-radius: 16px (rounded-2xl)
+   270→  padding:      20px mobile, 24px tablet+ (p-5 sm:p-6)
+   271→  shadow:       shadow-lg
+   272→
+   273→Header:
+   274→  title:        heading-card, white/90, "Line Breakdown"
+   275→  subtitle:     caption-sm, white/40, "Latest day — {date}"
+   276→
+   277→Per line:
+   278→  layout:       flex between — (dot + name) | (value + trend)
+   279→  dot:          6px circle, transit line color
+   280→  name:         body-xs, white/70 → white/90 on hover
+   281→  value:        body-xs, white, font-semibold, tabular-nums
+   282→  trend:        TrendIcon (3x) + delta %, emerald/red/white/30
+   283→  bar:          6px height, bg-white/[0.04] track, line color fill at 60% opacity
+   284→
+   285→Footer:
+   286→  "Total Rail"  caption, white/30, uppercase
+   287→  total value   text-sm, white, font-semibold, tabular-nums
+   288→  separator:    border-t border-white/[0.06], pt-3
+   289→```
+   290→
+   291→### 4.6 Calendar Picker
+   292→
+   293→**Default month rule:** The calendar MUST open on the month of the latest data
+   294→point (e.g., April 2026 if `data[data.length-1].date` is `2026-04-30`).
+   295→Never default to the current calendar month — users must see data dates first.
+   296→Implementation: parent guards render until data loads, then passes
+   297→`defaultMonth={new Date(latest.date + 'T00:00:00')}` as a prop.
+   298→
+   299→```
+   300→Container:
+   301→  background:   bg-white/5 (glassmorphism)
+   302→  border:       1px solid white/10
+   303→  border-radius: 16px (rounded-2xl)
+   304→  padding:      20px mobile, 24px tablet+ (p-4 sm:p-5)
+   305→
+   306→Header:
+   307→  title:        heading-card-sub, white/80, "Date Comparison" + Calendar icon
+   308→  month nav:    prev/next ChevronLeft/Right, 12px buttons, rounded-lg
+   309→  month label:  body-xs, white/70, w-28 text-center, "MMMM yyyy"
+   310→
+   311→Weekday headers:
+   312→  text:         caption, white/30, uppercase
+   313→  grid:         7-column, gap-1
+   314→
+   315→Day cells:
+   316→  size:         32px × 32px (h-8 w-full)
+   317→  border-radius: 8px (rounded-lg)
+   318→  default:      text-white/70, hover bg-white/10 text-white
+   319→  today:        ring-1 ring-[#85AB8B]/60
+   320→  selected:     bg-[#85AB8B] text-[#070e07] shadow-lg shadow-[#85AB8B]/20
+   321→
+   322→Holiday dots:
+   323→  size:         6px circle (w-1.5 h-1.5 rounded-full)
+   324→  position:     absolute, bottom-0.5, centered (left-1/2 -translate-x-1/2)
+   325→  confirmed:    bg-red-400
+   326→  estimated:    bg-orange-400
+   327→  friday:       bg-yellow-400
+   328→  weekend:      bg-blue-400
+   329→  weekday:      no dot
+   330→
+   331→Warning pulse (estimated holidays):
+   332→  size:         8px (w-2 h-2)
+   333→  position:     absolute, -top-0.5, -right-0.5
+   334→  color:        bg-orange-500
+   335→  animation:    animate-pulse
+   336→
+   337→Legend:
+   338→  layout:       flex wrap, gap-3
+   339→  items:        dot + caption-sm, white/40
+   340→  last item:    "· No dot = weekday", micro token, white/25
+   341→
+   342→Comparison hint:
+   343→  selected × 2: text-xs, #85AB8B, font-medium
+   344→  selected × 1: caption-sm, white/30
+   345→  separator:    border-t border-white/[0.06], mt-3 pt-3
+   346→```
+   347→
+   348→### 4.7 Train Animation Container
+   349→
+   350→**CRITICAL: The CSS keyframe below is preserved VERBATIM. Do not modify the
+   351→animation name, duration, timing function, keyframe percentages, or transform
+   352→values. This is the brand's signature element.**
+   353→
+   354→```css
+   355→@keyframes train-pass {
+   356→  0% {
+   357→    transform: translateX(110%);
+   358→    opacity: 0;
+   359→  }
+   360→  10% {
+   361→    opacity: 1;
+   362→  }
+   363→  90% {
+   364→    opacity: 1;
+   365→  }
+   366→  100% {
+   367→    transform: translateX(-110%);
+   368→    opacity: 0;
+   369→  }
+   370→}
+   371→
+   372→.animate-train-pass {
+   373→  animation: train-pass 12s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+   374→}
+   375→```
+   376→
+   377→**Container environment (enhanceable):**
+   378→```
+   379→hero wrapper:  relative, overflow-hidden, height 300/340/360px (responsive)
+   380→base bg:       --bg-base
+   381→
+   382→Platform glow:
+   383→  gradient:    to-top from #85AB8B/6 via-transparent to-transparent
+   384→  gradient:    to-bottom from #070e07/80 via-transparent to #070e07/60
+   385→
+   386→Track bed:
+   387→  position:    absolute, bottom-8
+   388→  lines:       h-px, white/[0.03] to white/[0.12]
+   389→  ties:        60 flex-1 divs, h-px bg-white/[0.05], gap-[3px]
+   390→  rails:       h-px bg-white/[0.12] w-full
+   391→
+   392→Train element:
+   393→  position:    absolute, bottom-16, centered
+   394→  wrapper:     relative, w-80, h-20, animate-train-pass
+   395→  headlight:   amber-400/25 blur, left side
+   396→  tail light:  red-400/15 blur, right side
+   397→  windows:     6 flex-1 amber-400/12 rects with border
+   398→  roof detail: amber-400/40 h-[2px], amber-400/15 h-[1px]
+   399→  body:        amber-400/12 gradient overlay, rounded-xl
+   400→
+   401→Ping indicator:
+   402→  position:    absolute, bottom-5, left-5
+   403→  dot:         h-1.5 w-1.5, #85AB8B, animate-ping
+   404→  label:       micro token, #85AB8B/30, "Train Loop — 12s cycle"
+   405→
+   406→Bottom fade:
+   407→  gradient:    to-top from #070e07 to-transparent, h-24
+   408→```
+   409→
+   410→**Allowed enhancements:** Add ambient particle overlays, subtle platform
+   411→reflection, or parallax depth layers to the container. These must NOT
+   412→interfere with the train animation's performance or visual path.
+   413→
+   414→### 4.8 About Section Cards
+   415→
+   416→```
+   417→Container (per card):
+   418→  background:   bg-white/5 (glassmorphism)
+   419→  border:       1px solid white/10
+   420→  border-radius: 16px (rounded-2xl)
+   421→  padding:      20px mobile, 24px tablet+ (p-5 sm:p-6)
+   422→
+   423→Icon badge:
+   424→  size:         36px × 36px (w-9 h-9)
+   425→  border-radius: 12px (rounded-xl)
+   426→  colors:       line-color/10 bg, line-color/20 border
+   427→
+   428→Title:
+   429→  heading-card, white/90, mb-2
+   430→
+   431→Body text:
+   432→  body-xs / label, white/50, leading-relaxed
+   433→
+   434→Grid:
+   435→  3 columns on desktop (lg:grid-cols-3)
+   436→  2 columns on tablet (md:grid-cols-2)
+   437→  1 column on mobile
+   438→  gap: 20px (gap-5)
+   439→
+   440→Animation:
+   441→  animate-fade-in-up, staggered 80ms per card, initial opacity-0
+   442→```
+   443→
+   444→### 4.9 Data Integrity Banner
+   445→
+   446→```
+   447→Background:   bg-orange-500/10
+   448→Border:       1px solid border-orange-500/20
+   449→Text:         text-orange-300, body-xs
+   450→Icon:         Activity, 16px, text-orange-400
+   451→Border-radius: 12px (rounded-xl)
+   452→Padding:      12px 16px (px-4 py-3)
+   453→Layout:       flex, icon + text, gap-3
+   454→```
+   455→
+   456→### 4.10 Nav Bar
+   457→
+   458→```
+   459→Container:
+   460→  position:     fixed, top-0, z-30
+   461→  background:   --bg-base/80 + backdrop-blur-xl (glassmorphism)
+   462→  border:       1px solid white/[0.04] (bottom)
+   463→  height:       60px mobile, 68px tablet+
+   464→
+   465→Logo:
+   466→  icon:         Activity, 16px, #85AB8B
+   467→  text:         "RapidStats", body-xs, white/60
+   468→  superscript:  "MY", 8px, #85AB8B
+   469→
+   470→Nav links (desktop):
+   471→  container:    pill, bg-white/5, border white/10, rounded-full
+   472→  link:         caption-sm, white/50 → white/90 on hover
+   473→  active:       white/90, border-bottom accent
+   474→
+   475→Mobile hamburger:
+   476→  icon:         Menu/X, 20px, white/60
+   477→  drawer:       slide-down, bg-white/5, backdrop-blur-xl, border-t white/[0.06]
+   478→```
+   479→
+   480→### 4.11 Footer
+   481→
+   482→```
+   483→Position:       sticky to bottom via mt-auto on root flex container
+   484→Border:         border-t border-white/[0.06]
+   485→Padding:        24px 16px mobile, 24px 40px desktop (pt-6 pb-8)
+   486→Layout:         flex, items-center, justify-between, gap-3
+   487→
+   488→Left:
+   489→  logo + name:  RapidStats (MY superscript), body-xs, white/40
+   490→  separator:    w-px h-3 bg-white/10
+   491→  tech:         "Built with Next.js 16 · Recharts · Tailwind CSS", micro, white/25
+   492→
+   493→Right:
+   494→  license:      "Headline data: monthly audited · CC-BY 4.0 · data.gov.my", micro, white/25
+   495→  link:         "datagovmy-meta", micro, white/25 → white/50 hover
+   496→
+   497→Animation:      animate-fade-in-up, delay 650ms
+   498→```
+   499→
+   500→---
+   501→
+   502→## 5. Layout Principles
+   503→
+   504→### 5.1 Grid System
+   505→
+   506→```
+   507→Base grid:     12-column (Tailwind lg:grid-cols-12)
+   508→Card gap:      20px (gap-5) mobile/tablet, 24px (gap-6) desktop (sm:)
+   509→Max-width:     1400px (max-w-[1400px]), centered with mx-auto
+   510→```
+   511→
+   512→### 5.2 Page Padding
+   513→
+   514→```
+   515→Mobile:        16px (px-4)
+   516→Tablet:        24px (px-6)
+   517→Desktop:       40px (px-10)
+   518→```
+   519→
+   520→### 5.3 Section Spacing
+   521→
+   522→```
+   523→Between major sections:  32px (pb-8 / pt-8)
+   524→Between card groups:     24px (mb-6)
+   525→Between cards in grid:   20–24px (gap-5 / gap-6)
+   526→Internal card padding:   20–24px (p-5 / sm:p-6)
+   527→```
+   528→
+   529→### 5.4 Grid Layouts (by section)
+   530→
+   531→```
+   532→Hero:            full width, centered text, max-w-2xl
+   533→Summary Stats:   4 columns (grid-cols-2 sm:grid-cols-4), gap-3
+   534→KPI Cards:       4 columns (grid-cols-1 sm:grid-cols-2 lg:grid-cols-4), gap-4
+   535→Main Chart Grid: 8-col chart + 4-col breakdown (lg:grid-cols-12)
+   536→Analytics Grid:  8-col table + 4-col calendar (lg:grid-cols-12)
+   537→About Grid:      3-col on desktop, 2-col tablet, 1-col mobile
+   538→```
+   539→
+   540→### 5.5 Z-Index Hierarchy
+   541→
+   542→| Layer | Z-Index | Usage |
+   543→|-------|---------|-------|
+   544→| Base content | z-0 | Cards, text, charts |
+   545→| Calendar tooltip | z-10 | Comparison hint within calendar |
+   546→| Status bar | z-20 | Fixed data freshness bar |
+   547→| Nav | z-30 | Fixed navigation |
+   548→| Modal/overlay | z-40 | "Why the gap?" tooltip, future modals |
+   549→| Toast | z-50 | Sonner toast notifications |
+   550→
+   551→---
+   552→
+   553→## 6. Depth & Elevation
+   554→
+   555→**Design decision:** No drop shadows on cards. Depth is communicated through
+   556→background layering and border luminosity only.
+   557→
+   558→### 6.1 Surface Hierarchy
+   559→
+   560→| Level | Token | Background | Border | Usage |
+   561→|-------|-------|-----------|--------|-------|
+   562→| 0 (deepest) | `--bg-base` | `#070e07` | none | Page shell, hero |
+   563→| 1 (card) | `--bg-surface-1` | `#0a120a` | `white/10` | Stat cards, nav bg |
+   564→| 1 (glass) | n/a | `white/5` + `backdrop-blur-md` | `white/10` | KPI, chart, calendar |
+   565→| 2 (elevated) | `--bg-surface-2` | `#1f2a1d` | `white/15` | Hover states, orbs |
+   566→| 3 (active) | `--bg-surface-3` | `#2d3a2a` | `white/20` | Selected, pressed |
+   567→
+   568→### 6.2 Ambient Effects
+   569→
+   570→```
+   571→Gradient orbs:
+   572→  count:        3
+   573→  size:         300–600px circles
+   574→  filter:       blur-[100px] to blur-[140px]
+   575→  opacity:      0.08 to 0.30
+   576→  animation:    animate-pulse-glow, 5–6s cycle, staggered delays
+   577→  position:     fixed, inset-0, pointer-events-none
+   578→  colors:       #336443/20, #1f2a1d/30, #85AB8B/8
+   579→```
+   580→
+   581→---
+   582→
+   583→## 7. Do's and Don'ts
+   584→
+   585→### Do
+   586→
+   587→- Use `tabular-nums` for ALL numeric values — dates, ridership counts, percentages, delta values
+   588→- Show data source attribution on every metric (source badge, footer line)
+   589→- Flag uncertain dates with the warning triangle and orange color
+   590→- Preserve the CSS train animation keyframe and duration exactly as defined in section 4.7
+   591→- Use the standardized white/N opacity tokens from section 2.5 — do not invent new opacities
+   592→- Use `animate-fade-in-up` with staggered delays for card entrances
+   593→- Use glassmorphism (`bg-white/5 backdrop-blur-md border border-white/10`) for content cards
+   594→- Show "Data recorded Xd ago" timestamps for data freshness transparency
+   595→- Use `rounded-2xl` (16px) for all major card containers
+   596→- Use semantic color tokens from this document, never raw hex values in components
+   597→
+   598→### Don't
+   599→
+   600→- Add drop shadows to cards (use border luminosity and background layering)
+   601→- Use pure black (`#000000`) anywhere — always use `--bg-base`
+   602→- Claim "real-time" without a visible freshness timestamp
+   603→- Hardcode holiday dates — always fetch from the holiday API chain
+   604→- Introduce Framer Motion, GSAP, Lottie, or any JS animation library
+   605→- Modify the `train-pass` keyframe duration (12s), easing (cubic-bezier), or transform values
+   606→- Use indigo or blue as a primary accent color (blue is reserved for weekend dots and Putrajaya line only)
+   607→- Use `eslint-disable` comments to suppress lint rules
+   608→- Change the Recharts Area `dot={false}` setting (dots on the line chart would be noisy)
+   609→- Add border-radius values other than the standard set: `rounded-lg` (8px), `rounded-xl` (12px), `rounded-2xl` (16px), `rounded-full`
+   610→
+   611→---
+   612→
+   613→## 8. Responsive Behavior
+   614→
+   615→### 8.1 Breakpoints
+   616→
+   617→| Breakpoint | Width | Columns | Key Changes |
+   618→|-----------|-------|---------|-------------|
+   619→| Mobile | < 640px | 1 | Stacked cards, hamburger nav, reduced chart height |
+   620→| Tablet (sm) | 640–1023px | 2 | 2-col KPIs, 2-col stats, visible nav links |
+   621→| Desktop (lg) | 1024–1279px | 12-grid | 8+4 layout for chart+breakdown, 8+4 for analytics |
+   622→| Wide (xl) | ≥ 1280px | 12-grid | Max 1400px container, wider chart area |
+   623→
+   624→### 8.2 Component-Specific Responsive Rules
+   625→
+   626→**Hero:**
+   627→- Mobile: h-[300px]
+   628→- Tablet: h-[340px] (sm:)
+   629→- Desktop: h-[360px] (md:)
+   630→
+   631→**Nav:**
+   632→- Mobile: hamburger menu, 60px height
+   633→- Desktop: pill nav, 68px height (sm:)
+   634→
+   635→**Status bar:**
+   636→- Mobile: source labels hidden, dates visible
+   637→- Tablet: full labels visible (sm:)
+   638→
+   639→**Summary Stats:**
+   640→- Mobile: 2 columns (grid-cols-2)
+   641→- Tablet+: 4 columns (sm:grid-cols-4)
+   642→
+   643→**KPI Cards:**
+   644→- Mobile: 1 column (grid-cols-1)
+   645→- Tablet: 2 columns (sm:grid-cols-2)
+   646→- Desktop: 4 columns (lg:grid-cols-4)
+   647→
+   648→**Chart height:**
+   649→- Mobile: h-72 (288px)
+   650→- Tablet+: h-80 (320px) (sm:)
+   651→
+   652→**KPI value font:**
+   653→- Mobile: text-2xl
+   654→- Tablet+: text-3xl (sm:)
+   655→
+   656→**About grid:**
+   657→- Mobile: 1 column
+   658→- Tablet: 2 columns (md:grid-cols-2)
+   659→- Desktop: 3 columns (lg:grid-cols-3)
+   660→
+   661→**Footer:**
+   662→- Mobile: stacked (flex-col)
+   663→- Tablet+: row (sm:flex-row)
+   664→
+   665→---
+   666→
+   667→## 9. Agent Prompt Guide
+   668→
+   669→### 9.1 Quick Color Reference
+   670→
+   671→```
+   672→Brand green (primary):    #85AB8B  — headings, active states, brand marks
+   673→Brand green (deep):       #336443  — ambient orbs, heading emphasis
+   674→Body text muted:          #4b5b47  — chart axes, very muted labels
+   675→Subtitle:                 #6b7f68  — hero subtitle
+   676→
+   677→MRT Kajang:               #fbbf24  (amber-400)
+   678→MRT Putrajaya:            #38bdf8  (sky-400)
+   679→LRT Kelana Jaya:          #a78bfa  (violet-400)
+   680→LRT Ampang:               #fb7185  (rose-400)
+   681→Monorail:                 #34d399  (emerald-400)
+   682→KTM Komuter:              #2dd4bf  (teal-400)
+   683→Bus KL:                   #fb923c  (orange-400)
+   684→
+   685→Confirmed holiday:        #ef4444  (red-400)
+   686→Estimated holiday:        #f97316  (orange-400)
+   687→Friday:                   #facc15  (yellow-400)
+   688→Weekend:                  #60a5fa  (blue-400)
+   689→
+   690→Positive delta:           #34d399  (emerald-400)
+   691→Negative delta:           #ef4444  (red-400)
+   692→Overdue / stale:          #f97316  (orange-400)
+   693→```
+   694→
+   695→### 9.2 Ready-to-Use Prompts
+   696→
+   697→**Creating a new KPI card:**
+   698→> "Create a KPI card for [Line Name] with value [N], delta [±X.X]%, using the
+   699→> glassmorphism card style from section 4.1. The transit line color is
+   700→> [--line-token]. Include a 'headline audited' source badge and 'vs prior day'
+   701→> with native title tooltip showing the comparison date."
+   702→
+   703→**Creating a chart:**
+   704→> "Build a Recharts AreaChart with gradient fills using --line-kajang (#fbbf24)
+   705→> and --line-putrajaya (#38bdf8) tokens. Use the CustomTooltip style from
+   706→> section 4.4. Chart background is glassmorphism. Grid lines are white/[0.04],
+   707→> dashed, vertical=false."
+   708→
+   709→**Creating a calendar:**
+   710→> "Style a calendar picker with confirmed holiday dots (red-400), estimated dots
+   711→> (orange-400), Friday dots (yellow-400), and weekend dots (blue-400). Selected
+   712→> day uses --accent-primary (#85AB8B) fill with dark text. See section 4.6."
+   713→
+   714→**Enhancing the train container:**
+   715→> "Add ambient visual effects to the train animation container (section 4.7).
+   716→> You may add gradient overlays, subtle particle layers, or platform reflections.
+   717→> Do NOT modify the train-pass keyframe, its duration (12s), or its easing
+   718→> function. The .animate-train-pass class and @keyframes train-pass block are
+   719→> immutable."
+   720→
+   721→**Creating an About card:**
+   722→> "Create an About section card using the glassmorphism style from section 4.8.
+   723→> Include a 36px icon badge with the relevant color, heading-card title,
+   724→> and label/body text. The card should animate in with fade-in-up and 80ms
+   725→> stagger delay."
+   726→
+   727→### 9.3 Token Application Rules
+   728→
+   729→1. **Always** use `var(--token-name)` in CSS custom properties — never hardcode
+   730→   hex values directly in component className strings.
+   731→2. **Exception:** Tailwind utility classes like `text-amber-400` or `bg-sky-400`
+   732→   are acceptable for transit line colors since they map 1:1 to the tokens.
+   733→3. **White opacity:** Use the standardized set from section 2.5. If a needed
+   734→   opacity is not listed, use the nearest available one.
+   735→4. **Border radius:** Only use `rounded-lg` (8px), `rounded-xl` (12px),
+   736→   `rounded-2xl` (16px), or `rounded-full`. No other values.
+   737→5. **Spacing:** Follow the 4px base unit. Common values: 4, 8, 12, 16, 20, 24,
+   738→   32, 40px. Use Tailwind spacing scale (p-1 through p-10, gap-1 through gap-10).
+   739→6. **Animation delays:** Use multiples of 80–100ms for staggered entrances.
+   740→   First card: 0ms or 100ms. Each subsequent card: +100ms.
+   741→
+   742→---
+   743→
+   744→## Appendix A: Existing Animations (Immutable)
+   745→
+   746→These animations are defined in `globals.css` and used throughout the dashboard.
+   747→Do not rename, modify durations, or change easing functions.
+   748→
+   749→| Name | Duration | Easing | Iteration | Usage |
+   750→|------|----------|--------|-----------|-------|
+   751→| `fadeInUp` | 0.7s | `cubic-bezier(0.22, 1, 0.36, 1)` | once (forwards) | Card entrances |
+   752→| `pulse-glow` | 6s | `ease-in-out` | infinite | Ambient orbs |
+   753→| `train-pass` | **12s** | `cubic-bezier(0.22, 1, 0.36, 1)` | infinite | Train animation |
+   754→| `shimmer` | 3s | `ease-in-out` | infinite | Loading shimmer |
+   755→
+   756→**Note:** `train-pass` and `pulse-glow` differ slightly from the prompt's suggested
+   757→values (prompt says 5s for pulse-glow, code uses 6s). The codebase values are
+   758→canonical — use what's in `globals.css`.
+   759→
+   760→---
+   761→
+   762→## Appendix B: Migration Map (Token → Existing File)
+   763→
+   764→| File | Current Pattern | Token Replacement |
+   765→|------|----------------|-------------------|
+   766→| `globals.css` | No custom tokens | Add `:root { --bg-base: #070e07; ... }` block |
+   767→| `page.tsx` | `bg-[#070e07]` | `bg-[var(--bg-base)]` |
+   768→| `page.tsx` | `bg-[#0a120a]/80` | `bg-[var(--bg-surface-1)]/80` |
+   769→| `page.tsx` | `text-[#85AB8B]` | `text-[var(--accent-primary)]` |
+   770→| `page.tsx` | `text-[#6b7f68]` | `text-[var(--accent-body)]` |
+   771→| `kpi-cards.tsx` | `bg-amber-400/10` | Keep as Tailwind utility (1:1 mapped) |
+   772→| `ridership-chart.tsx` | `stroke="#85AB8B"` | `stroke="var(--accent-primary)"` |
+   773→| `ridership-chart.tsx` | `stroke="#fbbf24"` | `stroke="var(--line-kajang)"` |
+   774→| `ridership-chart.tsx` | `stroke="#38bdf8"` | `stroke="var(--line-putrajaya)"` |
+   775→| `ridership-chart.tsx` | `stroke="#4b5b47"` | `stroke="var(--accent-muted)"` |
+   776→| `calendar-picker.tsx` | `bg-red-400` | `bg-[var(--status-holiday)]` |
+   777→| `calendar-picker.tsx` | `bg-orange-400` | `bg-[var(--status-estimated)]` |
+   778→| `calendar-picker.tsx` | `bg-yellow-400` | `bg-[var(--status-friday)]` |
+   779→| `calendar-picker.tsx` | `bg-blue-400` | `bg-[var(--status-weekend)]` |
+   780→| `data-status-bar.tsx` | `text-[#85AB8B]` | `text-[var(--accent-primary)]` |
+   781→| `data-status-bar.tsx` | `bg-[#1a2418]/95` | `bg-[var(--bg-dropdown)]/95` |
+   782→| `cinematic-train.tsx` | `from-[#85AB8B]/6` | `from-[var(--accent-primary)]/6` |
+   783→| `cinematic-train.tsx` | `from-[#070e07]` | `from-[var(--bg-base)]` |
+   784→| `transit-breakdown.tsx` | `text-amber-400` | Keep as Tailwind utility (1:1 mapped) |
+   785→
+   786→**Durability note:** The "Current Pattern" column uses search strings (e.g.,
+   787→`bg-[#070e07]`), not line numbers. Line numbers shift with every code change;
+   788→search strings remain stable across commits. When applying this map, use your
+   789→editor's find-and-replace with the exact pattern strings shown.
+   790→
+   791→**Priority order:** (1) `globals.css` token declarations, (2) `ridership-chart.tsx`
+   792→Recharts strokes, (3) `calendar-picker.tsx` dot colors, (4) remaining files.
+   793→
+   794→**Files with NO changes needed:**
+   795→- `analytics-table.tsx` — uses Tailwind utilities only
+   796→- `comparison-chart.tsx` — uses Recharts stroke from data
+   797→- `data-integrity-banner.tsx` — uses Tailwind utilities only
+   798→- `holidays/route.ts` — server-side, no UI tokens
+   799→- `use-analytics.ts` — logic only, no styling
+   800→
+   801→---
+   802→
+   803→*Document generated for RapidStats MY v1.0 — Malaysia Transit Dashboard*
+   804→*Format: Stitch/VoltAgent DESIGN.md specification*
+   805→*Last updated: 2026-05-24*
+   806→

@@ -1,0 +1,971 @@
+     1→'use client';
+     2→
+     3→import { useState, useEffect, useMemo, useCallback, useSyncExternalStore, useRef } from 'react';
+     4→import {
+     5→  Activity,
+     6→  Database,
+     7→  Shield,
+     8→  Scale,
+     9→  ExternalLink,
+    10→  Train,
+    11→  Bus,
+    12→  Code,
+    13→  Clock,
+    14→  AlertCircle,
+    15→  RefreshCw,
+    16→  GitCompareArrows,
+    17→} from 'lucide-react';
+    18→import { format, isYesterday, isSameDay, differenceInHours } from 'date-fns';
+    19→import { NavBar } from '@/components/dashboard/nav-bar';
+    20→import { KpiCards } from '@/components/dashboard/kpi-cards';
+    21→import { RidershipChart } from '@/components/dashboard/ridership-chart';
+    22→import { CinematicTrain } from '@/components/dashboard/cinematic-train';
+    23→import { TransitBreakdown } from '@/components/dashboard/transit-breakdown';
+    24→import { CalendarPicker } from '@/components/dashboard/calendar-picker';
+    25→import { ComparisonChart } from '@/components/dashboard/comparison-chart';
+    26→import { AnalyticsTable } from '@/components/dashboard/analytics-table';
+    27→import { DataIntegrityBanner } from '@/components/dashboard/data-integrity-banner';
+    28→import { DataStatusBar } from '@/components/dashboard/data-status-bar';
+    29→import { KtmbWeeklyChart } from '@/components/dashboard/ktmb-weekly-chart';
+    30→import { PrasaranaWeeklyChart } from '@/components/dashboard/prasarana-weekly-chart';
+    31→import { BusiestStationsRapidRail } from '@/components/dashboard/busiest-stations-rapid';
+    32→import { BusiestStationsKTMB } from '@/components/dashboard/busiest-stations-ktmb';
+    33→import { TopRoutesRapidRail, TopRoutesKTMB } from '@/components/dashboard/top-routes';
+    34→import { DayTypeAnalytics } from '@/components/dashboard/day-type-analytics';
+    35→import { FeatureCardsSection } from '@/components/dashboard/feature-cards';
+    36→import { EnvironmentAlertsPanel } from '@/components/dashboard/environment-alerts';
+    37→import { WeatherForecastWidget } from '@/components/dashboard/weather-forecast';
+    38→import { OfflineBanner } from '@/components/dashboard/offline-banner';
+    39→import { InstallPrompt } from '@/components/dashboard/install-prompt';
+    40→import { DataUpdateToast } from '@/components/dashboard/data-update-toast';
+    41→import { PipelineStatusPanel } from '@/components/dashboard/pipeline-status';
+    42→import { ScrollToTop } from '@/components/dashboard/scroll-to-top';
+    43→import { ScrollProgress } from '@/components/dashboard/scroll-progress';
+    44→import { QuickInsights } from '@/components/dashboard/quick-insights';
+    45→import { PeriodComparison } from '@/components/dashboard/period-comparison';
+    46→import { SeasonalityHeatmap } from '@/components/dashboard/seasonality-heatmap';
+    47→import { ModeShareTrend } from '@/components/dashboard/mode-share-trend';
+    48→import { GrowthRankings } from '@/components/dashboard/growth-rankings';
+    49→import { LandingPage } from '@/components/dashboard/landing-page';
+    50→import { useRidership } from '@/hooks/use-ridership';
+    51→import { useAppStore } from '@/lib/store';
+    52→import { useAnalytics } from '@/hooks/use-analytics';
+    53→import { useNotifications } from '@/hooks/use-notifications';
+    54→import { useDataMetadata } from '@/hooks/use-data-metadata';
+    55→import type { DataMetadata } from '@/hooks/use-data-metadata';
+    56→
+    57→/**
+    58→ * Dynamic update badge — shows the freshest date across ALL data sources,
+    59→ * with a live indicator and lag label. Falls back to headline date if
+    60→ * metadata hasn't loaded yet.
+    61→ */
+    62→function DynamicUpdateBadge({
+    63→  meta,
+    64→  headlineLatest,
+    65→}: {
+    66→  meta: DataMetadata | null;
+    67→  headlineLatest?: string;
+    68→}) {
+    69→  // Determine what to show
+    70→  const freshestDate = meta?.freshest_date || headlineLatest || '';
+    71→  const freshestSource = meta?.freshest_source || '';
+    72→
+    73→  if (!freshestDate) return null;
+    74→
+    75→  // Compute lag
+    76→  let lagLabel = '';
+    77→  let lagColor = 'text-[var(--text-faint)]';
+    78→  try {
+    79→    const dateMs = new Date(freshestDate + 'T00:00:00').getTime();
+    80→    const nowMs = Date.now();
+    81→    const hoursAgo = differenceInHours(nowMs, dateMs);
+    82→    if (hoursAgo < 24) {
+    83→      lagLabel = `${hoursAgo}h ago`;
+    84→      lagColor = 'text-[#85AB8B]';
+    85→    } else if (hoursAgo < 48) {
+    86→      lagLabel = `${Math.round(hoursAgo / 24)}d ago`;
+    87→      lagColor = 'text-[#85AB8B]';
+    88→    } else {
+    89→      const days = Math.round(hoursAgo / 24);
+    90→      lagLabel = `${days}d ago`;
+    91→      lagColor = days > 15 ? 'text-orange-400' : 'text-amber-400';
+    92→    }
+    93→  } catch {
+    94→    lagLabel = freshestDate;
+    95→  }
+    96→
+    97→  return (
+    98→    <p className="mt-2 text-[10px] sm:text-[11px] text-[var(--text-ghost)] flex items-center justify-center gap-2 flex-wrap">
+    99→      <span className="flex items-center gap-1.5">
+   100→        <span className="relative flex h-2 w-2">
+   101→          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#85AB8B] opacity-60" />
+   102→          <span className="relative inline-flex rounded-full h-2 w-2 bg-[#85AB8B]" />
+   103→        </span>
+   104→        <span className="text-[var(--text-faint)]">
+   105→          Data via <span className="text-[var(--text-muted)]">data.gov.my</span>
+   106→        </span>
+   107→      </span>
+   108→      <span className="text-[var(--text-ghost)]">·</span>
+   109→      <span className="flex items-center gap-1.5">
+   110→        <RefreshCw className="w-3 h-3 text-[var(--text-ghost)]" />
+   111→        <span className={`font-medium tabular-nums ${lagColor}`}>
+   112→          {freshestDate}
+   113→        </span>
+   114→        {freshestSource && (
+   115→          <span className="text-[var(--text-ghost)]">
+   116→            ({freshestSource} · {lagLabel})
+   117→          </span>
+   118→        )}
+   119→      </span>
+   120→    </p>
+   121→  );
+   122→}
+   123→
+   124→function AboutSection() {
+   125→  const { metadata: meta } = useDataMetadata();
+   126→  return (
+   127→    <div id="about" className="scroll-mt-20 pt-8 pb-16">
+   128→      {/* Section header */}
+   129→      <div className="flex items-center gap-3 mb-8 animate-fade-in-up">
+   130→        <div className="w-1 h-6 rounded-full bg-[#85AB8B]/40" />
+   131→        <div>
+   132→          <h2 className="text-base font-semibold text-[var(--text-primary)]">About</h2>
+   133→          <p className="text-[10px] text-[var(--text-faint)] mt-0.5">
+   134→            Data sources, methodology, and data integrity
+   135→          </p>
+   136→        </div>
+   137→      </div>
+   138→
+   139→      {/* About grid */}
+   140→      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+   141→        {/* Data Freshness — now holiday-aware */}
+   142→        <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 animate-fade-in-up hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
+   143→          <div className="w-9 h-9 rounded-xl bg-amber-400/10 border border-amber-400/20 flex items-center justify-center mb-4">
+   144→            <Clock className="w-4 h-4 text-amber-400" />
+   145→          </div>
+   146→          <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-2">
+   147→            Data Freshness
+   148→          </h3>
+   149→          <div className="space-y-2 text-xs">
+   150→            <div className="flex items-center justify-between">
+   151→              <span className="text-[var(--text-muted)]">Latest headline</span>
+   152→              <span className="font-medium text-[var(--text-secondary)] tabular-nums">
+   153→                {meta?.headline.latest_date ?? '—'}
+   154→              </span>
+   155→            </div>
+   156→            <div className="flex items-center justify-between">
+   157→              <span className="text-[var(--text-muted)]">Headline lag</span>
+   158→              <span className={`font-medium tabular-nums ${
+   159→                (meta?.headline.lag_days ?? 0) > 30 ? 'text-red-400' :
+   160→                (meta?.headline.lag_days ?? 0) > 15 ? 'text-orange-400' :
+   161→                (meta?.headline.lag_days ?? 0) > 5 ? 'text-yellow-400' : 'text-emerald-400'
+   162→              }`}>
+   163→                ~{(meta?.headline.lag_days ?? 0)}d
+   164→              </span>
+   165→            </div>
+   166→            <div className="flex items-center justify-between">
+   167→              <span className="text-[var(--text-muted)]">Freshest OD data</span>
+   168→              <span className="font-medium text-emerald-400 tabular-nums">
+   169→                {meta?.freshest_date ?? '—'}
+   170→                <span className="ml-1 text-[9px] text-[var(--text-faint)]">
+   171→                  ({meta?.freshest_source})
+   172→                </span>
+   173→              </span>
+   174→            </div>
+   175→            {meta?.holiday_context && (
+   176→              <div className="pt-2 border-t border-[var(--border-faint)]">
+   177→                <div className="flex items-center gap-1.5 text-[10px] text-[var(--text-faint)]">
+   178→                  <Clock className="w-3 h-3" />
+   179→                  <span>Next batch expected: <span className="text-[var(--text-muted)] font-medium tabular-nums">{meta.holiday_context.nextWorkingDay}</span></span>
+   180→                </div>
+   181→                {meta.holiday_context.todayIsBlackout && (
+   182→                  <div className="flex items-center gap-1.5 text-[10px] text-orange-400 mt-1">
+   183→                    <AlertCircle className="w-3 h-3" />
+   184→                    <span>Today is a non-working day</span>
+   185→                  </div>
+   186→                )}
+   187→              </div>
+   188→            )}
+   189→          </div>
+   190→        </div>
+   191→
+   192→        {/* Data Source */}
+   193→        <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 animate-fade-in-up hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300" style={{ animationDelay: '80ms', opacity: 0 }}>
+   194→          <div className="w-9 h-9 rounded-xl bg-[#85AB8B]/10 border border-[#85AB8B]/20 flex items-center justify-center mb-4">
+   195→            <Database className="w-4 h-4 text-[#85AB8B]" />
+   196→          </div>
+   197→          <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-2">
+   198→            Data Source
+   199→          </h3>
+   200→          <p className="text-xs text-[var(--text-muted)] leading-relaxed">
+   201→            Ridership data is sourced from{' '}
+   202→            <span className="text-[#85AB8B]">
+   203→              Department of Statistics Malaysia (DOSM)
+   204→            </span>{' '}
+   205→            via the official{' '}
+   206→            <span className="text-[#85AB8B]">data.gov.my</span> open data
+   207→            portal. The <code className="text-[var(--text-secondary)] text-[10px]">ridership_headline</code> dataset
+   208→            provides daily passenger counts. It is{' '}
+   209→            <span className="text-amber-400/80">monthly audited</span> — published ~12 days
+   210→            after month-end following audit.
+   211→          </p>
+   212→        </div>
+   213→
+   214→        {/* Coverage */}
+   215→        <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 animate-fade-in-up hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300" style={{ animationDelay: '80ms', opacity: 0 }}>
+   216→          <div className="w-9 h-9 rounded-xl bg-amber-400/10 border border-amber-400/20 flex items-center justify-center mb-4">
+   217→            <Train className="w-4 h-4 text-amber-400" />
+   218→          </div>
+   219→          <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-2">
+   220→            Transit Coverage
+   221→          </h3>
+   222→          <div className="space-y-2">
+   223→            {[
+   224→              { label: 'MRT Kajang Line (SBK)', color: 'bg-amber-400' },
+   225→              { label: 'MRT Putrajaya Line (SSP)', color: 'bg-sky-400' },
+   226→              { label: 'LRT Kelana Jaya Line', color: 'bg-violet-400' },
+   227→              { label: 'LRT Ampang Line', color: 'bg-rose-400' },
+   228→              { label: 'Monorail Line', color: 'bg-emerald-400' },
+   229→              { label: 'KTM Komuter', color: 'bg-teal-400' },
+   230→              { label: 'ETS', color: 'bg-cyan-400' },
+   231→              { label: 'KTM Intercity', color: 'bg-lime-400' },
+   232→              { label: 'KTM Komuter Utara', color: 'bg-pink-400' },
+   233→              { label: 'Shuttle Tebrau', color: 'bg-yellow-400' },
+   234→              { label: 'RapidKL Bus (KL)', color: 'bg-orange-400' },
+   235→              { label: 'Rapid Bus (Kuantan)', color: 'bg-fuchsia-400' },
+   236→              { label: 'Rapid Bus (Penang)', color: 'bg-stone-400' },
+   237→              { label: 'BRT Sunway Line', color: 'bg-orange-300' },
+   238→            ].map((item) => (
+   239→              <div key={item.label} className="flex items-center gap-2">
+   240→                <span className={`w-1.5 h-1.5 rounded-full ${item.color}`} />
+   241→                <span className="text-[11px] text-[var(--text-muted)]">{item.label}</span>
+   242→              </div>
+   243→            ))}
+   244→          </div>
+   245→        </div>
+   246→
+   247→        {/* Pipeline Info */}
+   248→        <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 animate-fade-in-up hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300" style={{ animationDelay: '160ms', opacity: 0 }}>
+   249→          <div className="w-9 h-9 rounded-xl bg-sky-400/10 border border-sky-400/20 flex items-center justify-center mb-4">
+   250→            <AlertCircle className="w-4 h-4 text-sky-400" />
+   251→          </div>
+   252→          <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-2">
+   253→            Three Data Pipelines
+   254→          </h3>
+   255→          <div className="space-y-3">
+   256→            <div className="rounded-lg bg-[var(--surface-card)] border border-[var(--border-faint)] p-3">
+   257→              <div className="flex items-center gap-2 mb-1">
+   258→                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+   259→                <span className="text-[11px] font-semibold text-[var(--text-secondary)]">Headline (Monthly, Audited)</span>
+   260→              </div>
+   261→              <p className="text-[10px] text-[var(--text-faint)] leading-relaxed">
+   262→                13 transit lines — rail + bus. Published ~12 days after
+   263→                month-end via audit. Used by KPI cards, line breakdown, and comparison chart.
+   264→              </p>
+   265→            </div>
+   266→            <div className="rounded-lg bg-[var(--surface-card)] border border-[var(--border-faint)] p-3">
+   267→              <div className="flex items-center gap-2 mb-1">
+   268→                <span className="w-1.5 h-1.5 rounded-full bg-teal-400" />
+   269→                <span className="text-[11px] font-semibold text-[var(--text-secondary)]">KTMB Daily (Daily Batch, Parquet)</span>
+   270→              </div>
+   271→              <p className="text-[10px] text-[var(--text-faint)] leading-relaxed">
+   272→                5 KTMB rail services + 158 stations. Origin-destination parquet from data.gov.my.
+   273→                Used by KTMB Mon–Sun chart, Busiest Stations, and Top Routes.
+   274→              </p>
+   275→            </div>
+   276→            <div className="rounded-lg bg-[var(--surface-card)] border border-[var(--border-faint)] p-3">
+   277→              <div className="flex items-center gap-2 mb-1">
+   278→                <span className="w-1.5 h-1.5 rounded-full bg-orange-300" />
+   279→                <span className="text-[11px] font-semibold text-[var(--text-secondary)]">Prasarana Daily (Daily Batch, Parquet)</span>
+   280→              </div>
+   281→              <p className="text-[10px] text-[var(--text-faint)] leading-relaxed">
+   282→                5 Rapid Rail lines + BRT Sunway + 150+ stations. Origin-destination parquet from
+   283→                data.gov.my. Used by Rapid Rail chart, Busiest Stations, and Top Routes.
+   284→              </p>
+   285→            </div>
+   286→          </div>
+   287→        </div>
+   288→
+   289→        {/* Holiday Scope */}
+   290→        <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 animate-fade-in-up hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300" style={{ animationDelay: '240ms', opacity: 0 }}>
+   291→          <div className="w-9 h-9 rounded-xl bg-sky-400/10 border border-sky-400/20 flex items-center justify-center mb-4">
+   292→            <Scale className="w-4 h-4 text-sky-400" />
+   293→          </div>
+   294→          <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-2">
+   295→            Holiday Scope
+   296→          </h3>
+   297→          <p className="text-xs text-[var(--text-muted)] leading-relaxed">
+   298→            Analytics are scoped to{' '}
+   299→            <span className="text-[var(--text-secondary)]">Selangor + KL Federal Territory</span>{' '}
+   300→            — the RapidKL operational area. This includes federal holidays, state
+   301→            holidays (Sultan of Selangor&apos;s Birthday), and Federal Territory Day.
+   302→            Sunday holidays trigger Monday replacement (cuti ganti).
+   303→          </p>
+   304→        </div>
+   305→
+   306→        {/* Data Integrity */}
+   307→        <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 animate-fade-in-up hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300" style={{ animationDelay: '320ms', opacity: 0 }}>
+   308→          <div className="w-9 h-9 rounded-xl bg-orange-400/10 border border-orange-400/20 flex items-center justify-center mb-4">
+   309→            <Shield className="w-4 h-4 text-orange-400" />
+   310→          </div>
+   311→          <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-2">
+   312→            Data Integrity
+   313→          </h3>
+   314→          <p className="text-xs text-[var(--text-muted)] leading-relaxed">
+   315→            Holiday classifications are sourced from the{' '}
+   316→            <span className="text-[#85AB8B]">Malaysia Calendar API</span>{' '}
+   317→            with Nager.Date as fallback. Islamic festival dates (Raya, Haji) are
+   318→            declared by the Keeper of the Rulers&apos; Seal based on moon sighting
+   319→            (rukyah) — not Gregorian projection. Dates pending confirmation are
+   320→            flagged with ⚠ and shown in orange.
+   321→          </p>
+   322→        </div>
+   323→
+   324→        {/* Confidence Levels */}
+   325→        <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 animate-fade-in-up hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300" style={{ animationDelay: '400ms', opacity: 0 }}>
+   326→          <div className="w-9 h-9 rounded-xl bg-emerald-400/10 border border-emerald-400/20 flex items-center justify-center mb-4">
+   327→            <Shield className="w-4 h-4 text-emerald-400" />
+   328→          </div>
+   329→          <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">
+   330→            Confidence Levels
+   331→          </h3>
+   332→          <div className="space-y-2.5">
+   333→            {[
+   334→              { label: 'High', desc: 'Confirmed by official gazette or JAKIM', color: 'bg-emerald-400' },
+   335→              { label: 'Medium', desc: 'From secondary source, likely correct', color: 'bg-yellow-400' },
+   336→              { label: 'Low', desc: 'Estimated — pending rukyah confirmation', color: 'bg-orange-400' },
+   337→              { label: 'Unverified', desc: 'Fallback mode, weekend detection only', color: 'bg-red-400' },
+   338→            ].map((level) => (
+   339→              <div key={level.label} className="flex items-start gap-2.5">
+   340→                <span className={`w-2 h-2 rounded-full ${level.color} mt-1 shrink-0`} />
+   341→                <div>
+   342→                  <span className="text-[11px] font-medium text-[var(--text-secondary)]">{level.label}</span>
+   343→                  <p className="text-[10px] text-[var(--text-faint)]">{level.desc}</p>
+   344→                </div>
+   345→              </div>
+   346→            ))}
+   347→          </div>
+   348→        </div>
+   349→
+   350→        {/* Technology */}
+   351→        <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 animate-fade-in-up hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300" style={{ animationDelay: '400ms', opacity: 0 }}>
+   352→          <div className="w-9 h-9 rounded-xl bg-violet-400/10 border border-violet-400/20 flex items-center justify-center mb-4">
+   353→            <Code className="w-4 h-4 text-violet-400" />
+   354→          </div>
+   355→          <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-2">
+   356→            Built With
+   357→          </h3>
+   358→          <div className="flex flex-wrap gap-2 mt-3">
+   359→            {[
+   360→              'Next.js 16',
+   361→              'React 19',
+   362→              'TypeScript',
+   363→              'Tailwind CSS',
+   364→              'Recharts',
+   365→              'date-fns',
+   366→              'Lucide Icons',
+   367→              'Python',
+   368→              'Pandas',
+   369→              'Parquet',
+   370→            ].map((tech) => (
+   371→              <span
+   372→                key={tech}
+   373→                className="text-[10px] font-medium text-[var(--text-muted)] px-2.5 py-1 rounded-full bg-[var(--surface-card)] border border-[var(--border-subtle)]"
+   374→              >
+   375→                {tech}
+   376→              </span>
+   377→            ))}
+   378→          </div>
+   379→          <div className="mt-4 pt-3 border-t border-[var(--border-faint)]">
+   380→            <a
+   381→              href="https://github.com/data-gov-my/datagovmy-meta"
+   382→              target="_blank"
+   383→              rel="noopener noreferrer"
+   384→              className="flex items-center gap-2 text-[10px] text-[var(--text-faint)] hover:text-[#85AB8B] transition-colors"
+   385→            >
+   386→              <ExternalLink className="w-3 h-3" />
+   387→              datagovmy-meta on GitHub
+   388→            </a>
+   389→          </div>
+   390→        </div>
+   391→      </div>
+   392→    </div>
+   393→  );
+   394→}
+   395→
+   396→function DashboardView() {
+   397→  const { data, loading, refetch: refetchRidership } = useRidership();
+   398→  const { metadata: meta } = useDataMetadata();
+   399→  useNotifications(); // triggers initial fetch + auto-refresh, syncs to Zustand store
+   400→  const {
+   401→    ridership: analyticsData,
+   402→    analytics,
+   403→    holidayMap,
+   404→    holidaySource,
+   405→    holidayFallback,
+   406→    hasLowConfidence,
+   407→    availableDates,
+   408→    dataRange,
+   409→    loading: analyticsLoading,
+   410→    refetch: refetchAnalytics,
+   411→  } = useAnalytics();
+   412→  const [selectedDates, setSelectedDates] = useState<Date[]>([]);
+   413→
+   414→  // Dynamic data refresh: when metadata detects a new freshest_date,
+   415→  // cascade refetch ridership + analytics (with cache-busting)
+   416→  const pendingRefresh = useAppStore((s) => s.pendingRefresh);
+   417→  const dataRefreshKey = useAppStore((s) => s.dataRefreshKey);
+   418→  const clearPendingRefresh = useAppStore((s) => s.clearPendingRefresh);
+   419→  const setDataUpdateTimestamp = useAppStore((s) => s.setDataUpdateTimestamp);
+   420→
+   421→  useEffect(() => {
+   422→    if (!pendingRefresh) return;
+   423→
+   424→    // Refetch all data sources in parallel with cache-busting
+   425→    Promise.allSettled([
+   426→      refetchRidership(),
+   427→      refetchAnalytics(true), // forceRefresh=true bypasses 6-hour server cache
+   428→    ]).finally(() => {
+   429→      clearPendingRefresh();
+   430→      setDataUpdateTimestamp(Date.now()); // trigger toast via store
+   431→    });
+   432→  }, [dataRefreshKey, pendingRefresh, clearPendingRefresh, setDataUpdateTimestamp, refetchRidership, refetchAnalytics]);
+   433→
+   434→  // Find the ridership data for selected dates
+   435→  const selectedDateA = selectedDates[0];
+   436→  const selectedDateB = selectedDates[1];
+   437→  const dataA = useMemo(
+   438→    () =>
+   439→      selectedDateA
+   440→        ? analyticsData.find((d) =>
+   441→            isSameDay(new Date(d.date), selectedDateA)
+   442→          )
+   443→        : undefined,
+   444→    [analyticsData, selectedDateA]
+   445→  );
+   446→  const dataB = useMemo(
+   447→    () =>
+   448→      selectedDateB
+   449→        ? analyticsData.find((d) =>
+   450→            isSameDay(new Date(d.date), selectedDateB)
+   451→          )
+   452→        : undefined,
+   453→    [analyticsData, selectedDateB]
+   454→  );
+   455→  const latest = data[data.length - 1];
+   456→  const totalRail = latest?.total ?? 0;
+   457→
+   458→  const avgDaily =
+   459→    data.length > 0
+   460→      ? Math.round(data.reduce((sum, d) => sum + d.total, 0) / data.length)
+   461→      : 0;
+   462→
+   463→  // Honest label — show the actual date, not "Today" if it's stale
+   464→  const latestLabel = latest
+   465→    ? isYesterday(new Date(latest.date))
+   466→      ? 'Yesterday'
+   467→      : format(new Date(latest.date), 'd MMM')
+   468→    : 'Latest';
+   469→
+   470→  return (
+   471→    <section className="relative w-full min-h-screen overflow-hidden bg-[var(--bg-base)] flex flex-col">
+   472→      {/* Scroll progress indicator */}
+   473→      <ScrollProgress />
+   474→
+   475→      {/* Offline banner */}
+   476→      <OfflineBanner />
+   477→
+   478→      {/* A2HS install prompt (Chrome Android only) */}
+   479→      <InstallPrompt />
+   480→
+   481→      {/* Data update toast — appears when auto-refresh detects new data */}
+   482→      <DataUpdateToast />
+   483→
+   484→      {/* Ambient orbs */}
+   485→      <div className="fixed inset-0 pointer-events-none" aria-hidden="true">
+   486→        <div className="absolute top-[-15%] left-[-10%] w-[500px] h-[500px] rounded-full bg-[#336443]/20 blur-[140px] animate-pulse-glow" />
+   487→        <div
+   488→          className="absolute bottom-[-15%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[#1f2a1d]/30 blur-[140px] animate-pulse-glow"
+   489→          style={{ animationDelay: '2000ms' }}
+   490→        />
+   491→        <div
+   492→          className="absolute top-[40%] right-[20%] w-[300px] h-[300px] rounded-full bg-[#85AB8B]/8 blur-[100px] animate-pulse-glow"
+   493→          style={{ animationDelay: '4000ms' }}
+   494→        />
+   495→      </div>
+   496→
+   497→      {/* ═══ NAV ═══ */}
+   498→      <NavBar />
+   499→
+   500→      {/* ═══ HONEST DATA STATUS BAR ═══ */}
+   501→      <div className="fixed top-[62px] sm:top-[68px] left-0 right-0 z-20 bg-[var(--bg-elevated)] backdrop-blur-xl border-b border-[var(--border-ghost)]">
+   502→        <div className="px-4 sm:px-6 md:px-10">
+   503→          <DataStatusBar />
+   504→        </div>
+   505→      </div>
+   506→
+   507→      <QuickInsights />
+   508→
+   509→      <main className="relative z-10">
+   510→        {/* ═══ DASHBOARD SECTION ═══ */}
+   511→        <div id="dashboard" className="scroll-mt-20">
+   512→          {/* Hero — honest, centered, no fake live elements */}
+   513→          <div className="relative w-full h-[420px] sm:h-[460px] md:h-[480px] overflow-hidden">
+   514→            <CinematicTrain />
+   515→
+   516→            <div className="relative z-10 flex flex-col items-center justify-end h-full px-4 sm:px-6 md:px-10 pb-10 sm:pb-14">
+   517→              <div className="max-w-2xl mx-auto text-center animate-fade-in-up" style={{ opacity: 0 }}>
+   518→                {/* Coverage line */}
+   519→                <p className="text-[10px] sm:text-[11px] text-[var(--text-faint)] tracking-wide uppercase mb-4">
+   520→                  <span className="inline-flex items-center gap-1"><span className="inline-block w-1 h-1 rounded-full bg-amber-400" />SBK</span>
+   521→                  <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
+   522→                  <span className="inline-flex items-center gap-1"><span className="inline-block w-1 h-1 rounded-full bg-sky-400" />SSP</span>
+   523→                  <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
+   524→                  <span className="inline-flex items-center gap-1"><span className="inline-block w-1 h-1 rounded-full bg-[var(--text-muted)]" />Ampang</span>
+   525→                  <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
+   526→                  <span className="inline-flex items-center gap-1"><span className="inline-block w-1 h-1 rounded-full bg-[var(--text-muted)]" />Kelana Jaya</span>
+   527→                  <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
+   528→                  <span className="inline-flex items-center gap-1"><span className="inline-block w-1 h-1 rounded-full bg-[var(--text-muted)]" />Monorail</span>
+   529→                  <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
+   530→                  <span className="inline-flex items-center gap-1"><span className="inline-block w-1 h-1 rounded-full bg-[var(--text-muted)]" />Komuter</span>
+   531→                  <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
+   532→                  <span className="inline-flex items-center gap-1"><span className="inline-block w-1 h-1 rounded-full bg-[var(--text-muted)]" />ETS</span>
+   533→                  <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
+   534→                  <span className="inline-flex items-center gap-1"><span className="inline-block w-1 h-1 rounded-full bg-[var(--text-muted)]" />Intercity</span>
+   535→                  <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
+   536→                  <span className="inline-flex items-center gap-1"><span className="inline-block w-1 h-1 rounded-full bg-[var(--text-muted)]" />Komuter Utara</span>
+   537→                  <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
+   538→                  <span className="inline-flex items-center gap-1"><span className="inline-block w-1 h-1 rounded-full bg-[var(--text-muted)]" />Tebrau</span>
+   539→                  <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
+   540→                  <span className="inline-flex items-center gap-1"><span className="inline-block w-1 h-1 rounded-full bg-orange-400" />Bus KL</span>
+   541→                  <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
+   542→                  <span className="inline-flex items-center gap-1"><span className="inline-block w-1 h-1 rounded-full bg-[var(--text-muted)]" />Bus Kuantan</span>
+   543→                  <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
+   544→                  <span className="inline-flex items-center gap-1"><span className="inline-block w-1 h-1 rounded-full bg-[var(--text-muted)]" />Bus Penang</span>
+   545→                  <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
+   546→                  <span className="inline-flex items-center gap-1"><span className="inline-block w-1 h-1 rounded-full bg-[var(--text-muted)]" />BRT Sunway</span>
+   547→                </p>
+   548→
+   549→                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold text-[var(--text-primary)] leading-[1.02] tracking-tight">
+   550→                  Malaysia{' '}
+   551→                  <span className="text-[#85AB8B]">Transit</span>{' '}
+   552→                  Dashboard
+   553→                </h1>
+   554→
+   555→                <p className="mt-3 text-[#6b7f68] text-sm sm:text-base max-w-lg mx-auto leading-relaxed">
+   556→                  Daily ridership analytics from the Department of Statistics
+   557→                  Malaysia open data portal.
+   558→                </p>
+   559→
+   560→                {/* Source attribution */}
+   561→                <DynamicUpdateBadge meta={meta} headlineLatest={latest?.date} />
+   562→              </div>
+   563→            </div>
+   564→          </div>
+   565→
+   566→          {/* Dashboard Panels */}
+   567→          <div className="px-4 sm:px-6 md:px-10 pb-8">
+   568→            <div className="max-w-[1400px] mx-auto">
+   569→
+   570→              {/* Environment Alerts — weather/flood/seismic via data.gov.my (pasarapi.xyz) */}
+   571→              <div className="mb-5">
+   572→                <EnvironmentAlertsPanel />
+   573→              </div>
+   574→
+   575→              {/* Glowing Feature Cards */}
+   576→              <div className="mb-10">
+   577→                <FeatureCardsSection />
+   578→              </div>
+   579→
+   580→              {/* Summary Stats */}
+   581→              <div
+   582→                className="-mt-4 mb-6 grid grid-cols-2 sm:grid-cols-4 gap-3 animate-fade-in-up"
+   583→                style={{ animationDelay: '150ms', opacity: 0 }}
+   584→              >
+   585→                {[
+   586→                  {
+   587→                    label: latestLabel,
+   588→                    value: loading ? '—' : totalRail.toLocaleString(),
+   589→                    sub: latest?.date ?? 'total rail passengers',
+   590→                    accent: 'border-l-[#85AB8B]',
+   591→                  },
+   592→                  {
+   593→                    label: '30-Day Avg',
+   594→                    value: loading ? '—' : avgDaily.toLocaleString(),
+   595→                    sub: 'all rail lines combined',
+   596→                    accent: 'border-l-amber-400',
+   597→                  },
+   598→                  {
+   599→                    label: 'Top Line',
+   600→                    value: loading
+   601→                      ? '—'
+   602→                      : latest
+   603→                        ? (latest.mrtKajang >= latest.mrtPutrajaya
+   604→                            ? 'SBK'
+   605→                            : 'SSP')
+   606→                        : '—',
+   607→                    sub: latest ? `highest on ${latest.date}` : 'top rail line',
+   608→                    accent: 'border-l-sky-400',
+   609→                  },
+   610→                  {
+   611→                    label: 'Data Points',
+   612→                    value: loading ? '—' : String(data.length),
+   613→                    sub: latest ? `as of ${latest.date}` : 'days tracked',
+   614→                    accent: 'border-l-emerald-400',
+   615→                  },
+   616→                ].map((stat) => (
+   617→                  <div
+   618→                    key={stat.label}
+   619→                    className={`rounded-xl bg-[var(--bg-elevated)] backdrop-blur-md border border-[var(--border-faint)] border-l-2 ${stat.accent} px-4 py-3 shadow-lg hover:border-[var(--border-subtle)] hover:shadow-xl transition-all duration-300`}
+   620→                  >
+   621→                    <span className="text-[10px] text-[var(--text-faint)] uppercase tracking-widest font-medium">
+   622→                      {stat.label}
+   623→                    </span>
+   624→                    <div className="text-xl font-semibold text-[var(--text-primary)] tabular-nums tracking-wide mt-0.5">
+   625→                      {stat.value}
+   626→                    </div>
+   627→                    <span className="text-[10px] text-[var(--text-faint)]">
+   628→                      {stat.sub}
+   629→                    </span>
+   630→                  </div>
+   631→                ))}
+   632→              </div>
+   633→
+   634→              {/* KPI Cards — data passed as props to avoid duplicate fetch */}
+   635→              <div className="mb-6">
+   636→                <KpiCards data={data} loading={loading} />
+   637→              </div>
+   638→
+   639→              {/* Period Comparison — MoM / WoW / YoY */}
+   640→              <div className="mb-6">
+   641→                <div className="flex items-center gap-3 mb-5 animate-fade-in-up" style={{ animationDelay: '350ms', opacity: 0 }}>
+   642→                  <div className="w-1 h-6 rounded-full bg-[#85AB8B]/40" />
+   643→                  <div>
+   644→                    <h2 className="text-base font-semibold text-[var(--text-primary)]">Period Comparison</h2>
+   645→                    <p className="text-[10px] text-[var(--text-faint)] mt-0.5">Month-over-month · Week-over-week · Year-over-year ridership trends</p>
+   646→                  </div>
+   647→                </div>
+   648→                <PeriodComparison />
+   649→              </div>
+   650→
+   651→              {/* Main Grid — items-start prevents both cards from stretching to equal height */}
+   652→              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 mb-6 items-start">
+   653→                <div className="lg:col-span-7 xl:col-span-8">
+   654→                  <RidershipChart />
+   655→                </div>
+   656→                <div className="lg:col-span-5 xl:col-span-4">
+   657→                  <TransitBreakdown />
+   658→                </div>
+   659→              </div>
+   660→
+   661→              {/* KTMB Daily/Weekly Chart */}
+   662→              <div className="mb-6">
+   663→                <div className="flex items-center gap-3 mb-5 animate-fade-in-up">
+   664→                  <div className="w-1 h-6 rounded-full bg-teal-400/40" />
+   665→                  <div>
+   666→                    <h2 className="text-base font-semibold text-[var(--text-primary)]">KTMB Weekly Patterns</h2>
+   667→                    <p className="text-[10px] text-[var(--text-faint)] mt-0.5">Monday–Sunday ridership by service · From daily batch data</p>
+   668→                  </div>
+   669→                </div>
+   670→                <KtmbWeeklyChart />
+   671→              </div>
+   672→
+   673→              {/* Prasarana Daily/Weekly Chart */}
+   674→              <div className="mb-6">
+   675→                <div className="flex items-center gap-3 mb-5 animate-fade-in-up">
+   676→                  <div className="w-1 h-6 rounded-full bg-amber-400/40" />
+   677→                  <div>
+   678→                    <h2 className="text-base font-semibold text-[var(--text-primary)]">Rapid Rail Weekly Patterns</h2>
+   679→                    <p className="text-[10px] text-[var(--text-faint)] mt-0.5">Monday–Sunday ridership by line · From daily batch data</p>
+   680→                  </div>
+   681→                </div>
+   682→                <PrasaranaWeeklyChart />
+   683→              </div>
+   684→
+   685→              {/* Day-Type Analytics + Weather Forecast side by side */}
+   686→              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 mb-6 items-start">
+   687→                <div className="lg:col-span-7 xl:col-span-8">
+   688→                  <div className="flex items-center gap-3 mb-5 animate-fade-in-up">
+   689→                    <div className="w-1 h-6 rounded-full bg-sky-400/40" />
+   690→                    <div>
+   691→                      <h2 className="text-base font-semibold text-[var(--text-primary)]">Day-Type Analysis</h2>
+   692→                      <p className="text-[10px] text-[var(--text-faint)] mt-0.5">Weekday vs weekend patterns · Holiday impact detection</p>
+   693→                    </div>
+   694→                  </div>
+   695→                  <DayTypeAnalytics />
+   696→                </div>
+   697→                <div className="lg:col-span-5 xl:col-span-4">
+   698→                  <WeatherForecastWidget />
+   699→                </div>
+   700→              </div>
+   701→
+   702→              {/* Demand Analytics — Decision Layer */}
+   703→              <div className="mb-6">
+   704→                <div className="flex items-center gap-3 mb-5 animate-fade-in-up">
+   705→                  <div className="w-1 h-6 rounded-full bg-amber-400/40" />
+   706→                  <div>
+   707→                    <h2 className="text-base font-semibold text-[var(--text-primary)]">Demand Analytics</h2>
+   708→                    <p className="text-[10px] text-[var(--text-faint)] mt-0.5">Seasonality patterns · Mode share evolution · Growth rankings</p>
+   709→                  </div>
+   710→                </div>
+   711→
+   712→                {/* Seasonality + Growth side by side */}
+   713→                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 mb-5">
+   714→                  <div className="lg:col-span-7 xl:col-span-8">
+   715→                    <SeasonalityHeatmap ridership={analyticsData} loading={analyticsLoading} />
+   716→                  </div>
+   717→                  <div className="lg:col-span-5 xl:col-span-4">
+   718→                    <GrowthRankings ridership={analyticsData} loading={analyticsLoading} />
+   719→                  </div>
+   720→                </div>
+   721→
+   722→                {/* Mode Share Trend — full width */}
+   723→                <ModeShareTrend ridership={analyticsData} loading={analyticsLoading} />
+   724→              </div>
+   725→            </div>
+   726→          </div>
+   727→
+   728→          {/* ═══ Station Analytics — full-bleed wider section for wide desktops ═══ */}
+   729→          <div className="px-4 sm:px-6 md:px-10 pb-8">
+   730→            <div className="max-w-[1800px] mx-auto">
+   731→              {/* Station Analytics Section Header */}
+   732→              <div className="flex items-center gap-3 mb-5 mt-4 animate-fade-in-up">
+   733→                <div className="w-1 h-6 rounded-full bg-amber-400/40" />
+   734→                <div>
+   735→                  <h2 className="text-base font-semibold text-[var(--text-primary)]">
+   736→                    Station Analytics
+   737→                  </h2>
+   738→                  <p className="text-[10px] text-[var(--text-faint)] mt-0.5">
+   739→                    Busiest stations & routes · From parquet origin-destination data
+   740→                  </p>
+   741→                </div>
+   742→              </div>
+   743→
+   744→              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 mb-6 items-start">
+   745→                <div className="lg:col-span-7 xl:col-span-8">
+   746→                  <BusiestStationsRapidRail />
+   747→                </div>
+   748→                <div className="lg:col-span-5 xl:col-span-4">
+   749→                  <BusiestStationsKTMB />
+   750→                </div>
+   751→              </div>
+   752→
+   753→              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 mb-6 items-start">
+   754→                <div className="lg:col-span-7 xl:col-span-8">
+   755→                  <TopRoutesRapidRail />
+   756→                </div>
+   757→                <div className="lg:col-span-5 xl:col-span-4">
+   758→                  <TopRoutesKTMB />
+   759→                </div>
+   760→              </div>
+   761→            </div>
+   762→          </div>
+   763→
+   764→          {/* ─── Section Divider ─── */}
+   765→          <div className="max-w-[1400px] mx-auto w-full px-4 sm:px-6 md:px-10">
+   766→            <div className="h-px bg-gradient-to-r from-transparent via-[var(--border-subtle)] to-transparent" />
+   767→          </div>
+   768→        </div>
+   769→
+   770→        {/* ═══ ANALYTICS SECTION ═══ */}
+   771→        <div id="analytics" className="scroll-mt-20 px-4 sm:px-6 md:px-10 pb-8">
+   772→          <div className="max-w-[1400px] mx-auto">
+   773→            {/* Section header */}
+   774→            <div className="flex items-center gap-3 mb-5 animate-fade-in-up">
+   775→              <div className="w-1 h-6 rounded-full bg-[#85AB8B]/40" />
+   776→              <div>
+   777→                <h2 className="text-base font-semibold text-[var(--text-primary)]">
+   778→                  Analytics
+   779→                </h2>
+   780→                <p className="text-[10px] text-[var(--text-faint)] mt-0.5">
+   781→                  Holiday patterns · Confidence flags
+   782→                </p>
+   783→              </div>
+   784→            </div>
+   785→
+   786→            {/* Data integrity banners */}
+   787→            {hasLowConfidence && !holidayFallback && (
+   788→              <div className="mb-4 animate-fade-in-up">
+   789→                <div className="rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-300 text-xs px-4 py-3 flex items-start gap-3">
+   790→                  <Activity className="w-4 h-4 mt-0.5 shrink-0 text-orange-400" />
+   791→                  <p className="text-[11px] leading-relaxed text-orange-300/70">
+   792→                    Some holiday dates are estimated pending official rukyah
+   793→                    confirmation. Comparisons marked ⚠ may shift.
+   794→                  </p>
+   795→                </div>
+   796→              </div>
+   797→            )}
+   798→            <DataIntegrityBanner
+   799→              holidayFallback={holidayFallback}
+   800→              holidaySource={holidaySource}
+   801→            />
+   802→
+   803→            {/* Analytics grid */}
+   804→            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 mt-4">
+   805→              {/* Left column: Analytics table */}
+   806→              <div className="lg:col-span-7 xl:col-span-8 space-y-5">
+   807→                <AnalyticsTable
+   808→                  analytics={analytics}
+   809→                  loading={analyticsLoading}
+   810→                />
+   811→                {/* Holiday source info */}
+   812→                {!holidayFallback && holidaySource && (
+   813→                  <div className="text-[9px] text-[var(--text-ghost)] flex items-center gap-2">
+   814→                    <span>Holiday source:</span>
+   815→                    <span className="text-[#85AB8B]/50">
+   816→                      {holidaySource === 'mycal'
+   817→                        ? 'Malaysia Calendar API (JAKIM + Federal Gazette)'
+   818→                        : holidaySource === 'nager'
+   819→                          ? 'Nager.Date API (federal holidays only)'
+   820→                          : holidaySource}
+   821→                    </span>
+   822→                  </div>
+   823→                )}
+   824→              </div>
+   825→
+   826→              {/* Right column: Calendar + Comparison */}
+   827→              <div className="lg:col-span-5 xl:col-span-4 space-y-5">
+   828→                {latest ? (
+   829→                  <CalendarPicker
+   830→                    selected={selectedDates}
+   831→                    onSelect={setSelectedDates}
+   832→                    holidayMap={holidayMap}
+   833→                    availableDates={availableDates}
+   834→                    defaultMonth={new Date(latest.date + 'T00:00:00')}
+   835→                    dataRange={dataRange}
+   836→                  />
+   837→                ) : (
+   838→                  <div className="h-[340px] rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md animate-pulse" />
+   839→                )}
+   840→                {selectedDates.length === 2 && (
+   841→                  <ComparisonChart
+   842→                    dateA={selectedDates[0]}
+   843→                    dateB={selectedDates[1]}
+   844→                    dataA={dataA}
+   845→                    dataB={dataB}
+   846→                    availableDates={availableDates}
+   847→                    headlineThrough={dataRange?.headlineThrough}
+   848→                    prasaranaThrough={dataRange?.prasaranaThrough}
+   849→                  />
+   850→                )}
+   851→              </div>
+   852→            </div>
+   853→          </div>
+   854→        </div>
+   855→
+   856→        {/* ═══ PIPELINE STATUS SECTION ═══ */}
+   857→        <div className="px-4 sm:px-6 md:px-10 pt-4">
+   858→          <div className="max-w-[1400px] mx-auto">
+   859→            {/* ─── Section Divider ─── */}
+   860→            <div className="mb-6 h-px bg-gradient-to-r from-transparent via-[var(--border-subtle)] to-transparent" />
+   861→            <PipelineStatusPanel meta={meta} />
+   862→          </div>
+   863→        </div>
+   864→
+   865→        {/* ═══ ABOUT SECTION ═══ */}
+   866→        <div className="px-4 sm:px-6 md:px-10">
+   867→          <div className="max-w-[1400px] mx-auto">
+   868→            <AboutSection />
+   869→          </div>
+   870→        </div>
+   871→
+   872→        {/* ═══ FOOTER ═══ */}
+   873→        <footer
+   874→          className="mt-auto flex flex-col items-center gap-4 px-4 sm:px-6 md:px-10 pb-8 pt-10 safe-bottom animate-fade-in-up"
+   875→          style={{ animationDelay: '650ms', opacity: 0 }}
+   876→        >
+   877→          <div className="w-full bg-gradient-to-r from-transparent via-[#85AB8B]/20 to-transparent h-px" />
+   878→          <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[var(--border-faint)] pt-6">
+   879→            <div className="flex items-center gap-3">
+   880→              <div className="flex items-center gap-2">
+   881→                <div className="w-6 h-6 rounded bg-[#85AB8B]/20 flex items-center justify-center">
+   882→                  <Activity className="w-3.5 h-3.5 text-[#85AB8B]" />
+   883→                </div>
+   884→                <span className="text-xs font-medium text-[var(--text-faint)]">
+   885→                  RapidStats
+   886→                  <sup className="text-[8px] text-[#85AB8B]">MY</sup>
+   887→                </span>
+   888→              </div>
+   889→              <span className="w-px h-3 bg-[var(--surface-active)]" />
+   890→              <span className="text-[10px] text-[var(--text-ghost)]">
+   891→                Built with Next.js 16 · Recharts · Tailwind CSS
+   892→              </span>
+   893→            </div>
+   894→            <div className="flex items-center gap-4">
+   895→              <span className="text-[10px] text-[var(--text-ghost)]">
+   896→                Headline data: monthly audited · CC-BY 4.0 · data.gov.my
+   897→              </span>
+   898→              <a
+   899→                href="https://github.com/data-gov-my/datagovmy-meta"
+   900→                target="_blank"
+   901→                rel="noopener noreferrer"
+   902→                className="text-[10px] text-[var(--text-ghost)] hover:text-[var(--text-muted)] transition-colors"
+   903→              >
+   904→                datagovmy-meta
+   905→              </a>
+   906→            </div>
+   907→          </div>
+   908→          <p className="text-[10px] text-[var(--text-ghost)]">
+   909→            Made with ♥ for Malaysian public transit
+   910→          </p>
+   911→        </footer>
+   912→      </main>
+   913→
+   914→      {/* Scroll to top button */}
+   915→      <ScrollToTop />
+   916→
+   917→      {/* Compare Mode floating indicator */}
+   918→      {selectedDates.length === 2 && (
+   919→        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 animate-fade-in-up">
+   920→          <div className="flex items-center gap-2.5 rounded-full bg-[var(--bg-elevated)]/95 backdrop-blur-xl border border-[var(--border-subtle)] shadow-2xl shadow-black/20 px-4 py-2.5">
+   921→            <GitCompareArrows className="w-3.5 h-3.5 text-[#85AB8B]" />
+   922→            <span className="text-[11px] font-medium text-[var(--text-secondary)]">
+   923→              Compare mode
+   924→            </span>
+   925→            <span className="text-[10px] text-[var(--text-faint)]">
+   926→              {format(selectedDates[0], 'd MMM')} vs {format(selectedDates[1], 'd MMM')}
+   927→            </span>
+   928→          </div>
+   929→        </div>
+   930→      )}
+   931→    </section>
+   932→  );
+   933→}
+   934→
+   935→// ponytail: localStorage gate, upgrade to route-based split if landing grows
+   936→
+   937→// Lightweight pub/sub for landing state (avoids storage event cross-tab limitation)
+   938→const landingListeners: Array<() => void> = [];
+   939→function subscribeLanding(cb: () => void) {
+   940→  landingListeners.push(cb);
+   941→  return () => {
+   942→    const idx = landingListeners.indexOf(cb);
+   943→    if (idx > -1) landingListeners.splice(idx, 1);
+   944→  };
+   945→}
+   946→function getLandingSnapshot() {
+   947→  return localStorage.getItem('rapidstats-landing-dismissed') === '1';
+   948→}
+   949→function getLandingServerSnapshot() {
+   950→  return false;
+   951→}
+   952→
+   953→export default function Home() {
+   954→  const landingDismissed = useSyncExternalStore(
+   955→    subscribeLanding,
+   956→    getLandingSnapshot,
+   957→    getLandingServerSnapshot
+   958→  );
+   959→
+   960→  const handleEnter = useCallback(() => {
+   961→    localStorage.setItem('rapidstats-landing-dismissed', '1');
+   962→    landingListeners.forEach((l) => l());
+   963→  }, []);
+   964→
+   965→  if (!landingDismissed) {
+   966→    return <LandingPage onEnter={handleEnter} />;
+   967→  }
+   968→
+   969→  return <DashboardView />;
+   970→}
+   971→
