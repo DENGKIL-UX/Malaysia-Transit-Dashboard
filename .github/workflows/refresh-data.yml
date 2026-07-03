@@ -72,11 +72,8 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Install Bun
-        uses: oven-sh/setup-bun@v2
-
       - name: Run headline refresh script
-        run: bun run scripts/refresh-headline.js
+        run: node scripts/refresh-headline.js
         env:
           HEADLINE_OUTPUT: public/headline-recent.json
 

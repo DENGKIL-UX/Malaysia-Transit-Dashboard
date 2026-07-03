@@ -6,55 +6,17 @@ import { parseRidershipRow, type ParsedRidershipRow } from '@/lib/parse-ridershi
 // Re-export for consumer convenience
 export type RidershipDay = ParsedRidershipRow;
 
-/**
- * Call the internal MCP endpoint to fetch ridership data.
- * Falls back to direct /api/ridership if MCP fails.
- */
-async function fetchViaMCP(
-  startDate: string,
-  endDate: string
-): Promise<Record<string, unknown>[]> {
-  const res = await fetch('/api/mcp', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      method: 'tools/call',
-      params: {
-        name: 'query_ridership',
-        arguments: { start_date: startDate, end_date: endDate },
-      },
-    }),
-  });
-
-  if (!res.ok) {
-    throw new Error(`MCP error: ${res.status}`);
-  }
-
-  const result = await res.json();
-  const parsed = JSON.parse(result.content[0].text);
-  return parsed.data;
-}
-
-async function fetchViaDirectAPI(
-  startDate: string,
-  endDate: string
-): Promise<Record<string, unknown>[]> {
-  const res = await fetch(
-    `/api/ridership?start_date=${startDate}&end_date=${endDate}`
-  );
-
-  if (!res.ok) {
-    throw new Error(`API error: ${res.status}`);
-  }
-
-  return res.json();
-}
-
-// parseRidershipRow is now imported from @/lib/parse-ridership
+// In-memory cache to avoid redundant fetches within the same session
+let cachedPayload: { data: ParsedRidershipRow[]; timestamp: number } | null = null;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 /**
  * Fetch ridership data. `days` controls how many days of history to load
  * (default 90 for multiple 30-day pagination windows).
+ *
+ * ponytail: Uses /api/comparison-data which merges headline + live headline +
+ * Prasarana daily + live KTMB. The old /api/ridership route only read stale
+ * static files — switching eliminates the 40-day data gap.
  */
 export function useRidership(days: number = 90) {
   const [data, setData] = useState<RidershipDay[]>([]);
@@ -69,13 +31,30 @@ export function useRidership(days: number = 90) {
     const start = new Date(Date.now() - days * 864e5).toISOString().split('T')[0];
 
     try {
-      // Try MCP first, fallback to direct API
-      let rows: Record<string, unknown>[];
-      try {
-        rows = await fetchViaMCP(start, end);
-      } catch {
-        rows = await fetchViaDirectAPI(start, end);
+      // Check in-memory cache
+      if (
+        cachedPayload &&
+        Date.now() - cachedPayload.timestamp < CACHE_TTL_MS &&
+        cachedPayload.data.length > 0
+      ) {
+        const filtered = cachedPayload.data.filter(
+          (r) => r.date >= start && r.date <= end
+        );
+        setData(filtered);
+        setLoading(false);
+        return;
       }
+
+      // Use comparison-data API — has live extensions for all data sources
+      const url = `/api/comparison-data?start_date=${start}&end_date=${end}&nocache=1`;
+      const res = await fetch(url);
+
+      if (!res.ok) {
+        throw new Error(`API error: ${res.status}`);
+      }
+
+      const json = await res.json();
+      const rows: Record<string, unknown>[] = json.data ?? [];
 
       const parsed = rows
         .filter((r) => r.date != null)
@@ -83,6 +62,9 @@ export function useRidership(days: number = 90) {
         .sort(
           (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
         );
+
+      // Cache the parsed result (not filtered — cache serves multiple date ranges)
+      cachedPayload = { data: parsed, timestamp: Date.now() };
 
       setData(parsed);
     } catch (err) {

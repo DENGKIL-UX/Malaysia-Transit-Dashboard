@@ -25,6 +25,18 @@ interface KtmbDailyRow {
   ridership: number;
 }
 
+// Raw format from prasarana-daily-totals.json (parquet output)
+interface PrasaranaRawRow {
+  date: string;
+  lrt_ampang: number;
+  lrt_kj: number;
+  mrt_pjy: number;
+  monorail: number;
+  brt: number;
+  total: number;
+}
+
+// Mapped to headline-compatible field names
 interface PrasaranaDailyRow {
   date: string;
   rail_lrt_ampang: number;
@@ -67,12 +79,23 @@ async function fetchPrasaranaDaily(
     const res = await fetch(`${origin}/prasarana-daily-totals.json`);
     if (!res.ok) return new Map();
 
-    const data: PrasaranaDailyRow[] = await res.json();
+    const raw: PrasaranaRawRow[] = await res.json();
     const byDate = new Map<string, PrasaranaDailyRow>();
 
-    for (const row of data) {
+    for (const row of raw) {
       if (row.date > startDate) {
-        byDate.set(row.date, row);
+        // ponytail: Map parquet field names → headline-compatible names.
+        // The parquet output uses short names (lrt_ampang, mrt_pjy)
+        // but the chart expects headline-style names (rail_lrt_ampang, rail_mrt_pjy).
+        byDate.set(row.date, {
+          date: row.date,
+          rail_lrt_ampang: row.lrt_ampang ?? 0,
+          rail_lrt_kj: row.lrt_kj ?? 0,
+          rail_mrt_kajang: 0, // SBK line not in parquet OD data
+          rail_mrt_pjy: row.mrt_pjy ?? 0,
+          rail_monorail: row.monorail ?? 0,
+          bus_rkl: row.brt ?? 0, // BRT maps to bus_rkl for chart display
+        });
       }
     }
 
