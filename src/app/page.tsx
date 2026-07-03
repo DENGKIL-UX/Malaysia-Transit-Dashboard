@@ -40,6 +40,7 @@ import { PipelineStatusPanel } from '@/components/dashboard/pipeline-status';
 import { ScrollToTop } from '@/components/dashboard/scroll-to-top';
 import { ScrollProgress } from '@/components/dashboard/scroll-progress';
 import { QuickInsights } from '@/components/dashboard/quick-insights';
+import { PeriodComparison } from '@/components/dashboard/period-comparison';
 import { useRidership } from '@/hooks/use-ridership';
 import { useAppStore } from '@/lib/store';
 import { useAnalytics } from '@/hooks/use-analytics';
@@ -622,6 +623,18 @@ export default function Home() {
               {/* KPI Cards — data passed as props to avoid duplicate fetch */}
               <div className="mb-6">
                 <KpiCards data={data} loading={loading} />
+              </div>
+
+              {/* Period Comparison — MoM / WoW / YoY */}
+              <div className="mb-6">
+                <div className="flex items-center gap-3 mb-5 animate-fade-in-up" style={{ animationDelay: '350ms', opacity: 0 }}>
+                  <div className="w-1 h-6 rounded-full bg-[#85AB8B]/40" />
+                  <div>
+                    <h2 className="text-base font-semibold text-[var(--text-primary)]">Period Comparison</h2>
+                    <p className="text-[10px] text-[var(--text-faint)] mt-0.5">Month-over-month · Week-over-week · Year-over-year ridership trends</p>
+                  </div>
+                </div>
+                <PeriodComparison />
               </div>
 
               {/* Main Grid — items-start prevents both cards from stretching to equal height */}
