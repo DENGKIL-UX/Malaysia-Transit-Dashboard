@@ -21,8 +21,14 @@ import { format, parseISO } from 'date-fns';
 function LazyAlertsInner() {
   const { data, loading, error } = useEnvironmentAlerts();
   const [expanded, setExpanded] = useState(false);
-  const [manuallyDismissed, setManuallyDismissed] = useState(false);
-  return <AlertsContent data={data} loading={loading} error={error} expanded={expanded} setExpanded={setExpanded} manuallyDismissed={manuallyDismissed} setManuallyDismissed={setManuallyDismissed} />;
+  const [manuallyDismissed, setManuallyDismissed] = useState(
+    () => sessionStorage.getItem('env-alert-dismissed') === '1'
+  );
+  const handleDismiss = useCallback(() => {
+    setManuallyDismissed(true);
+    sessionStorage.setItem('env-alert-dismissed', '1');
+  }, []);
+  return <AlertsContent data={data} loading={loading} error={error} expanded={expanded} setExpanded={setExpanded} manuallyDismissed={manuallyDismissed} setManuallyDismissed={handleDismiss} />;
 }
 
 export function EnvironmentAlertsPanel() {

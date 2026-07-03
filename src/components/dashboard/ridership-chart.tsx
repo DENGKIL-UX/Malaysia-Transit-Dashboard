@@ -63,10 +63,15 @@ function CustomTooltip({
   const total = payload.reduce((s, p) => s + p.value, 0);
 
   return (
-    <div className="bg-[var(--bg-tooltip)] backdrop-blur-md border border-[var(--border-subtle)] rounded-xl p-3 shadow-xl max-h-[340px] overflow-y-auto custom-scrollbar">
-      <p className="text-[10px] font-medium text-[#85AB8B] uppercase tracking-widest mb-2">
-        {label}
-      </p>
+    <div className="bg-[var(--bg-tooltip)] backdrop-blur-md border border-[var(--border-subtle)] border-l-2 border-l-[#85AB8B] rounded-xl p-4 shadow-xl max-h-[340px] overflow-y-auto custom-scrollbar">
+      <div className="flex items-center gap-2 mb-2">
+        <p className="text-[10px] font-medium text-[#85AB8B] uppercase tracking-widest">
+          {label}
+        </p>
+        <span className="text-[8px] font-medium px-1.5 py-0.5 rounded bg-[#85AB8B]/10 text-[#85AB8B] border border-[#85AB8B]/20 uppercase tracking-wider">
+          daily
+        </span>
+      </div>
       {/* Total */}
       <div className="flex items-center justify-between gap-4 pb-2 mb-2 border-b border-[var(--border-subtle)]">
         <span className="text-xs font-semibold text-[var(--text-primary)]">Total Rail</span>
@@ -284,7 +289,7 @@ export function RidershipChart() {
   return (
     <div
       data-chart
-      className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 shadow-lg animate-fade-in-up"
+      className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 shadow-lg animate-fade-in-up card-hover"
       style={{ animationDelay: '400ms', opacity: 0 }}
     >
       {/* Header */}

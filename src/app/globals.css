@@ -76,17 +76,17 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
-  --bg-base: #f5f5f0;
-  --bg-surface-1: #ffffff;
-  --bg-surface-2: #e8e8e3;
-  --bg-dropdown: #f0f0eb;
+  --bg-base: #f7f6f3;
+  --bg-surface-1: #fefdfb;
+  --bg-surface-2: #edecea;
+  --bg-dropdown: #f3f2ef;
   --accent-primary: #3d7a4f;
   --accent-heading: #1a3d25;
-  --accent-body: #4a5549;
-  --accent-muted: #6b7b68;
-  --text-primary: #1a1a1a;
-  --text-secondary: #555555;
-  --text-muted: #888888;
+  --accent-body: #3a4a37;
+  --accent-muted: #5a6b57;
+  --text-primary: #111111;
+  --text-secondary: #444444;
+  --text-muted: #777777;
   --text-faint: #aaaaaa;
   --text-ghost: #cccccc;
 
@@ -113,6 +113,12 @@
   /* Skeleton & misc */
   --skeleton-bg: rgba(0, 0, 0, 0.06);
   --shadow-accent: rgba(61, 122, 79, 0.2);
+
+  /* Light mode card warmth */
+  --card: #fefdfb;
+  --card-foreground: oklch(0.145 0 0);
+  --surface-card: rgba(0, 0, 0, 0.02);
+  --bg-elevated: rgba(254, 253, 251, 0.9);
 }
 
 .dark {
@@ -184,6 +190,10 @@
   /* Skeleton & misc */
   --skeleton-bg: rgba(255, 255, 255, 0.05);
   --shadow-accent: rgba(133, 171, 139, 0.2);
+
+  /* Dark mode card values */
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
 }
 
 @layer base {
@@ -287,6 +297,58 @@
 
 .animate-subtle-breathe {
   animation: subtle-breathe 3s ease-in-out infinite;
+}
+
+/* ─── Card Hover Effects ─── */
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card-hover:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Light mode card shadows */
+:root:not(.dark) .rounded-xl,
+:root:not(.dark) .rounded-2xl {
+  --tw-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+:root:not(.dark) .shadow-lg {
+  --tw-shadow: 0 4px 12px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+:root:not(.dark) .shadow-xl {
+  --tw-shadow: 0 8px 24px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.04);
+}
+
+/* ─── Fresh Status Pulse Dot ─── */
+@keyframes fresh-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.7);
+  }
+}
+.fresh-pulse-dot {
+  animation: fresh-pulse 2s ease-in-out infinite;
+}
+
+/* ─── Reduced Motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse-glow,
+  .animate-shimmer,
+  .animate-train-pass,
+  .animate-fade-in-up,
+  .animate-notification-pulse,
+  .animate-subtle-breathe,
+  .fresh-pulse-dot {
+    animation: none !important;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* Custom scrollbar — theme-aware */

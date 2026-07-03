@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useCallback } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { useAppStore } from '@/lib/store';
 
 interface NotificationsResponse {
@@ -27,7 +28,23 @@ export function useNotifications() {
     lastSynced,
     markAsRead,
     markAllRead,
-  } = useAppStore();
+  } = useAppStore(
+    useShallow((s) => ({
+      setNotifications: s.setNotifications,
+      setAnalyticsState: s.setAnalyticsState,
+      setFreshness: s.setFreshness,
+      setLastSynced: s.setLastSynced,
+      setLoadingNotifications: s.setLoadingNotifications,
+      loadingNotifications: s.loadingNotifications,
+      notifications: s.notifications,
+      unreadCount: s.unreadCount,
+      freshness: s.freshness,
+      analyticsState: s.analyticsState,
+      lastSynced: s.lastSynced,
+      markAsRead: s.markAsRead,
+      markAllRead: s.markAllRead,
+    }))
+  );
 
   const fetchNotifications = useCallback(async () => {
     setLoadingNotifications(true);

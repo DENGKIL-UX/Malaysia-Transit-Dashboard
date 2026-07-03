@@ -66,7 +66,11 @@ export function useRidership(days: number = 90) {
       // Cache the parsed result (not filtered — cache serves multiple date ranges)
       cachedPayload = { data: parsed, timestamp: Date.now() };
 
-      setData(parsed);
+      // Also filter for the requesting caller (previously returned full unfiltered dataset on cache miss)
+      const filtered = parsed.filter(
+        (r) => r.date >= start && r.date <= end
+      );
+      setData(filtered);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {

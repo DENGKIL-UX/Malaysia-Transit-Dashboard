@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Search, Calendar, Train, ChevronRight } from 'lucide-react';
+import { Search, Calendar, Train, ChevronRight, Keyboard, Sun, Moon, Home, LayoutDashboard, BarChart3 } from 'lucide-react';
 import { format } from 'date-fns';
+import { useTheme } from 'next-themes';
 import {
   CommandDialog,
   CommandInput,
@@ -30,23 +31,103 @@ const transitLines = [
   { id: 'bus-penang', label: 'Rapid Bus (Penang)', abbr: 'BRP' },
 ];
 
+const shortcuts = [
+  { key: '⌘K / Ctrl+K', label: 'Open this palette', icon: Search },
+  { key: 'D', label: 'Jump to Dashboard', icon: LayoutDashboard },
+  { key: 'A', label: 'Jump to Analytics', icon: BarChart3 },
+  { key: '?', label: 'Show shortcuts', icon: Keyboard },
+  { key: 'T', label: 'Toggle theme', icon: Sun },
+  { key: 'R', label: 'Return to Hero', icon: Home },
+];
+
+function scrollToId(id: string) {
+  const el = document.getElementById(id);
+  if (el) {
+    const top = el.getBoundingClientRect().top + window.scrollY - 80;
+    window.scrollTo({ top, behavior: 'smooth' });
+  }
+}
+
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
   const { data } = useRidership();
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
+      // Cmd+K / Ctrl+K — toggle palette
       if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         setOpen((v) => !v);
+        return;
+      }
+
+      // Don't intercept when palette is open and user is typing in input
+      if (open) return;
+
+      // D — Jump to Dashboard
+      if (e.key === 'd' || e.key === 'D') {
+        e.preventDefault();
+        scrollToId('dashboard');
+        return;
+      }
+
+      // A — Jump to Analytics
+      if (e.key === 'a' || e.key === 'A') {
+        // Don't intercept if user is typing in an input/textarea
+        if (
+          e.target instanceof HTMLInputElement ||
+          e.target instanceof HTMLTextAreaElement
+        ) return;
+        e.preventDefault();
+        scrollToId('analytics');
+        return;
+      }
+
+      // ? — Open palette with shortcuts
+      if (e.key === '?') {
+        // Don't intercept if user is typing in an input/textarea
+        if (
+          e.target instanceof HTMLInputElement ||
+          e.target instanceof HTMLTextAreaElement
+        ) return;
+        e.preventDefault();
+        setShowShortcuts(true);
+        setOpen(true);
+        return;
+      }
+
+      // T — Toggle theme
+      if (e.key === 't' || e.key === 'T') {
+        if (
+          e.target instanceof HTMLInputElement ||
+          e.target instanceof HTMLTextAreaElement
+        ) return;
+        e.preventDefault();
+        setTheme(theme === 'dark' ? 'light' : theme === 'light' ? 'system' : 'dark');
+        return;
+      }
+
+      // R — Return to Hero
+      if (e.key === 'r' || e.key === 'R') {
+        if (
+          e.target instanceof HTMLInputElement ||
+          e.target instanceof HTMLTextAreaElement
+        ) return;
+        e.preventDefault();
+        localStorage.removeItem('rapidstats-landing-dismissed');
+        window.location.reload();
+        return;
       }
     };
     document.addEventListener('keydown', down);
     return () => document.removeEventListener('keydown', down);
-  }, []);
+  }, [open, theme, setTheme]);
 
   const jumpToDate = useCallback((date: string) => {
     setOpen(false);
+    setShowShortcuts(false);
     const el = document.getElementById('analytics');
     if (el) {
       const top = el.getBoundingClientRect().top + window.scrollY - 80;
@@ -56,6 +137,7 @@ export function CommandPalette() {
 
   const jumpToSection = useCallback((id: string) => {
     setOpen(false);
+    setShowShortcuts(false);
     const el = document.getElementById(id);
     if (el) {
       const top = el.getBoundingClientRect().top + window.scrollY - 80;
@@ -63,10 +145,26 @@ export function CommandPalette() {
     }
   }, []);
 
+  const toggleTheme = useCallback(() => {
+    setTheme(theme === 'dark' ? 'light' : theme === 'light' ? 'system' : 'dark');
+  }, [theme, setTheme]);
+
+  const returnToHero = useCallback(() => {
+    setOpen(false);
+    setShowShortcuts(false);
+    localStorage.removeItem('rapidstats-landing-dismissed');
+    window.location.reload();
+  }, []);
+
+  const handleInputChange = useCallback((value: string) => {
+    const q = value.toLowerCase().trim();
+    setShowShortcuts(q === '?' || q === 'shortcuts');
+  }, []);
+
   return (
     <>
       <button
-        onClick={() => setOpen(true)}
+        onClick={() => { setOpen(true); setShowShortcuts(false); }}
         className="hidden sm:flex items-center gap-2 rounded-full bg-[var(--surface-hover)] border border-[var(--border-subtle)] text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--surface-active)] hover:border-[var(--border-subtle)] transition-all duration-200 pl-3 pr-2 py-1.5 h-9 min-w-[36px] group"
         aria-label="Search (⌘K)"
       >
@@ -79,10 +177,41 @@ export function CommandPalette() {
         </kbd>
       </button>
 
-      <CommandDialog open={open} onOpenChange={setOpen}>
-        <CommandInput placeholder="Search dates, lines, or sections..." />
+      <CommandDialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setShowShortcuts(false); }}>
+        <CommandInput placeholder="Search dates, lines, or sections..." onValueChange={handleInputChange} />
         <CommandList>
           <CommandEmpty>No results found.</CommandEmpty>
+
+          {/* Keyboard Shortcuts — shown on ? or "shortcuts" query */}
+          {showShortcuts && (
+            <>
+              <CommandGroup heading="Keyboard Shortcuts">
+                {shortcuts.map((s) => {
+                  const Icon = s.icon;
+                  return (
+                    <CommandItem
+                      key={s.key}
+                      onSelect={() => {
+                        if (s.key === 'D') jumpToSection('dashboard');
+                        else if (s.key === 'A') jumpToSection('analytics');
+                        else if (s.key === 'T') toggleTheme();
+                        else if (s.key === 'R') returnToHero();
+                        else if (s.key === '?') { /* already showing */ }
+                        else setOpen(false);
+                      }}
+                    >
+                      <Icon className="w-4 h-4 text-[var(--text-faint)]" />
+                      <span className="flex-1">{s.label}</span>
+                      <kbd className="text-[10px] font-medium text-[var(--text-ghost)] bg-[var(--surface-card)] border border-[var(--border-faint)] rounded px-1.5 py-0.5 leading-none tabular-nums">
+                        {s.key}
+                      </kbd>
+                    </CommandItem>
+                  );
+                })}
+              </CommandGroup>
+              <CommandSeparator />
+            </>
+          )}
 
           {/* Sections */}
           <CommandGroup heading="Sections">

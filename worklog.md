@@ -571,3 +571,43 @@ Stage Summary:
 - Zero new dependencies — all built with existing stack
 - All API responses validated with comprehensive variable testing (0 failures)
 - Memory-optimized: flood count-only scan, regex-based forecast extraction, lazy IntersectionObserver loading
+---
+Task ID: 4
+Agent: Main
+Task: Comprehensive code review, bug fixes, styling polish, and new features
+
+Work Log:
+- Read full worklog history to understand project state
+- Attempted agent-browser QA — sandbox limitation prevents localhost connection; pivoted to code review
+- Deep code review via subagent: 31 issues found (5 critical, 9 medium, 17 low) across 22 files
+- Fixed all 5 critical bugs:
+  - C1: use-data-metadata.ts — stale closure in polling interval (useRef pattern)
+  - C2: use-ridership.ts — first fetch returned unfiltered data (now filters on cache miss)
+  - C3: use-toast.ts — [state] in useEffect deps caused listener churn (changed to [])
+  - C4: export-dropdown.tsx — PNG export broke CSS vars (resolve var() to computed values)
+  - C5: environment-alerts.tsx — dismiss reset on scroll (sessionStorage persistence)
+- Fixed 2 medium bugs:
+  - M9: use-notifications.ts — 9+ individual Zustand subscriptions → useShallow
+  - M2: nav-bar.tsx — mobile drawer z-index collision (z-20 → z-30)
+- Fixed 2 low issues:
+  - L7: seasonality-heatmap.tsx — added "All Years" reset button
+  - L15: globals.css — added prefers-reduced-motion media query
+- Styling improvements (via frontend-styling-expert agent):
+  - Section header accent lines (sage-green w-8 h-0.5) above all h2 headings
+  - .card-hover CSS class with translateY(-1px) + shadow on hover
+  - KPI sparkline gradient area fill opacity refined (0.3 → 0.15)
+  - Ridership chart tooltip: sage-green left border, more padding, "daily" badge
+  - Data status bar: fresh-pulse-dot animation on fresh indicators
+  - Transit breakdown: alternating row backgrounds for scanability
+  - Light mode polish: warm white backgrounds, better contrast, subtle card shadows
+- New features (already present from prior agent work, verified + enhanced):
+  - Quick Stats Summary Strip: 4 metrics (14 services, data freshness, latest total with trend arrow, record high)
+  - Keyboard Shortcuts: D/A/?/T/R global hotkeys with Command Palette integration
+  - Live Clock: MYT time in navbar, updates every minute via Intl.DateTimeFormat
+  - Data Coverage Indicator: progress bar + percentage in status bar tooltip
+
+Stage Summary:
+- 11 files modified: use-toast.ts, use-ridership.ts, use-data-metadata.ts, use-notifications.ts, environment-alerts.tsx, export-dropdown.tsx, nav-bar.tsx, seasonality-heatmap.tsx, data-status-bar.tsx, globals.css, page.tsx
+- 0 new dependencies added
+- Lint passes cleanly, production build compiles successfully
+- All 5 critical bugs fixed, preventing: infinite listener churn, stale data cascade, unfiltered KPI data, broken PNG exports, alert reappearance

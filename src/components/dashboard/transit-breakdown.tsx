@@ -80,7 +80,7 @@ export function TransitBreakdown() {
 
   return (
     <div
-      className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 shadow-lg animate-fade-in-up flex flex-col"
+      className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 shadow-lg animate-fade-in-up flex flex-col card-hover"
       style={{ animationDelay: '550ms', opacity: 0 }}
     >
       <div className="mb-4 shrink-0">
@@ -108,13 +108,14 @@ export function TransitBreakdown() {
 
       {/* Scrollable line list */}
       <div className="space-y-3 overflow-y-auto flex-1 min-h-0 max-h-[320px] pr-1 custom-scrollbar">
-        {lines.map((line) => {
+        {lines.map((line, lineIdx) => {
           const value = latest?.[line.key] ?? 0;
           const pct = maxVal > 0 ? (value / maxVal) * 100 : 0;
           const d = latest && prev ? delta(latest[line.key], prev[line.key]) : '0.0';
 
           const isHighlighted = highlightedLine === line.key;
           const isDimmed = highlightedLine !== null && !isHighlighted;
+          const isEven = lineIdx % 2 === 0;
 
           return (
             <div
@@ -123,7 +124,8 @@ export function TransitBreakdown() {
                 'group cursor-pointer rounded-lg px-2 py-1.5 -mx-2 transition-all duration-200',
                 isHighlighted && 'bg-[var(--bg-elevated)] ring-1 ring-[var(--border-subtle)]',
                 isDimmed && 'opacity-40',
-                !highlightedLine && 'hover:bg-[var(--bg-elevated)]'
+                !highlightedLine && !isHighlighted && isEven && 'bg-[var(--surface-hover)]/30',
+                !highlightedLine && !isHighlighted && !isEven && 'hover:bg-[var(--bg-elevated)]',
               )}
               onClick={() =>
                 setHighlightedLine(highlightedLine === line.key ? null : line.key)

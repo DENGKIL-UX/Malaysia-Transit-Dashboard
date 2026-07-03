@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Menu, X, Activity, Github, Home } from 'lucide-react';
 import { CommandPalette } from '@/components/dashboard/command-palette';
 import { NotificationBell } from '@/components/dashboard/notification-bell';
@@ -16,6 +16,27 @@ const navLinks = [
 export function NavBar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [active, setActive] = useState('dashboard');
+  const [clockTime, setClockTime] = useState('');
+  const clockIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Live clock — updates every minute in MYT
+  useEffect(() => {
+    const updateClock = () => {
+      const now = new Date();
+      const fmt = new Intl.DateTimeFormat('en-GB', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+        timeZone: 'Asia/Kuala_Lumpur',
+      });
+      setClockTime(fmt.format(now));
+    };
+    updateClock();
+    clockIntervalRef.current = setInterval(updateClock, 60_000);
+    return () => {
+      if (clockIntervalRef.current) clearInterval(clockIntervalRef.current);
+    };
+  }, []);
 
   // Lock body scroll when mobile menu is open
   useEffect(() => {
@@ -126,6 +147,13 @@ export function NavBar() {
           >
             <Home className="w-4 h-4" />
           </button>
+          {/* Live clock — Malaysia time */}
+          {clockTime && (
+            <span className="hidden md:inline-flex items-center text-[10px] text-[var(--text-faint)] tabular-nums font-medium mr-1 select-none" aria-label={`Current time ${clockTime} MYT`}>
+              {clockTime}
+              <span className="text-[8px] ml-1 opacity-60">MYT</span>
+            </span>
+          )}
           <a
             href="https://github.com/data-gov-my/datagovmy-meta"
             target="_blank"
@@ -162,7 +190,7 @@ export function NavBar() {
 
       {/* Mobile overlay */}
       <div
-        className={`lg:hidden fixed inset-0 z-20 transition-opacity duration-300 ${
+        className={`lg:hidden fixed inset-0 z-30 transition-opacity duration-300 ${
           menuOpen
             ? 'opacity-100 pointer-events-auto'
             : 'opacity-0 pointer-events-none'
@@ -174,7 +202,7 @@ export function NavBar() {
 
       {/* Mobile drawer */}
       <div
-        className={`lg:hidden fixed top-0 right-0 bottom-0 z-20 w-[85%] max-w-sm bg-[var(--bg-surface-1)]/95 backdrop-blur-xl shadow-2xl border-l border-[var(--border-faint)] transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+        className={`lg:hidden fixed top-0 right-0 bottom-0 z-30 w-[85%] max-w-sm bg-[var(--bg-surface-1)]/95 backdrop-blur-xl shadow-2xl border-l border-[var(--border-faint)] transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
           menuOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >

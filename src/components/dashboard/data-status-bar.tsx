@@ -105,7 +105,12 @@ export function DataStatusBar() {
   const freshnessIcon = (freshness: SourceStatus['freshness']) => {
     switch (freshness) {
       case 'fresh':
-        return <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />;
+        return (
+          <span className="relative flex items-center justify-center">
+            <span className="fresh-pulse-dot absolute w-1.5 h-1.5 rounded-full bg-emerald-400/50" />
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+          </span>
+        );
       case 'expected':
         return <Clock className="w-3.5 h-3.5 text-amber-400" />;
       case 'delayed':
@@ -126,6 +131,24 @@ export function DataStatusBar() {
 
   // Today's blackout status
   const todayIsBlackout = metadata?.holiday_context?.todayIsBlackout ?? false;
+
+  // Data coverage: percentage of days in current year that have data
+  const coverage = useMemo(() => {
+    if (!metadata?.freshest_date) return null;
+    const freshest = new Date(metadata.freshest_date + 'T00:00:00');
+    const now = new Date();
+    const year = now.getFullYear();
+    const startOfYear = new Date(year, 0, 1);
+    const daysElapsed = Math.min(
+      Math.floor((now.getTime() - startOfYear.getTime()) / 864e5) + 1,
+      Math.floor((freshest.getTime() - startOfYear.getTime()) / 864e5) + 1
+    );
+    if (daysElapsed <= 0) return null;
+    // We have data up to freshest_date — assume continuous coverage
+    const daysWithData = Math.floor((freshest.getTime() - startOfYear.getTime()) / 864e5) + 1;
+    const pct = Math.round((daysWithData / daysElapsed) * 100);
+    return { pct, daysWithData, daysElapsed };
+  }, [metadata?.freshest_date]);
 
   if (metadataLoading) {
     return (
@@ -202,6 +225,32 @@ export function DataStatusBar() {
             )}
           </div>
         </div>
+
+        {/* Data coverage indicator */}
+        {coverage && coverage.pct > 0 && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[var(--border-faint)] bg-[var(--surface-card)] cursor-default">
+                <div className="w-12 h-1.5 rounded-full bg-[var(--border-faint)] overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-[#85AB8B] transition-all duration-500"
+                    style={{ width: `${coverage.pct}%` }}
+                  />
+                </div>
+                <span className="text-[10px] font-semibold tabular-nums text-[var(--text-muted)]">
+                  {coverage.pct}%
+                </span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent
+              side="bottom"
+              sideOffset={6}
+              className="bg-[var(--bg-tooltip)] text-[var(--text-primary)] border border-[var(--border-subtle)] rounded-lg shadow-xl backdrop-blur-xl px-3 py-2 text-[11px] leading-relaxed"
+            >
+              {coverage.daysWithData} of {coverage.daysElapsed} days covered in {new Date().getFullYear()}
+            </TooltipContent>
+          </Tooltip>
+        )}
 
         {/* Help button — always visible */}
         <button

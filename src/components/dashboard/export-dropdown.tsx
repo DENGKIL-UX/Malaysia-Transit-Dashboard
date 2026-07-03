@@ -90,9 +90,23 @@ async function svgToPNG(
   const scale = opts.scale ?? 2;
   const background = opts.background ?? '#0a120a';
 
-  // Serialize SVG to string
+  // Serialize SVG to string, resolving CSS custom properties to computed values
+  // (standalone <img> elements cannot resolve var() references)
   const serializer = new XMLSerializer();
-  const svgString = serializer.serializeToString(svgElement);
+  let svgString = serializer.serializeToString(svgElement);
+
+  // Resolve common CSS variables used in Recharts SVG output
+  const cs = getComputedStyle(document.documentElement);
+  const resolveVar = (name: string) => cs.getPropertyValue(name).trim() || 'currentColor';
+  svgString = svgString
+    .replace(/var\(--chart-axis\)/g, resolveVar('--chart-axis'))
+    .replace(/var\(--chart-grid\)/g, resolveVar('--chart-grid'))
+    .replace(/var\(--chart-text\)/g, resolveVar('--chart-text'))
+    .replace(/var\(--text-primary\)/g, resolveVar('--text-primary'))
+    .replace(/var\(--text-secondary\)/g, resolveVar('--text-secondary'))
+    .replace(/var\(--text-muted\)/g, resolveVar('--text-muted'))
+    .replace(/var\(--text-faint\)/g, resolveVar('--text-faint'))
+    .replace(/var\(--border-subtle\)/g, resolveVar('--border-subtle'));
 
   // Compute dimensions from the SVG's viewBox or explicit width/height
   const viewBox = svgElement.getAttribute('viewBox');

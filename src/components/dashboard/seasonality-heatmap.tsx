@@ -297,6 +297,16 @@ export function SeasonalityHeatmap({ ridership, loading }: Props) {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           {/* Year buttons */}
           <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
+            <button
+              onClick={() => setSelectedYear(0)}
+              className={`px-2.5 py-1 rounded-md text-[11px] font-medium tabular-nums transition-all shrink-0 ${
+                effectiveYear === 0 || selectedYear === 0
+                  ? 'bg-[#85AB8B]/15 text-[#85AB8B] border border-[#85AB8B]/25'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)] border border-transparent hover:border-[var(--border-subtle)]'
+              }`}
+            >
+              All
+            </button>
             {availableYears.map((year) => (
               <button
                 key={year}

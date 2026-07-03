@@ -129,6 +129,7 @@ function AboutSection() {
       <div className="flex items-center gap-3 mb-8 animate-fade-in-up">
         <div className="w-1 h-6 rounded-full bg-[#85AB8B]/40" />
         <div>
+          <div className="w-8 h-0.5 bg-[#85AB8B]/40 mb-2 rounded-full" />
           <h2 className="text-base font-semibold text-[var(--text-primary)]">About</h2>
           <p className="text-[10px] text-[var(--text-faint)] mt-0.5">
             Data sources, methodology, and data integrity
@@ -636,11 +637,73 @@ function DashboardView() {
                 <KpiCards data={data} loading={loading} />
               </div>
 
+              {/* Quick Stats Summary Strip */}
+              <div className="mb-6 animate-fade-in-up" style={{ animationDelay: '300ms', opacity: 0 }}>
+                <div className="flex items-center justify-between rounded-xl bg-[var(--bg-elevated)] backdrop-blur-md border border-[var(--border-faint)] px-5 py-3 shadow-lg overflow-x-auto">
+                  {/* Total services */}
+                  <div className="flex flex-col items-center min-w-0 px-3">
+                    <span className="text-[10px] text-[var(--text-faint)] uppercase tracking-widest font-medium">Services</span>
+                    <span className="text-sm font-semibold text-[var(--text-primary)] tabular-nums mt-0.5">14</span>
+                  </div>
+                  <div className="w-px h-8 bg-[var(--border-faint)] shrink-0" />
+                  {/* Data freshness */}
+                  <div className="flex flex-col items-center min-w-0 px-3">
+                    <span className="text-[10px] text-[var(--text-faint)] uppercase tracking-widest font-medium">Data as of</span>
+                    <span className="text-sm font-semibold text-[#85AB8B] tabular-nums mt-0.5">
+                      {meta?.freshest_date
+                        ? format(new Date(meta.freshest_date + 'T00:00:00'), 'd MMM yyyy')
+                        : (latest?.date ? format(new Date(latest.date + 'T00:00:00'), 'd MMM yyyy') : '—')}
+                    </span>
+                  </div>
+                  <div className="w-px h-8 bg-[var(--border-faint)] shrink-0" />
+                  {/* Today's estimate */}
+                  <div className="flex flex-col items-center min-w-0 px-3">
+                    <span className="text-[10px] text-[var(--text-faint)] uppercase tracking-widest font-medium">Latest Total</span>
+                    <span className="text-sm font-semibold text-[var(--text-primary)] tabular-nums mt-0.5 flex items-center gap-1">
+                      {loading ? '—' : (latest?.total ?? 0).toLocaleString()}
+                      {data.length >= 2 && latest && data[data.length - 2] && (
+                        (() => {
+                          const prev = data[data.length - 2].total;
+                          const curr = latest.total;
+                          const diff = curr - prev;
+                          if (diff > 0) return <span className="text-[10px] text-emerald-400">↑</span>;
+                          if (diff < 0) return <span className="text-[10px] text-red-400">↓</span>;
+                          return <span className="text-[10px] text-[var(--text-faint)]">→</span>;
+                        })()
+                      )}
+                    </span>
+                  </div>
+                  <div className="w-px h-8 bg-[var(--border-faint)] shrink-0" />
+                  {/* Record high */}
+                  <div className="flex flex-col items-center min-w-0 px-3">
+                    <span className="text-[10px] text-[var(--text-faint)] uppercase tracking-widest font-medium">Record High</span>
+                    {(() => {
+                      if (loading || data.length === 0) {
+                        return <span className="text-sm font-semibold text-[var(--text-primary)] tabular-nums mt-0.5">—</span>;
+                      }
+                      let maxRow = data[0];
+                      for (let i = 1; i < data.length; i++) {
+                        if (data[i].total > maxRow.total) maxRow = data[i];
+                      }
+                      return (
+                        <span className="text-sm font-semibold text-amber-400 tabular-nums mt-0.5">
+                          {maxRow.total.toLocaleString()}
+                          <span className="text-[10px] text-[var(--text-faint)] ml-1.5 font-normal">
+                            {format(new Date(maxRow.date + 'T00:00:00'), 'd MMM yyyy')}
+                          </span>
+                        </span>
+                      );
+                    })()}
+                  </div>
+                </div>
+              </div>
+
               {/* Period Comparison — MoM / WoW / YoY */}
               <div className="mb-6">
                 <div className="flex items-center gap-3 mb-5 animate-fade-in-up" style={{ animationDelay: '350ms', opacity: 0 }}>
                   <div className="w-1 h-6 rounded-full bg-[#85AB8B]/40" />
                   <div>
+                    <div className="w-8 h-0.5 bg-[#85AB8B]/40 mb-2 rounded-full" />
                     <h2 className="text-base font-semibold text-[var(--text-primary)]">Period Comparison</h2>
                     <p className="text-[10px] text-[var(--text-faint)] mt-0.5">Month-over-month · Week-over-week · Year-over-year ridership trends</p>
                   </div>
@@ -663,6 +726,7 @@ function DashboardView() {
                 <div className="flex items-center gap-3 mb-5 animate-fade-in-up">
                   <div className="w-1 h-6 rounded-full bg-teal-400/40" />
                   <div>
+                    <div className="w-8 h-0.5 bg-teal-400/40 mb-2 rounded-full" />
                     <h2 className="text-base font-semibold text-[var(--text-primary)]">KTMB Weekly Patterns</h2>
                     <p className="text-[10px] text-[var(--text-faint)] mt-0.5">Monday–Sunday ridership by service · From daily batch data</p>
                   </div>
@@ -675,6 +739,7 @@ function DashboardView() {
                 <div className="flex items-center gap-3 mb-5 animate-fade-in-up">
                   <div className="w-1 h-6 rounded-full bg-amber-400/40" />
                   <div>
+                    <div className="w-8 h-0.5 bg-amber-400/40 mb-2 rounded-full" />
                     <h2 className="text-base font-semibold text-[var(--text-primary)]">Rapid Rail Weekly Patterns</h2>
                     <p className="text-[10px] text-[var(--text-faint)] mt-0.5">Monday–Sunday ridership by line · From daily batch data</p>
                   </div>
@@ -688,6 +753,7 @@ function DashboardView() {
                   <div className="flex items-center gap-3 mb-5 animate-fade-in-up">
                     <div className="w-1 h-6 rounded-full bg-sky-400/40" />
                     <div>
+                      <div className="w-8 h-0.5 bg-sky-400/40 mb-2 rounded-full" />
                       <h2 className="text-base font-semibold text-[var(--text-primary)]">Day-Type Analysis</h2>
                       <p className="text-[10px] text-[var(--text-faint)] mt-0.5">Weekday vs weekend patterns · Holiday impact detection</p>
                     </div>
@@ -704,6 +770,7 @@ function DashboardView() {
                 <div className="flex items-center gap-3 mb-5 animate-fade-in-up">
                   <div className="w-1 h-6 rounded-full bg-amber-400/40" />
                   <div>
+                    <div className="w-8 h-0.5 bg-amber-400/40 mb-2 rounded-full" />
                     <h2 className="text-base font-semibold text-[var(--text-primary)]">Demand Analytics</h2>
                     <p className="text-[10px] text-[var(--text-faint)] mt-0.5">Seasonality patterns · Mode share evolution · Growth rankings</p>
                   </div>
@@ -732,6 +799,7 @@ function DashboardView() {
               <div className="flex items-center gap-3 mb-5 mt-4 animate-fade-in-up">
                 <div className="w-1 h-6 rounded-full bg-amber-400/40" />
                 <div>
+                  <div className="w-8 h-0.5 bg-amber-400/40 mb-2 rounded-full" />
                   <h2 className="text-base font-semibold text-[var(--text-primary)]">
                     Station Analytics
                   </h2>
@@ -774,6 +842,7 @@ function DashboardView() {
             <div className="flex items-center gap-3 mb-5 animate-fade-in-up">
               <div className="w-1 h-6 rounded-full bg-[#85AB8B]/40" />
               <div>
+                <div className="w-8 h-0.5 bg-[#85AB8B]/40 mb-2 rounded-full" />
                 <h2 className="text-base font-semibold text-[var(--text-primary)]">
                   Analytics
                 </h2>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { useAppStore } from '@/lib/store';
 
 export interface PipelineFreshness {
@@ -74,6 +74,11 @@ export function useDataMetadata() {
   const setLastKnownFreshestDate = useAppStore((s) => s.setLastKnownFreshestDate);
   const triggerDataRefresh = useAppStore((s) => s.triggerDataRefresh);
 
+  // Ref to avoid stale closure in the polling interval — the interval captures
+  // the initial fetchMetadata closure, so we read the latest value via ref.
+  const lastKnownRef = useRef(lastKnownFreshestDate);
+  useEffect(() => { lastKnownRef.current = lastKnownFreshestDate; }, [lastKnownFreshestDate]);
+
   const fetchMetadata = useCallback(async () => {
     // Prevent concurrent fetches
     if (inFlight) return;
@@ -88,11 +93,12 @@ export function useDataMetadata() {
 
       // Detect new data: if freshest_date changed from what we knew
       const newFreshest = data.freshest_date || null;
-      if (lastKnownFreshestDate !== null && newFreshest !== null && newFreshest > lastKnownFreshestDate) {
+      const prevFreshest = lastKnownRef.current;
+      if (prevFreshest !== null && newFreshest !== null && newFreshest > prevFreshest) {
         // New data detected! Trigger cascade refresh for ridership, analytics, etc.
         triggerDataRefresh();
         console.info(
-          `[data-refresh] New data detected: ${lastKnownFreshestDate} → ${newFreshest} (${data.freshest_source})`
+          `[data-refresh] New data detected: ${prevFreshest} → ${newFreshest} (${data.freshest_source})`
         );
       }
       setLastKnownFreshestDate(newFreshest);
@@ -102,7 +108,7 @@ export function useDataMetadata() {
       setMetadataLoading(false);
       inFlight = false;
     }
-  }, [setMetadata, setMetadataLoading, lastKnownFreshestDate, setLastKnownFreshestDate, triggerDataRefresh]);
+  }, [setMetadata, setMetadataLoading, setLastKnownFreshestDate, triggerDataRefresh]);
 
   useEffect(() => {
     // Initial fetch
