@@ -63,6 +63,7 @@ interface AppState {
   pendingRefresh: boolean; // signals consumers to re-fetch
   dataUpdateTimestamp: number | null; // epoch ms when last auto-refresh completed
   // UI
+  highlightedLine: string | null;
   lastSynced: string | null;
   loadingNotifications: boolean;
   // Actions
@@ -74,6 +75,7 @@ interface AppState {
   setAnalyticsState: (state: AnalyticsState) => void;
   setMetadata: (data: DataMetadata) => void;
   setMetadataLoading: (loading: boolean) => void;
+  setHighlightedLine: (line: string | null) => void;
   setLastSynced: (ts: string) => void;
   setLoadingNotifications: (loading: boolean) => void;
   setLastKnownFreshestDate: (date: string | null) => void;
@@ -93,6 +95,7 @@ export const useAppStore = create<AppState>((set) => ({
   dataRefreshKey: 0,
   pendingRefresh: false,
   dataUpdateTimestamp: null,
+  highlightedLine: null,
   lastSynced: null,
   loadingNotifications: false,
 
@@ -149,6 +152,8 @@ export const useAppStore = create<AppState>((set) => ({
   clearPendingRefresh: () => set({ pendingRefresh: false }),
 
   setDataUpdateTimestamp: (ts) => set({ dataUpdateTimestamp: ts }),
+
+  setHighlightedLine: (line) => set({ highlightedLine: line }),
 
   setLastSynced: (ts) => set({ lastSynced: ts }),
 

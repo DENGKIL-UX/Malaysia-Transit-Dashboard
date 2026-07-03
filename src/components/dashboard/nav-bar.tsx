@@ -96,7 +96,7 @@ export function NavBar() {
                   text-sm px-4 py-2 rounded-full transition-all duration-300
                   ${
                     isActive
-                      ? 'font-semibold text-[#1f2a1d] bg-[#85AB8B] shadow-lg shadow-[#85AB8B]/20'
+                      ? 'font-semibold bg-[#85AB8B] shadow-lg shadow-[#85AB8B]/20 text-[#1f2a1d] dark:text-[#0a120a]'
                       : 'font-medium text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--surface-card)]'
                   }
                 `}

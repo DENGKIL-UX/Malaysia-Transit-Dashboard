@@ -38,6 +38,7 @@ import { DataUpdateToast } from '@/components/dashboard/data-update-toast';
 import { PipelineStatusPanel } from '@/components/dashboard/pipeline-status';
 import { ScrollToTop } from '@/components/dashboard/scroll-to-top';
 import { ScrollProgress } from '@/components/dashboard/scroll-progress';
+import { QuickInsights } from '@/components/dashboard/quick-insights';
 import { useRidership } from '@/hooks/use-ridership';
 import { useAppStore } from '@/lib/store';
 import { useAnalytics } from '@/hooks/use-analytics';
@@ -241,7 +242,7 @@ function AboutSection() {
             <AlertCircle className="w-4 h-4 text-sky-400" />
           </div>
           <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-2">
-            Four Data Pipelines
+            Three Data Pipelines
           </h3>
           <div className="space-y-3">
             <div className="rounded-lg bg-[var(--surface-card)] border border-[var(--border-faint)] p-3">
@@ -272,16 +273,6 @@ function AboutSection() {
               <p className="text-[10px] text-[var(--text-faint)] leading-relaxed">
                 5 Rapid Rail lines + BRT Sunway + 150+ stations. Origin-destination parquet from
                 data.gov.my. Used by Rapid Rail chart, Busiest Stations, and Top Routes.
-              </p>
-            </div>
-            <div className="rounded-lg bg-[var(--surface-card)] border border-[var(--border-faint)] p-3">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
-                <span className="text-[11px] font-semibold text-[var(--text-secondary)]">OD Datasets (Exploratory)</span>
-              </div>
-              <p className="text-[10px] text-[var(--text-faint)] leading-relaxed">
-                7 origin-destination datasets covering every station pair across all services.
-                Available as per-year Parquet files from data.gov.my. Raw data for advanced analysis.
               </p>
             </div>
           </div>
@@ -505,6 +496,8 @@ export default function Home() {
         </div>
       </div>
 
+      <QuickInsights />
+
       <main className="relative z-10">
         {/* ═══ DASHBOARD SECTION ═══ */}
         <div id="dashboard" className="scroll-mt-20">
@@ -516,33 +509,33 @@ export default function Home() {
               <div className="max-w-2xl mx-auto text-center animate-fade-in-up" style={{ opacity: 0 }}>
                 {/* Coverage line */}
                 <p className="text-[10px] sm:text-[11px] text-[var(--text-faint)] tracking-wide uppercase mb-4">
-                  <span className="text-[#85AB8B]/70">SBK</span>
+                  <span className="inline-flex items-center gap-1"><span className="inline-block w-1 h-1 rounded-full bg-amber-400" />SBK</span>
                   <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
-                  <span className="text-sky-400/60">SSP</span>
+                  <span className="inline-flex items-center gap-1"><span className="inline-block w-1 h-1 rounded-full bg-sky-400" />SSP</span>
                   <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
-                  <span className="text-[var(--text-muted)]">Ampang</span>
+                  <span className="inline-flex items-center gap-1"><span className="inline-block w-1 h-1 rounded-full bg-[var(--text-muted)]" />Ampang</span>
                   <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
-                  <span className="text-[var(--text-muted)]">Kelana Jaya</span>
+                  <span className="inline-flex items-center gap-1"><span className="inline-block w-1 h-1 rounded-full bg-[var(--text-muted)]" />Kelana Jaya</span>
                   <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
-                  <span className="text-[var(--text-muted)]">Monorail</span>
+                  <span className="inline-flex items-center gap-1"><span className="inline-block w-1 h-1 rounded-full bg-[var(--text-muted)]" />Monorail</span>
                   <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
-                  <span className="text-[var(--text-muted)]">Komuter</span>
+                  <span className="inline-flex items-center gap-1"><span className="inline-block w-1 h-1 rounded-full bg-[var(--text-muted)]" />Komuter</span>
                   <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
-                  <span className="text-[var(--text-muted)]">ETS</span>
+                  <span className="inline-flex items-center gap-1"><span className="inline-block w-1 h-1 rounded-full bg-[var(--text-muted)]" />ETS</span>
                   <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
-                  <span className="text-[var(--text-muted)]">Intercity</span>
+                  <span className="inline-flex items-center gap-1"><span className="inline-block w-1 h-1 rounded-full bg-[var(--text-muted)]" />Intercity</span>
                   <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
-                  <span className="text-[var(--text-muted)]">Komuter Utara</span>
+                  <span className="inline-flex items-center gap-1"><span className="inline-block w-1 h-1 rounded-full bg-[var(--text-muted)]" />Komuter Utara</span>
                   <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
-                  <span className="text-[var(--text-muted)]">Tebrau</span>
+                  <span className="inline-flex items-center gap-1"><span className="inline-block w-1 h-1 rounded-full bg-[var(--text-muted)]" />Tebrau</span>
                   <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
-                  <span className="text-orange-400/60">Bus KL</span>
+                  <span className="inline-flex items-center gap-1"><span className="inline-block w-1 h-1 rounded-full bg-orange-400" />Bus KL</span>
                   <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
-                  <span className="text-[var(--text-muted)]">Bus Kuantan</span>
+                  <span className="inline-flex items-center gap-1"><span className="inline-block w-1 h-1 rounded-full bg-[var(--text-muted)]" />Bus Kuantan</span>
                   <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
-                  <span className="text-[var(--text-muted)]">Bus Penang</span>
+                  <span className="inline-flex items-center gap-1"><span className="inline-block w-1 h-1 rounded-full bg-[var(--text-muted)]" />Bus Penang</span>
                   <span className="mx-1.5 text-[var(--text-ghost)]">·</span>
-                  <span className="text-orange-300/60">BRT Sunway</span>
+                  <span className="inline-flex items-center gap-1"><span className="inline-block w-1 h-1 rounded-full bg-[var(--text-muted)]" />BRT Sunway</span>
                 </p>
 
                 <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold text-[var(--text-primary)] leading-[1.02] tracking-tight">
@@ -581,11 +574,13 @@ export default function Home() {
                     label: latestLabel,
                     value: loading ? '—' : totalRail.toLocaleString(),
                     sub: latest?.date ?? 'total rail passengers',
+                    accent: 'border-l-[#85AB8B]',
                   },
                   {
                     label: '30-Day Avg',
                     value: loading ? '—' : avgDaily.toLocaleString(),
                     sub: 'all rail lines combined',
+                    accent: 'border-l-amber-400',
                   },
                   {
                     label: 'Top Line',
@@ -597,21 +592,23 @@ export default function Home() {
                             : 'SSP')
                         : '—',
                     sub: latest ? `highest on ${latest.date}` : 'top rail line',
+                    accent: 'border-l-sky-400',
                   },
                   {
                     label: 'Data Points',
                     value: loading ? '—' : String(data.length),
                     sub: latest ? `as of ${latest.date}` : 'days tracked',
+                    accent: 'border-l-emerald-400',
                   },
                 ].map((stat) => (
                   <div
                     key={stat.label}
-                    className="rounded-xl bg-[var(--bg-elevated)] backdrop-blur-md border border-[var(--border-faint)] px-4 py-3 shadow-lg"
+                    className={`rounded-xl bg-[var(--bg-elevated)] backdrop-blur-md border border-[var(--border-faint)] border-l-2 ${stat.accent} px-4 py-3 shadow-lg hover:border-[var(--border-subtle)] hover:shadow-xl transition-all duration-300`}
                   >
                     <span className="text-[10px] text-[var(--text-faint)] uppercase tracking-widest font-medium">
                       {stat.label}
                     </span>
-                    <div className="text-lg font-semibold text-[var(--text-primary)] tabular-nums tracking-tight mt-0.5">
+                    <div className="text-xl font-semibold text-[var(--text-primary)] tabular-nums tracking-wide mt-0.5">
                       {stat.value}
                     </div>
                     <span className="text-[10px] text-[var(--text-faint)]">
@@ -638,16 +635,37 @@ export default function Home() {
 
               {/* KTMB Daily/Weekly Chart */}
               <div className="mb-6">
+                <div className="flex items-center gap-3 mb-5 animate-fade-in-up">
+                  <div className="w-1 h-6 rounded-full bg-teal-400/40" />
+                  <div>
+                    <h2 className="text-base font-semibold text-[var(--text-primary)]">KTMB Weekly Patterns</h2>
+                    <p className="text-[10px] text-[var(--text-faint)] mt-0.5">Monday–Sunday ridership by service · From daily batch data</p>
+                  </div>
+                </div>
                 <KtmbWeeklyChart />
               </div>
 
               {/* Prasarana Daily/Weekly Chart */}
               <div className="mb-6">
+                <div className="flex items-center gap-3 mb-5 animate-fade-in-up">
+                  <div className="w-1 h-6 rounded-full bg-amber-400/40" />
+                  <div>
+                    <h2 className="text-base font-semibold text-[var(--text-primary)]">Rapid Rail Weekly Patterns</h2>
+                    <p className="text-[10px] text-[var(--text-faint)] mt-0.5">Monday–Sunday ridership by line · From daily batch data</p>
+                  </div>
+                </div>
                 <PrasaranaWeeklyChart />
               </div>
 
               {/* Day-Type Analytics */}
               <div className="mb-6">
+                <div className="flex items-center gap-3 mb-5 animate-fade-in-up">
+                  <div className="w-1 h-6 rounded-full bg-sky-400/40" />
+                  <div>
+                    <h2 className="text-base font-semibold text-[var(--text-primary)]">Day-Type Analysis</h2>
+                    <p className="text-[10px] text-[var(--text-faint)] mt-0.5">Weekday vs weekend patterns · Holiday impact detection</p>
+                  </div>
+                </div>
                 <DayTypeAnalytics />
               </div>
             </div>
@@ -792,37 +810,43 @@ export default function Home() {
 
         {/* ═══ FOOTER ═══ */}
         <footer
-          className="mt-10 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[var(--border-faint)] px-4 sm:px-6 md:px-10 pt-6 pb-8 animate-fade-in-up"
+          className="mt-10 flex flex-col items-center gap-4 px-4 sm:px-6 md:px-10 pb-8 animate-fade-in-up"
           style={{ animationDelay: '650ms', opacity: 0 }}
         >
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <div className="w-5 h-5 rounded bg-[#85AB8B]/20 flex items-center justify-center">
-                <Activity className="w-3 h-3 text-[#85AB8B]" />
+          <div className="w-full bg-gradient-to-r from-transparent via-[#85AB8B]/20 to-transparent h-px" />
+          <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[var(--border-faint)] pt-6">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded bg-[#85AB8B]/20 flex items-center justify-center">
+                  <Activity className="w-3.5 h-3.5 text-[#85AB8B]" />
+                </div>
+                <span className="text-xs font-medium text-[var(--text-faint)]">
+                  RapidStats
+                  <sup className="text-[8px] text-[#85AB8B]">MY</sup>
+                </span>
               </div>
-              <span className="text-xs font-medium text-[var(--text-faint)]">
-                RapidStats
-                <sup className="text-[8px] text-[#85AB8B]">MY</sup>
+              <span className="w-px h-3 bg-[var(--surface-active)]" />
+              <span className="text-[10px] text-[var(--text-ghost)]">
+                Built with Next.js 16 · Recharts · Tailwind CSS
               </span>
             </div>
-            <span className="w-px h-3 bg-[var(--surface-active)]" />
-            <span className="text-[10px] text-[var(--text-ghost)]">
-              Built with Next.js 16 · Recharts · Tailwind CSS
-            </span>
+            <div className="flex items-center gap-4">
+              <span className="text-[10px] text-[var(--text-ghost)]">
+                Headline data: monthly audited · CC-BY 4.0 · data.gov.my
+              </span>
+              <a
+                href="https://github.com/data-gov-my/datagovmy-meta"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10px] text-[var(--text-ghost)] hover:text-[var(--text-muted)] transition-colors"
+              >
+                datagovmy-meta
+              </a>
+            </div>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-[10px] text-[var(--text-ghost)]">
-              Headline data: monthly audited · CC-BY 4.0 · data.gov.my
-            </span>
-            <a
-              href="https://github.com/data-gov-my/datagovmy-meta"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[10px] text-[var(--text-ghost)] hover:text-[var(--text-muted)] transition-colors"
-            >
-              datagovmy-meta
-            </a>
-          </div>
+          <p className="text-[10px] text-[var(--text-ghost)]">
+            Made with ♥ for Malaysian public transit
+          </p>
         </footer>
       </main>
 

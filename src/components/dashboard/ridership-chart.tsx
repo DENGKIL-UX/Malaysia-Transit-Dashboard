@@ -12,7 +12,9 @@ import {
   Brush,
 } from 'recharts';
 import { useRidership } from '@/hooks/use-ridership';
-import { TrainFront, Train, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react';
+import { useAppStore } from '@/lib/store';
+import { cn } from '@/lib/utils';
+import { TrainFront, Train, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, X } from 'lucide-react';
 import { format, subDays } from 'date-fns';
 
 // Deterministic pseudo-random heights (no Math.random to avoid hydration mismatch)
@@ -138,6 +140,8 @@ const WINDOW_DAYS = 30;
 
 export function RidershipChart() {
   const { data: allData, loading } = useRidership(90);
+  const highlightedLine = useAppStore((s) => s.highlightedLine);
+  const setHighlightedLine = useAppStore((s) => s.setHighlightedLine);
   const [pageOffset, setPageOffset] = useState(0); // 0 = latest 30 days, 1 = previous, etc.
   const [zoomed, setZoomed] = useState(false); // controls brush visibility
   const [brushRange, setBrushRange] = useState<{
@@ -286,9 +290,27 @@ export function RidershipChart() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-4">
         <div className="flex-1">
-          <h3 className="text-sm font-semibold text-[var(--text-primary)]">
-            30-Day Rail Ridership
-          </h3>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="text-sm font-semibold text-[var(--text-primary)]">
+              30-Day Rail Ridership
+            </h3>
+            {highlightedLine && (() => {
+              const line = RAIL_LINES.find((l) => l.key === highlightedLine);
+              return line ? (
+                <span className="flex items-center gap-1.5 text-[10px] font-medium px-2 py-0.5 rounded-md border text-[var(--text-secondary)]" style={{ borderColor: line.color, backgroundColor: `${line.color}15` }}>
+                  <span className="w-1.5 h-1.5 rounded-sm" style={{ backgroundColor: line.color }} />
+                  Showing: {line.label}
+                  <button
+                    onClick={() => setHighlightedLine(null)}
+                    className="ml-0.5 hover:text-[var(--text-primary)] transition-colors"
+                    aria-label="Clear line highlight"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ) : null;
+            })()}
+          </div>
           <p className="text-[10px] text-[var(--text-faint)] mt-0.5">
             {subtitleLabel}
           </p>
@@ -363,26 +385,32 @@ export function RidershipChart() {
         {/* Rapid Rail group */}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pr-3 border-r border-[var(--border-faint)]">
           <span className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider font-medium">Rapid Rail</span>
-          {RAIL_LINES.filter((l) => l.group === 'rapid').map((line) => (
-            <div key={line.key} className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: line.color }} />
-              <span className="text-[10px] text-[var(--text-muted)] font-medium">
-                {line.label}
-              </span>
-            </div>
-          ))}
+          {RAIL_LINES.filter((l) => l.group === 'rapid').map((line) => {
+            const dimmed = highlightedLine !== null && highlightedLine !== line.key;
+            return (
+              <div key={line.key} className={cn('flex items-center gap-1.5 transition-opacity duration-200', dimmed && 'opacity-25')}>
+                <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: line.color }} />
+                <span className="text-[10px] text-[var(--text-muted)] font-medium">
+                  {line.label}
+                </span>
+              </div>
+            );
+          })}
         </div>
         {/* KTMB group */}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <span className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider font-medium">KTMB</span>
-          {RAIL_LINES.filter((l) => l.group === 'ktmb').map((line) => (
-            <div key={line.key} className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: line.color }} />
-              <span className="text-[10px] text-[var(--text-muted)] font-medium">
-                {line.label}
-              </span>
-            </div>
-          ))}
+          {RAIL_LINES.filter((l) => l.group === 'ktmb').map((line) => {
+            const dimmed = highlightedLine !== null && highlightedLine !== line.key;
+            return (
+              <div key={line.key} className={cn('flex items-center gap-1.5 transition-opacity duration-200', dimmed && 'opacity-25')}>
+                <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: line.color }} />
+                <span className="text-[10px] text-[var(--text-muted)] font-medium">
+                  {line.label}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -426,20 +454,27 @@ export function RidershipChart() {
             />
             <Tooltip content={<CustomTooltip />} />
             {/* Stacked areas: each rail line stacks on top of previous */}
-            {RAIL_LINES.map((line) => (
-              <Area
-                key={line.key}
-                type="monotone"
-                dataKey={line.key}
-                stroke={line.color}
-                strokeWidth={1}
-                fill={`url(#stackGrad-${line.key})`}
-                name={line.label}
-                dot={zoomed}
-                activeDot={{ r: 3, strokeWidth: 0 }}
-                stackId="rail"
-              />
-            ))}
+            {RAIL_LINES.map((line) => {
+              const isHighlighted = highlightedLine === line.key;
+              const isDimmed = highlightedLine !== null && !isHighlighted;
+
+              return (
+                <Area
+                  key={line.key}
+                  type="monotone"
+                  dataKey={line.key}
+                  stroke={line.color}
+                  strokeWidth={isHighlighted ? 2 : 1}
+                  strokeOpacity={isDimmed ? 0.1 : 1}
+                  fill={`url(#stackGrad-${line.key})`}
+                  fillOpacity={isDimmed ? 0.05 : (isHighlighted ? 0.6 : undefined)}
+                  name={line.label}
+                  dot={zoomed}
+                  activeDot={{ r: 3, strokeWidth: 0 }}
+                  stackId="rail"
+                />
+              );
+            })}
             {/* Brush — drag-to-zoom slider, only visible in zoom mode */}
             {zoomed && chartData.length > 1 && (
               <Brush

@@ -2,8 +2,9 @@
 
 import { useRidership, type RidershipDay } from '@/hooks/use-ridership';
 import { usePrasaranaDaily } from '@/hooks/use-prasarana-daily';
+import { useAppStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, X } from 'lucide-react';
 
 interface LineData {
   label: string;
@@ -40,6 +41,8 @@ function TrendIcon({ value }: { value: string }) {
 export function TransitBreakdown() {
   const { data, loading } = useRidership();
   const { data: prasaranaData, loading: prasaranaLoading } = usePrasaranaDaily();
+  const highlightedLine = useAppStore((s) => s.highlightedLine);
+  const setHighlightedLine = useAppStore((s) => s.setHighlightedLine);
   const latest = data[data.length - 1];
   const prev = data[data.length - 2];
   const latestPrasarana = prasaranaData.length > 0 ? prasaranaData[prasaranaData.length - 1] : null;
@@ -80,12 +83,26 @@ export function TransitBreakdown() {
       style={{ animationDelay: '550ms', opacity: 0 }}
     >
       <div className="mb-4 shrink-0">
-        <h3 className="text-sm font-semibold text-[var(--text-primary)]">
-          Line Breakdown
-        </h3>
-        <p className="text-[10px] text-[var(--text-faint)] mt-0.5">
-          Latest day — {latest?.date}
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-semibold text-[var(--text-primary)]">
+              Line Breakdown
+            </h3>
+            <p className="text-[10px] text-[var(--text-faint)] mt-0.5">
+              Latest day — {latest?.date}
+            </p>
+          </div>
+          {highlightedLine && (
+            <button
+              onClick={() => setHighlightedLine(null)}
+              className="flex items-center gap-1 text-[10px] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
+              aria-label="Clear line selection"
+            >
+              <X className="w-3 h-3" />
+              Clear
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Scrollable line list */}
@@ -95,12 +112,45 @@ export function TransitBreakdown() {
           const pct = maxVal > 0 ? (value / maxVal) * 100 : 0;
           const d = latest && prev ? delta(latest[line.key], prev[line.key]) : '0.0';
 
+          const isHighlighted = highlightedLine === line.key;
+          const isDimmed = highlightedLine !== null && !isHighlighted;
+
           return (
-            <div key={line.key} className="group">
+            <div
+              key={line.key}
+              className={cn(
+                'group cursor-pointer rounded-lg px-2 py-1.5 -mx-2 transition-all duration-200',
+                isHighlighted && 'bg-[var(--bg-elevated)] ring-1 ring-[var(--border-subtle)]',
+                isDimmed && 'opacity-40',
+                !highlightedLine && 'hover:bg-[var(--bg-elevated)]'
+              )}
+              onClick={() =>
+                setHighlightedLine(highlightedLine === line.key ? null : line.key)
+              }
+              role="button"
+              tabIndex={0}
+              aria-pressed={isHighlighted}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ')
+                  setHighlightedLine(highlightedLine === line.key ? null : line.key);
+              }}
+            >
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
-                  <span className={cn('w-1.5 h-1.5 rounded-full', line.bgColor)} />
-                  <span className="text-xs font-medium text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors">
+                  <span
+                    className={cn(
+                      'w-1.5 h-1.5 rounded-full transition-all duration-200',
+                      line.bgColor,
+                      isHighlighted && 'scale-[1.8] ring-2 ring-offset-1 ring-offset-[var(--surface-card)]',
+                      isHighlighted && line.bgColor.replace('bg-', 'ring-')
+                    )}
+                  />
+                  <span className={cn(
+                    'text-xs font-medium transition-colors',
+                    isHighlighted
+                      ? 'text-[var(--text-primary)]'
+                      : 'text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]'
+                  )}>
                     {line.label}
                   </span>
                 </div>
@@ -125,7 +175,11 @@ export function TransitBreakdown() {
               </div>
               <div className="h-1 bg-[var(--surface-card)] rounded-full overflow-hidden">
                 <div
-                  className={cn('h-full rounded-full transition-all duration-700 ease-out', line.bgColor, 'opacity-60')}
+                  className={cn(
+                    'h-full rounded-full transition-all duration-700 ease-out',
+                    line.bgColor,
+                    isHighlighted ? 'opacity-100' : 'opacity-60'
+                  )}
                   style={{ width: `${pct}%` }}
                 />
               </div>
@@ -133,45 +187,85 @@ export function TransitBreakdown() {
           );
         })}
         {/* BRT Sunway - Batch data */}
-        {latestPrasarana && (
-          <div className="group">
-            <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-2">
-                <span className={cn('w-1.5 h-1.5 rounded-full', BRT_LINE.bgColor)} />
-                <span className="text-xs font-medium text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors">
-                  {BRT_LINE.label}
-                </span>
-                <span className="text-[8px] px-1 py-0.5 rounded bg-sky-400/15 text-sky-300/70 font-medium">T-1</span>
+        {latestPrasarana && (() => {
+          const brtKey = 'brt';
+          const isHighlighted = highlightedLine === brtKey;
+          const isDimmed = highlightedLine !== null && !isHighlighted;
+          const brtPct = maxVal > 0 ? (latestPrasarana.brt / maxVal) * 100 : 0;
+          const brtDelta = prevPrasarana ? delta(latestPrasarana.brt, prevPrasarana.brt) : '0.0';
+
+          return (
+            <div
+              className={cn(
+                'group cursor-pointer rounded-lg px-2 py-1.5 -mx-2 transition-all duration-200',
+                isHighlighted && 'bg-[var(--bg-elevated)] ring-1 ring-[var(--border-subtle)]',
+                isDimmed && 'opacity-40',
+                !highlightedLine && 'hover:bg-[var(--bg-elevated)]'
+              )}
+              onClick={() =>
+                setHighlightedLine(highlightedLine === brtKey ? null : brtKey)
+              }
+              role="button"
+              tabIndex={0}
+              aria-pressed={isHighlighted}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ')
+                  setHighlightedLine(highlightedLine === brtKey ? null : brtKey);
+              }}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-2">
+                  <span
+                    className={cn(
+                      'w-1.5 h-1.5 rounded-full transition-all duration-200',
+                      BRT_LINE.bgColor,
+                      isHighlighted && 'scale-[1.8] ring-2 ring-offset-1 ring-offset-[var(--surface-card)]'
+                    )}
+                  />
+                  <span className={cn(
+                    'text-xs font-medium transition-colors',
+                    isHighlighted
+                      ? 'text-[var(--text-primary)]'
+                      : 'text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]'
+                  )}>
+                    {BRT_LINE.label}
+                  </span>
+                  <span className="text-[8px] px-1 py-0.5 rounded bg-sky-400/15 text-sky-300/70 font-medium">T-1</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-[var(--text-primary)] tabular-nums">
+                    {latestPrasarana.brt.toLocaleString()}
+                  </span>
+                  {prevPrasarana && (
+                    <div className="flex items-center gap-0.5">
+                      <TrendIcon value={brtDelta} />
+                      <span
+                        className={cn(
+                          'text-[10px] tabular-nums font-medium',
+                          parseFloat(brtDelta) > 0 && 'text-emerald-400',
+                          parseFloat(brtDelta) < 0 && 'text-red-400',
+                          parseFloat(brtDelta) === 0 && 'text-[var(--text-faint)]'
+                        )}
+                      >
+                        {Math.abs(parseFloat(brtDelta)).toFixed(1)}%
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-[var(--text-primary)] tabular-nums">
-                  {latestPrasarana.brt.toLocaleString()}
-                </span>
-                {prevPrasarana && (
-                  <div className="flex items-center gap-0.5">
-                    <TrendIcon value={delta(latestPrasarana.brt, prevPrasarana.brt)} />
-                    <span
-                      className={cn(
-                        'text-[10px] tabular-nums font-medium',
-                        parseFloat(delta(latestPrasarana.brt, prevPrasarana.brt)) > 0 && 'text-emerald-400',
-                        parseFloat(delta(latestPrasarana.brt, prevPrasarana.brt)) < 0 && 'text-red-400',
-                        parseFloat(delta(latestPrasarana.brt, prevPrasarana.brt)) === 0 && 'text-[var(--text-faint)]'
-                      )}
-                    >
-                      {Math.abs(parseFloat(delta(latestPrasarana.brt, prevPrasarana.brt))).toFixed(1)}%
-                    </span>
-                  </div>
-                )}
+              <div className="h-1 bg-[var(--surface-card)] rounded-full overflow-hidden">
+                <div
+                  className={cn(
+                    'h-full rounded-full transition-all duration-700 ease-out',
+                    BRT_LINE.bgColor,
+                    isHighlighted ? 'opacity-100' : 'opacity-60'
+                  )}
+                  style={{ width: `${brtPct}%` }}
+                />
               </div>
             </div>
-            <div className="h-1 bg-[var(--surface-card)] rounded-full overflow-hidden">
-              <div
-                className={cn('h-full rounded-full transition-all duration-700 ease-out', BRT_LINE.bgColor, 'opacity-60')}
-                style={{ width: `${maxVal > 0 ? (latestPrasarana.brt / maxVal) * 100 : 0}%` }}
-              />
-            </div>
-          </div>
-        )}
+          );
+        })()}
       </div>
 
       <div className="mt-4 pt-3 border-t border-[var(--border-faint)] shrink-0">
