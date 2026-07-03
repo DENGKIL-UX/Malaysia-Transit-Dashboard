@@ -511,3 +511,63 @@ Stage Summary:
 - No new API routes, no new Zustand store
 - Lint passes cleanly, server compiles and renders HTTP 200
 - Compiled JS verified to contain LandingPage, DashboardView, rapidstats-landing, useSyncExternalStore
+
+---
+Task ID: 1
+Agent: Main
+Task: Research pasarapi.xyz and implement dashboard enhancements
+
+Work Log:
+- Fetched and analyzed pasarapi.xyz catalogue (906 APIs across MY, SG, ID, TH)
+- Identified 4 transit-relevant API groups from data.gov.my via pasarapi.xyz:
+  1. Weather Warnings (MET Malaysia) — live, free, no auth
+  2. 7-day Weather Forecast (MET Malaysia) — live, free, no auth
+  3. Flood Warnings (JPS) — live, free, no auth (large payload ~2MB)
+  4. Earthquake Warnings (MET Malaysia) — live, free, no auth
+- Tested all 4 upstream endpoints — all return valid data
+
+- Created `/api/environment-alerts/route.ts`:
+  - Fetches weather warnings + flood count + earthquakes
+  - Flood data is too large (~2MB) for full parse — optimized to count-only scan
+  - Transit-relevance detection: maps Malaysian states/districts to KTM/LRT/MRT/BRT lines
+  - 5-min server cache, 300s CDN cache, stale-while-revalidate
+  - Response: 6 weather warnings, 50 flood stations, 10 earthquakes, transit-relevant flag
+
+- Created `/api/weather-forecast/route.ts`:
+  - Fetches 7-day forecast from api.data.gov.my/weather/forecast/ (737KB upstream)
+  - Regex-based text extraction (no JSON.parse on full payload) for memory efficiency
+  - Extracts only St009 (KL) and St008 (Selangor) entries
+  - Rain/thunderstorm/heavy rain classification from Malay weather text
+  - 10-min server cache, 600s CDN cache
+
+- Created `src/hooks/use-environment.ts`:
+  - `useEnvironmentAlerts()` — 3s stagger, 5-min auto-refresh
+  - `useWeatherForecast()` — 5s stagger, 10-min auto-refresh
+  - Full TypeScript types mirroring API responses
+
+- Created `src/components/dashboard/environment-alerts.tsx`:
+  - Lazy-loaded via IntersectionObserver (only fetches when visible)
+  - Collapsible alert banner with transit-relevance highlighting
+  - Weather warnings: severity color, transit area badges, valid-until timestamps
+  - Flood summary: count + transit-relevance flag + link to JPS upstream
+  - Earthquake rows: magnitude, depth, location, distance from MY
+  - Dismissible with X button
+
+- Created `src/components/dashboard/weather-forecast.tsx`:
+  - Lazy-loaded via IntersectionObserver
+  - Today's rain status badge (thunderstorm/heavy/rain/clear)
+  - KL 7-day full-row forecast with weather icons
+  - Selangor 7-day compact strip
+  - Footer with ridership impact context
+  - Styled to match existing dashboard cards
+
+- Wired into page.tsx:
+  - EnvironmentAlertsPanel placed above Feature Cards (below nav)
+  - WeatherForecastWidget placed alongside Day-Type Analytics (7:5 grid)
+
+Stage Summary:
+- 4 new files: 2 API routes, 1 hook, 2 components
+- 1 modified file: page.tsx (imports + 2 component placements)
+- Zero new dependencies — all built with existing stack
+- All API responses validated with comprehensive variable testing (0 failures)
+- Memory-optimized: flood count-only scan, regex-based forecast extraction, lazy IntersectionObserver loading

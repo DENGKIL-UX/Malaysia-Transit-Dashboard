@@ -1,0 +1,1079 @@
+ID: ridership_headline
+  Title: Daily Public Transport Ridership
+  Category: Transportation
+  Frequency: DAILY
+  Coverage: 2020-2023
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.my/data-catalogue/ridership_headline
+  BaseUrl: None
+
+ID: sdg_16-2-2
+  Title: SDG 16-2-2: Victims of Human Trafficking
+  Category: Statistical Indicators
+  Frequency: ANNUAL
+  Coverage: 2016-2022
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.my/data-catalogue/sdg_16-2-2
+  BaseUrl: None
+
+ID: ridership_ktmb_daily
+  Title: Daily KTMB Ridership
+  Category: Transportation
+  Frequency: DAILY
+  Coverage: 2020-2025
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.my/data-catalogue/ridership_ktmb_daily
+  BaseUrl: None
+
+ID: ridership_ktmb_monthly
+  Title: Monthly KTMB Ridership
+  Category: Transportation
+  Frequency: MONTHLY
+  Coverage: 2020-2025
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.my/data-catalogue/ridership_ktmb_monthly
+  BaseUrl: None
+
+ID: registrations_type_fuel
+  Title: Monthly Vehicle Registrations by Vehicle and Fuel Type
+  Category: Transportation
+  Frequency: MONTHLY
+  Coverage: 2000-2026
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.my/data-catalogue/registrations_type_fuel
+  BaseUrl: None
+
+ID: d_bdaff844e3ef89d39fceb962ff8f0791
+  Title: Consumer Price Index (CPI), 2024 As Base Year, Monthly
+  Category: Economy & business
+  Frequency: None
+  Coverage: 1961-2026
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_bdaff844e3ef89d39fceb962ff8f0791/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_bdaff844e3ef89d39fceb962ff8f0791&limit=10
+
+ID: d_b22b2aa292bd29e1a200d4f1c5d013cd
+  Title: Resident Ever-Married Females Aged 15 Years and Over by Age Group, Number of Children Born and Economic Activity (Genera
+  Category: Economy & business
+  Frequency: None
+  Coverage: None
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_b22b2aa292bd29e1a200d4f1c5d013cd/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_b22b2aa292bd29e1a200d4f1c5d013cd&limit=10
+
+ID: d_897e1408ced50b89d3cbed95eb6b264d
+  Title: Resident Students Aged 5 Years and Over by Usual Mode of Transport to School, Type of Dwelling and Sex (Census of Popula
+  Category: Transport
+  Frequency: None
+  Coverage: None
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_897e1408ced50b89d3cbed95eb6b264d/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_897e1408ced50b89d3cbed95eb6b264d&limit=10
+
+ID: d_4622724fa2c5bf6f9e62882cb8b2e9c7
+  Title: Resident Working Persons Aged 15 Years and Over by Usual Mode of Transport to Work, Type of Dwelling and Sex (Census of 
+  Category: Transport
+  Frequency: None
+  Coverage: None
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_4622724fa2c5bf6f9e62882cb8b2e9c7/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_4622724fa2c5bf6f9e62882cb8b2e9c7&limit=10
+
+ID: d_69b3380ad7e51aff3a7dcc84eba52b8a
+  Title: COE Bidding Results / Prices
+  Category: Transport
+  Frequency: None
+  Coverage: 2010-2026
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_69b3380ad7e51aff3a7dcc84eba52b8a/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_69b3380ad7e51aff3a7dcc84eba52b8a&limit=10
+
+ID: d_48cb38d12697d3463c8cadfb22e6c61d
+  Title: Vessel Calls (>75 GT), Monthly
+  Category: Transport
+  Frequency: None
+  Coverage: 1993-2026
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_48cb38d12697d3463c8cadfb22e6c61d/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_48cb38d12697d3463c8cadfb22e6c61d&limit=10
+
+ID: d_d48c5a038904f6da3c603cd854b6c191
+  Title: Vessel Arrivals (>75 GT) Total, Monthly
+  Category: Transport
+  Frequency: None
+  Coverage: 1995-2026
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_d48c5a038904f6da3c603cd854b6c191/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_d48c5a038904f6da3c603cd854b6c191&limit=10
+
+ID: d_8f264219109e61fffa87ac64dd5a9a65
+  Title: Vessel Arrivals (>75 GT) Breakdown, Monthly
+  Category: Transport
+  Frequency: None
+  Coverage: 1995-2026
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_8f264219109e61fffa87ac64dd5a9a65/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_8f264219109e61fffa87ac64dd5a9a65&limit=10
+
+ID: d_9adb5ace517591edd9a8c88291ac1f1c
+  Title: Tanker Arrivals Total, Monthly
+  Category: Transport
+  Frequency: None
+  Coverage: 2002-2026
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_9adb5ace517591edd9a8c88291ac1f1c/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_9adb5ace517591edd9a8c88291ac1f1c&limit=10
+
+ID: d_c9dcfd8b85990669d1e74dd7ad71eb8b
+  Title: Tanker Arrivals Breakdown, Monthly
+  Category: Transport
+  Frequency: None
+  Coverage: 2002-2026
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_c9dcfd8b85990669d1e74dd7ad71eb8b/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_c9dcfd8b85990669d1e74dd7ad71eb8b&limit=10
+
+ID: d_56f64b2d5a31eb0ee465cc51e83ac60a
+  Title: Registered Vessels and Shipping Tonnage, Monthly
+  Category: Transport
+  Frequency: None
+  Coverage: 1995-2026
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_56f64b2d5a31eb0ee465cc51e83ac60a/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_56f64b2d5a31eb0ee465cc51e83ac60a&limit=10
+
+ID: d_da030f7028200d19ffcbe4a2d71af39c
+  Title: Container Throughput, Monthly
+  Category: Transport
+  Frequency: None
+  Coverage: 1995-2026
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_da030f7028200d19ffcbe4a2d71af39c/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_da030f7028200d19ffcbe4a2d71af39c&limit=10
+
+ID: d_042dd8b935eab998f389adaf559c80de
+  Title: Cargo Throughput Total, Monthly Data
+  Category: Transport
+  Frequency: None
+  Coverage: 1995-2026
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_042dd8b935eab998f389adaf559c80de/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_042dd8b935eab998f389adaf559c80de&limit=10
+
+ID: d_835d43b9238c6fc877dfcd62d73054a9
+  Title: Cargo Throughput Breakdown, Monthly Data
+  Category: Transport
+  Frequency: None
+  Coverage: 1995-2026
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_835d43b9238c6fc877dfcd62d73054a9/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_835d43b9238c6fc877dfcd62d73054a9&limit=10
+
+ID: d_89d2874dad74a273270369334f1e7d28
+  Title: Bunker Sales Total, Monthly
+  Category: Transport
+  Frequency: None
+  Coverage: 1995-2026
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_89d2874dad74a273270369334f1e7d28/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_89d2874dad74a273270369334f1e7d28&limit=10
+
+ID: d_4f5abbf4486bf8e52bbed3be56dde562
+  Title: Bunker Sales Breakdown, Monthly
+  Category: Transport
+  Frequency: None
+  Coverage: 1995-2026
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_4f5abbf4486bf8e52bbed3be56dde562/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_4f5abbf4486bf8e52bbed3be56dde562&limit=10
+
+ID: d_2def6f1e961d452f8073650bba251273
+  Title: Intake Count of Full-Time and Traineeship Programmes at ITE
+  Category: Environment & climate
+  Frequency: None
+  Coverage: 2011-2025
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_2def6f1e961d452f8073650bba251273/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_2def6f1e961d452f8073650bba251273&limit=10
+
+ID: d_4c00177b84dc5fd467146c5c1e58e469
+  Title: Number of Graduates from Full-Time and Traineeship Programmes at ITE
+  Category: Environment & climate
+  Frequency: None
+  Coverage: 2011-2025
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_4c00177b84dc5fd467146c5c1e58e469/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_4c00177b84dc5fd467146c5c1e58e469&limit=10
+
+ID: d_d1fbb24161f78e72bed494bd2ba9d091
+  Title: Training Places of CET Skills And Continuing Academic Education Programmes at ITE
+  Category: Environment & climate
+  Frequency: None
+  Coverage: 2010-2025
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_d1fbb24161f78e72bed494bd2ba9d091/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_d1fbb24161f78e72bed494bd2ba9d091&limit=10
+
+ID: d_134857f63c76d227b6fa045f31ce59c1
+  Title: Rainfall - Monthly Number of Rain Days
+  Category: Environment & climate
+  Frequency: None
+  Coverage: 1982-2026
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_134857f63c76d227b6fa045f31ce59c1/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_134857f63c76d227b6fa045f31ce59c1&limit=10
+
+ID: d_b16d06b83473fdfcc92ed9d37b66ba58
+  Title: Rainfall - Monthly Total
+  Category: Environment & climate
+  Frequency: None
+  Coverage: 1982-2026
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_b16d06b83473fdfcc92ed9d37b66ba58/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_b16d06b83473fdfcc92ed9d37b66ba58&limit=10
+
+ID: d_53ffdaa97e48ce934cf92799d381f3b1
+  Title: Rainfall - Monthly Highest Daily Total
+  Category: Environment & climate
+  Frequency: None
+  Coverage: 1982-2026
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_53ffdaa97e48ce934cf92799d381f3b1/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_53ffdaa97e48ce934cf92799d381f3b1&limit=10
+
+ID: d_8d7c6138029eea4d7ffae4f13e3a6458
+  Title: Aircraft and Transit Passenger
+  Category: Transport
+  Frequency: None
+  Coverage: 2015-2026
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_8d7c6138029eea4d7ffae4f13e3a6458/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_8d7c6138029eea4d7ffae4f13e3a6458&limit=10
+
+ID: d_744e62bfb1c524508bce0a64a2488243
+  Title: Air Traffic Movements
+  Category: Transport
+  Frequency: None
+  Coverage: 2015-2026
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_744e62bfb1c524508bce0a64a2488243/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_744e62bfb1c524508bce0a64a2488243&limit=10
+
+ID: d_23f946fa557947f93a8043bbef41dd09
+  Title: HDB Carpark Information
+  Category: Transport
+  Frequency: None
+  Coverage: None
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_23f946fa557947f93a8043bbef41dd09/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_23f946fa557947f93a8043bbef41dd09&limit=10
+
+ID: d_3f23c3c7ce5f72eab16ed999e7271f2f
+  Title: CAAS Annual Report Key Performance Indicators
+  Category: Transport
+  Frequency: None
+  Coverage: 2019-2025
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_3f23c3c7ce5f72eab16ed999e7271f2f/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_3f23c3c7ce5f72eab16ed999e7271f2f&limit=10
+
+ID: d_3df7dc96c9e35c717dda7dccb53a00dd
+  Title: Trade Disputes Referred for Conciliation - Topline
+  Category: Economy & business
+  Frequency: None
+  Coverage: 2005-2025
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_3df7dc96c9e35c717dda7dccb53a00dd/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_3df7dc96c9e35c717dda7dccb53a00dd&limit=10
+
+ID: d_c45e8a5f0fd6e51e83cfb6105dc2e1bd
+  Title: Trade Disputes Referred for Conciliation by Nature of Trade Dispute
+  Category: Economy & business
+  Frequency: None
+  Coverage: 2005-2025
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_c45e8a5f0fd6e51e83cfb6105dc2e1bd/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_c45e8a5f0fd6e51e83cfb6105dc2e1bd&limit=10
+
+ID: d_9903b834a7d5456b674c9c8ecc7fa6f0
+  Title: Trade Disputes Referred for Conciliation by Industry
+  Category: Economy & business
+  Frequency: None
+  Coverage: 2005-2025
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_9903b834a7d5456b674c9c8ecc7fa6f0/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_9903b834a7d5456b674c9c8ecc7fa6f0&limit=10
+
+ID: d_60410de1bc1e63ddcf51a619081b11b3
+  Title: Vessel Calls (>75 GT), Annual
+  Category: Transport
+  Frequency: None
+  Coverage: 1995-2025
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_60410de1bc1e63ddcf51a619081b11b3/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_60410de1bc1e63ddcf51a619081b11b3&limit=10
+
+ID: d_8392e9bea6ca351a38f67172ccdf6a6a
+  Title: Vessel Arrivals (>75 GT) Total, Annual Data
+  Category: Transport
+  Frequency: None
+  Coverage: 1995-2025
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_8392e9bea6ca351a38f67172ccdf6a6a/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_8392e9bea6ca351a38f67172ccdf6a6a&limit=10
+
+ID: d_b0c64c019b252698a9f1a222dcf9e0a6
+  Title: Vessel Arrivals (>75 GT) Breakdown, Annual Data
+  Category: Transport
+  Frequency: None
+  Coverage: 1995-2025
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_b0c64c019b252698a9f1a222dcf9e0a6/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_b0c64c019b252698a9f1a222dcf9e0a6&limit=10
+
+ID: d_eb1c7c0c9ee013f9be42cc8abf523326
+  Title: Tanker Arrivals Total, Annual Data
+  Category: Transport
+  Frequency: None
+  Coverage: 2002-2025
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_eb1c7c0c9ee013f9be42cc8abf523326/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_eb1c7c0c9ee013f9be42cc8abf523326&limit=10
+
+ID: d_1714a141d8bbf1996965eb3f71565525
+  Title: Tanker Arrivals Breakdown, Annual Data
+  Category: Transport
+  Frequency: None
+  Coverage: 2002-2025
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_1714a141d8bbf1996965eb3f71565525/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_1714a141d8bbf1996965eb3f71565525&limit=10
+
+ID: d_0c586210d33756a56ef6213078e749aa
+  Title: Registered Vessels and Shipping Tonnage, Annual
+  Category: Transport
+  Frequency: None
+  Coverage: 1995-2025
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_0c586210d33756a56ef6213078e749aa/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_0c586210d33756a56ef6213078e749aa&limit=10
+
+ID: d_085682b824700b4e88d946529f503da0
+  Title: Container Throughput, Annual
+  Category: Transport
+  Frequency: None
+  Coverage: 1995-2025
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_085682b824700b4e88d946529f503da0/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_085682b824700b4e88d946529f503da0&limit=10
+
+ID: d_8ab8d71a6bf44097889dd6a3b4258928
+  Title: Cargo Throughput Total, Annual Data
+  Category: Transport
+  Frequency: None
+  Coverage: 1995-2025
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_8ab8d71a6bf44097889dd6a3b4258928/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_8ab8d71a6bf44097889dd6a3b4258928&limit=10
+
+ID: d_a30479ad55e045bcaffacf587d05966c
+  Title: Cargo Throughput Breakdown, Annual Data
+  Category: Transport
+  Frequency: None
+  Coverage: 1995-2025
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_a30479ad55e045bcaffacf587d05966c/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_a30479ad55e045bcaffacf587d05966c&limit=10
+
+ID: d_35d0a8fba77b2e411629f7fed906328a
+  Title: Tier 2 non-elderly Vulnerable Adult abuse cases by Sex and Type of Abuse (Domestic Violence Trends Report)
+  Category: Government data
+  Frequency: None
+  Coverage: 2021-2024
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_35d0a8fba77b2e411629f7fed906328a/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_35d0a8fba77b2e411629f7fed906328a&limit=10
+
+ID: d_bce95b79ba198c25b078784063c79ab5
+  Title: Tier 2 non-elderly Vulnerable Adult Abuse Data by Age and Type of Abuse (Domestic Violence Trends Report)
+  Category: Population & society
+  Frequency: None
+  Coverage: 2021-2024
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_bce95b79ba198c25b078784063c79ab5/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_bce95b79ba198c25b078784063c79ab5&limit=10
+
+ID: d_0d08a4ca61abb6bce2291f359b047808
+  Title: Tier 2 non-elderly Vulnerable Adult Abuse Data by Age and Sex (Domestic Violence Trends Report)
+  Category: Population & society
+  Frequency: None
+  Coverage: 2021-2024
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_0d08a4ca61abb6bce2291f359b047808/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_0d08a4ca61abb6bce2291f359b047808&limit=10
+
+ID: d_71daf4b9690a30c37fa343bfe316d9f1
+  Title: Incidence rates of new Tier 2 non-elderly Vulnerable Adult abuse cases per 1,000 vulnerable population aged 18-64 years 
+  Category: Population & society
+  Frequency: None
+  Coverage: 2021-2024
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_71daf4b9690a30c37fa343bfe316d9f1/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_71daf4b9690a30c37fa343bfe316d9f1&limit=10
+
+ID: d_ba4f530a537ff032df6ea3a10ff417cc
+  Title: Tier 2 elderly Vulnerable Adult abuse cases by Sex and Type of Abuse (Domestic Violence Trends Report)
+  Category: Government data
+  Frequency: None
+  Coverage: 2021-2024
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_ba4f530a537ff032df6ea3a10ff417cc/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_ba4f530a537ff032df6ea3a10ff417cc&limit=10
+
+ID: d_3a6a142859398cd6b14f8a071b8f4cf3
+  Title: Incidence rates of new Tier 2 elderly Vulnerable Adult abuse cases per 1,000 vulnerable elderly (Domestic Violence Trend
+  Category: Government data
+  Frequency: None
+  Coverage: 2021-2024
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_3a6a142859398cd6b14f8a071b8f4cf3/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_3a6a142859398cd6b14f8a071b8f4cf3&limit=10
+
+ID: d_0e83a60152fd6e5a3a763a27ff41a71f
+  Title: Tier 2 Child Abuse Data by Sex and Type of Abuse (Domestic Violence Trends Report)
+  Category: Government data
+  Frequency: None
+  Coverage: 2021-2024
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_0e83a60152fd6e5a3a763a27ff41a71f/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_0e83a60152fd6e5a3a763a27ff41a71f&limit=10
+
+ID: d_a2bfd93915331b2f4ddb40f5ace01202
+  Title: Tier 2 Child Abuse Data by Age and Type of Abuse (Domestic Violence Trends Report)
+  Category: Population & society
+  Frequency: None
+  Coverage: 2021-2024
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_a2bfd93915331b2f4ddb40f5ace01202/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_a2bfd93915331b2f4ddb40f5ace01202&limit=10
+
+ID: d_4593e1723b33ed73f030c8752ed0692c
+  Title: Tier 2 Child Abuse Data by Age and Sex (Domestic Violence Trends Report)
+  Category: Population & society
+  Frequency: None
+  Coverage: 2021-2024
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_4593e1723b33ed73f030c8752ed0692c/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_4593e1723b33ed73f030c8752ed0692c&limit=10
+
+ID: d_bdd470184d51452b63ffecab6e1d98a9
+  Title: Incidence rates of new Tier 2 child abuse cases per 1,000 children (Domestic Violence Trends Report)
+  Category: Government data
+  Frequency: None
+  Coverage: 2021-2024
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_bdd470184d51452b63ffecab6e1d98a9/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_bdd470184d51452b63ffecab6e1d98a9&limit=10
+
+ID: d_a36974dce5a2a67eba37fe5ae108b9c4
+  Title: Tier 1 Child Abuse Data by Age and Sex (Domestic Violence Trends Report 2025)
+  Category: Population & society
+  Frequency: None
+  Coverage: 2021-2024
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_a36974dce5a2a67eba37fe5ae108b9c4/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_a36974dce5a2a67eba37fe5ae108b9c4&limit=10
+
+ID: d_1318486490fc19960ca536deeb07d26e
+  Title: Tier 1 Elder Abuse Data (Domestic Violence Trends Report 2025)
+  Category: Government data
+  Frequency: None
+  Coverage: 2021-2024
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_1318486490fc19960ca536deeb07d26e/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_1318486490fc19960ca536deeb07d26e&limit=10
+
+ID: d_ff8736f1378011003c0f8a35f9ff9c1e
+  Title: Tier 1 Spousal Abuse Data (Domestic Violence Trends Report 2025)
+  Category: Government data
+  Frequency: None
+  Coverage: 2021-2024
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_ff8736f1378011003c0f8a35f9ff9c1e/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_ff8736f1378011003c0f8a35f9ff9c1e&limit=10
+
+ID: d_b2d044a38a87a3f04d1802103b27f1bb
+  Title: Monthly Concession Passes (Dollars) (Effective 27 December 2025)
+  Category: Transport
+  Frequency: None
+  Coverage: None
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_b2d044a38a87a3f04d1802103b27f1bb/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_b2d044a38a87a3f04d1802103b27f1bb&limit=10
+
+ID: d_828dcf144fe4f82c85c53d15a19e920f
+  Title: Fares for Trunk Bus Services (Cents) (Effective 27 December 2025)
+  Category: Transport
+  Frequency: None
+  Coverage: None
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_828dcf144fe4f82c85c53d15a19e920f/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_828dcf144fe4f82c85c53d15a19e920f&limit=10
+
+ID: d_5c9bcc72089fb094f654ebf10854feda
+  Title: Fares for Feeder Bus Services (Cents) (Effective 27 December 2025)
+  Category: Transport
+  Frequency: None
+  Coverage: None
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_5c9bcc72089fb094f654ebf10854feda/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_5c9bcc72089fb094f654ebf10854feda&limit=10
+
+ID: d_2ca29f673b89e0cfddbb7c74516fa4d3
+  Title: Fares for MRT and LRT (Cents) (Effective 27 December 2025)
+  Category: Transport
+  Frequency: None
+  Coverage: None
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_2ca29f673b89e0cfddbb7c74516fa4d3/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_2ca29f673b89e0cfddbb7c74516fa4d3&limit=10
+
+ID: d_bf2ed06b8fcda382b0f83133b174e07f
+  Title: Fares for Express Bus Services (Cents) (Effective 27 December 2025)
+  Category: Transport
+  Frequency: None
+  Coverage: None
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_bf2ed06b8fcda382b0f83133b174e07f/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_bf2ed06b8fcda382b0f83133b174e07f&limit=10
+
+ID: d_2fcb043ef09016ae757bc396cd8f5027
+  Title: Total Annual New Registration By Make
+  Category: Transport
+  Frequency: None
+  Coverage: 2005-2024
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_2fcb043ef09016ae757bc396cd8f5027/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_2fcb043ef09016ae757bc396cd8f5027&limit=10
+
+ID: d_d3f4d708e1d0a37b4365414e2fad3a07
+  Title: New Registration of Cars by Make
+  Category: Transport
+  Frequency: None
+  Coverage: 2016-2025
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_d3f4d708e1d0a37b4365414e2fad3a07/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_d3f4d708e1d0a37b4365414e2fad3a07&limit=10
+
+ID: d_75248cf2fbf340de6a746dc91ec9223c
+  Title: Public Transport Utilisation - Average Public Transport Ridership
+  Category: Transport
+  Frequency: None
+  Coverage: 1995-2024
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_75248cf2fbf340de6a746dc91ec9223c/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_75248cf2fbf340de6a746dc91ec9223c&limit=10
+
+ID: d_20d3fc7f08caa581c5586df51a8993c5
+  Title: Annual Car Population by Make
+  Category: Transport
+  Frequency: None
+  Coverage: 2005-2024
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_20d3fc7f08caa581c5586df51a8993c5/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_20d3fc7f08caa581c5586df51a8993c5&limit=10
+
+ID: d_2873f3b1b2a836103f51f696350b98fa
+  Title: Annual Motor Vehicle Population by Vehicle Type
+  Category: Transport
+  Frequency: None
+  Coverage: 2005-2024
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_2873f3b1b2a836103f51f696350b98fa/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_2873f3b1b2a836103f51f696350b98fa&limit=10
+
+ID: d_bf50ce0f3f42f69d7acd50635afa62da
+  Title: Listing of Companies Licensed to Import, Wholesale and Manufacture Health Products
+  Category: Economy & business
+  Frequency: None
+  Coverage: None
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_bf50ce0f3f42f69d7acd50635afa62da/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_bf50ce0f3f42f69d7acd50635afa62da&limit=10
+
+ID: d_f51622e1a40887490d48969869522bc7
+  Title: Listing of Licensed Tobacco Importers and Wholesalers
+  Category: Economy & business
+  Frequency: None
+  Coverage: None
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_f51622e1a40887490d48969869522bc7/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_f51622e1a40887490d48969869522bc7&limit=10
+
+ID: d_c5822c4f3e210a3b0625e49b3faaac09
+  Title: Listing of Licensed Tobacco Retailers
+  Category: Economy & business
+  Frequency: None
+  Coverage: None
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_c5822c4f3e210a3b0625e49b3faaac09/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_c5822c4f3e210a3b0625e49b3faaac09&limit=10
+
+ID: d_b7c2e74824c179995d15d73eac845ba1
+  Title: Consumer Price Indices (CPI)
+  Category: Economy & business
+  Frequency: None
+  Coverage: 2008-2024
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_b7c2e74824c179995d15d73eac845ba1/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_b7c2e74824c179995d15d73eac845ba1&limit=10
+
+ID: d_26f6afadf2f86b2004f9a1e28f5564cc
+  Title: Average Speed During Peak Hours
+  Category: Transport
+  Frequency: None
+  Coverage: 2004-2023
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_26f6afadf2f86b2004f9a1e28f5564cc/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_26f6afadf2f86b2004f9a1e28f5564cc&limit=10
+
+ID: d_3136f317a1f282a33fe7a2f6a907c047
+  Title: Average Daily Traffic Volume Entering the City
+  Category: Transport
+  Frequency: None
+  Coverage: 2004-2023
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_3136f317a1f282a33fe7a2f6a907c047/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_3136f317a1f282a33fe7a2f6a907c047&limit=10
+
+ID: d_fe4922bfe352a1250edac15bd1453799
+  Title: Length of Roads (Kilometres)
+  Category: Transport
+  Frequency: None
+  Coverage: 2005-2017
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_fe4922bfe352a1250edac15bd1453799/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_fe4922bfe352a1250edac15bd1453799&limit=10
+
+ID: d_f9fc45b610aa9d100db3abef789e3ef5
+  Title: Annual Goods Vehicle and Bus Population By Make
+  Category: Transport
+  Frequency: None
+  Coverage: 2005-2017
+  Pricing: free
+  Auth: none
+  Source: https://data.gov.sg/datasets/d_f9fc45b610aa9d100db3abef789e3ef5/view
+  BaseUrl: https://data.gov.sg/api/action/datastore_search?resource_id=d_f9fc45b610aa9d100db3abef789e3ef5&limit=10
+
+ID: weather/forecast
+  Title: 7-day weather forecast (live)
+  Category: Realtime
+  Frequency: DAILY
+  Coverage: None
+  Pricing: free
+  Auth: none
+  Source: https://api.data.gov.my/weather/forecast/
+  BaseUrl: https://api.data.gov.my/weather/forecast/
+
+ID: weather/warning
+  Title: Weather warnings (live)
+  Category: Realtime
+  Frequency: AS ISSUED
+  Coverage: None
+  Pricing: free
+  Auth: none
+  Source: https://api.data.gov.my/weather/warning/
+  BaseUrl: https://api.data.gov.my/weather/warning/
+
+ID: weather/warning/earthquake
+  Title: Earthquake warnings (live)
+  Category: Realtime
+  Frequency: AS ISSUED
+  Coverage: None
+  Pricing: free
+  Auth: none
+  Source: https://api.data.gov.my/weather/warning/earthquake/
+  BaseUrl: https://api.data.gov.my/weather/warning/earthquake/
+
+ID: flood-warning
+  Title: River water levels & flood warnings (live)
+  Category: Realtime
+  Frequency: REALTIME
+  Coverage: None
+  Pricing: free
+  Auth: none
+  Source: https://api.data.gov.my/flood-warning/
+  BaseUrl: https://api.data.gov.my/flood-warning/
+
+ID: gtfs-static/prasarana
+  Title: Transit schedules ~ Prasarana LRT/MRT/monorail/bus (GTFS)
+  Category: Realtime
+  Frequency: STATIC FEED
+  Coverage: None
+  Pricing: free
+  Auth: none
+  Source: https://api.data.gov.my/gtfs-static/prasarana?category=rapid-rail-kl
+  BaseUrl: https://api.data.gov.my/gtfs-static/prasarana?category=rapid-rail-kl
+
+ID: gtfs-static/ktmb
+  Title: Train schedules ~ KTMB (GTFS)
+  Category: Realtime
+  Frequency: STATIC FEED
+  Coverage: None
+  Pricing: free
+  Auth: none
+  Source: https://api.data.gov.my/gtfs-static/ktmb
+  BaseUrl: https://api.data.gov.my/gtfs-static/ktmb
+
+ID: gtfs-realtime/vehicle-position/prasarana
+  Title: Live vehicle positions ~ Prasarana (GTFS-R)
+  Category: Realtime
+  Frequency: REALTIME
+  Coverage: None
+  Pricing: free
+  Auth: none
+  Source: https://api.data.gov.my/gtfs-realtime/vehicle-position/prasarana?category=rapid-bus-kl
+  BaseUrl: https://api.data.gov.my/gtfs-realtime/vehicle-position/prasarana?category=rapid-bus-kl
+
+ID: met-api
+  Title: Full weather, climate & seismic platform
+  Category: Other portals
+  Frequency: REALTIME
+  Coverage: None
+  Pricing: free
+  Auth: token
+  Source: https://api.met.gov.my
+  BaseUrl: https://api.met.gov.my
+
+ID: tmd-weather
+  Title: TMD Weather ~ Thai forecasts, radar & warnings
+  Category: Other portals
+  Frequency: REALTIME
+  Coverage: None
+  Pricing: free
+  Auth: token
+  Source: https://data.tmd.go.th/api/
+  BaseUrl: https://data.tmd.go.th/api/
+
+ID: bmkg-prakiraan-cuaca
+  Title: BMKG Weather Forecast API ~ keyless Indonesia weather
+  Category: Other portals
+  Frequency: REALTIME
+  Coverage: None
+  Pricing: free
+  Auth: none
+  Source: https://data.bmkg.go.id/prakiraan-cuaca/
+  BaseUrl: https://api.bmkg.go.id/publik
+
+ID: bmkg-gempabumi
+  Title: BMKG Earthquake & Tsunami Feed ~ real-time Indonesia seismic data
+  Category: Realtime
+  Frequency: REALTIME
+  Coverage: None
+  Pricing: free
+  Auth: none
+  Source: https://data.bmkg.go.id/gempabumi/
+  BaseUrl: https://data.bmkg.go.id/DataMKG/TEWS
+
+ID: lta-datamall
+  Title: LTA DataMall ~ Singapore real-time bus, train & traffic data
+  Category: Travel & mobility
+  Frequency: REALTIME
+  Coverage: None
+  Pricing: free
+  Auth: apiKey
+  Source: https://datamall.lta.gov.sg/content/datamall/en/dynamic-data.html
+  BaseUrl: https://datamall2.mytransport.sg/ltaodataservice
+
+ID: data-gov-sg-weather
+  Title: NEA Weather Forecast (data.gov.sg) ~ 2hr / 24hr / 4-day SG forecasts
+  Category: Data & enrichment
+  Frequency: REALTIME
+  Coverage: None
+  Pricing: free
+  Auth: none
+  Source: https://guide.data.gov.sg/developer-guide/api-overview
+  BaseUrl: https://api.data.gov.sg/v1/environment
+
+ID: data-gov-sg-traffic-images
+  Title: Traffic Images (data.gov.sg) ~ live Singapore road cameras
+  Category: Travel & mobility
+  Frequency: REALTIME
+  Coverage: None
+  Pricing: free
+  Auth: none
+  Source: https://guide.data.gov.sg/developer-guide/api-overview
+  BaseUrl: https://api.data.gov.sg/v1/transport/traffic-images
+
+ID: whatsapp-cloud-api
+  Title: WhatsApp Business Cloud API ~ send/receive WhatsApp messages
+  Category: Communications
+  Frequency: None
+  Coverage: None
+  Pricing: freemium
+  Auth: token
+  Source: https://developers.facebook.com/docs/whatsapp/cloud-api
+  BaseUrl: https://graph.facebook.com/v20.0
+
+ID: wati-whatsapp-api
+  Title: Wati API ~ WhatsApp Business messaging & automation
+  Category: Communications
+  Frequency: None
+  Coverage: None
+  Pricing: paid
+  Auth: token
+  Source: https://docs.wati.io/reference/introduction
+  BaseUrl: None
+
+ID: 360dialog-whatsapp-api
+  Title: 360dialog WhatsApp API ~ official WhatsApp Business provider
+  Category: Communications
+  Frequency: None
+  Coverage: None
+  Pricing: paid
+  Auth: apiKey
+  Source: https://docs.360dialog.com/
+  BaseUrl: None
+
+ID: commodities-api
+  Title: Commodities-API ~ broad commodities (metals, grains, energy)
+  Category: Commodities & metals
+  Frequency: None
+  Coverage: None
+  Pricing: freemium
+  Auth: apiKey
+  Source: https://commodities-api.com/documentation
+  BaseUrl: None
+
+ID: api-ninjas-commodity
+  Title: API Ninjas Commodity Price ~ 30+ commodities (metals, energy, grains)
+  Category: Commodities & metals
+  Frequency: None
+  Coverage: None
+  Pricing: freemium
+  Auth: apiKey
+  Source: https://api-ninjas.com/api/commodityprice
+  BaseUrl: None
+
+ID: twelve-data-commodities
+  Title: Twelve Data ~ commodities pairs (metals, livestock, softs, grains)
+  Category: Commodities & metals
+  Frequency: None
+  Coverage: None
+  Pricing: freemium
+  Auth: apiKey
+  Source: https://twelvedata.com/docs
+  BaseUrl: None
+
+ID: usda-nass-quickstats
+  Title: USDA NASS QuickStats ~ agriculture / grains / crops data
+  Category: Commodities & metals
+  Frequency: None
+  Coverage: None
+  Pricing: free
+  Auth: apiKey
+  Source: https://quickstats.nass.usda.gov/api
+  BaseUrl: None
+
+ID: myob-api
+  Title: MYOB Business API
+  Category: E-invoicing & tax
+  Frequency: None
+  Coverage: None
+  Pricing: paid
+  Auth: oauth
+  Source: https://developer.myob.com/
+  BaseUrl: None
+
+ID: railway
+  Title: Railway Deploy API
+  Category: Backend & devtools
+  Frequency: None
+  Coverage: None
+  Pricing: freemium
+  Auth: bearer
+  Source: https://docs.railway.com/reference/public-api
+  BaseUrl: None
+
+ID: borzo-malaysia-business-api
+  Title: Borzo Malaysia Business API ~ same-day intracity delivery orders
+  Category: Logistics & delivery
+  Frequency: None
+  Coverage: None
+  Pricing: paid
+  Auth: token
+  Source: https://borzodelivery.com/my/business-api/doc
+  BaseUrl: None
+
+ID: wave-accounting
+  Title: Wave Accounting GraphQL API ~ invoicing & small-business accounting
+  Category: Accounting & ERP
+  Frequency: None
+  Coverage: None
+  Pricing: freemium
+  Auth: oauth
+  Source: https://developer.waveapps.com/
+  BaseUrl: https://gql.waveapps.com/graphql/public
+
+ID: dynamics-365-business-central
+  Title: Microsoft Dynamics 365 Business Central API ~ ERP, finance & operations
+  Category: Accounting & ERP
+  Frequency: None
+  Coverage: None
+  Pricing: paid
+  Auth: oauth
+  Source: https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/api-reference/v2.0/
+  BaseUrl: https://api.businesscentral.dynamics.com
+
+ID: transitland
+  Title: Transitland API ~ global public-transit feeds, routes & stops
+  Category: Travel & mobility
+  Frequency: None
+  Coverage: None
+  Pricing: freemium
+  Auth: apiKey
+  Source: https://www.transit.land/documentation
+  BaseUrl: https://transit.land/api/v2
+
+ID: open-meteo
+  Title: Open-Meteo ~ keyless weather forecast
+  Category: Maps & location
+  Frequency: None
+  Coverage: None
+  Pricing: free
+  Auth: none
+  Source: https://open-meteo.com/en/docs
+  BaseUrl: https://api.open-meteo.com/v1/forecast?latitude=3.139&longitude=101.687&current=temperature_2m
+
+ID: usgs-earthquakes
+  Title: USGS Earthquakes ~ real-time seismic feed
+  Category: Data & enrichment
+  Frequency: None
+  Coverage: None
+  Pricing: free
+  Auth: none
+  Source: https://earthquake.usgs.gov/fdsnws/event/1/
+  BaseUrl: https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&limit=5&orderby=time
+
+ID: flip-for-business
+  Title: Flip for Business ~ Indonesian disbursement & accept-payment API
+  Category: Payments
+  Frequency: None
+  Coverage: None
+  Pricing: paid
+  Auth: apiKey
+  Source: https://docs.flip.id/
+  BaseUrl: https://bigflip.id/api/v2
+
+ID: mekari-qontak-omnichannel
+  Title: Mekari Qontak ~ WhatsApp Business API & omnichannel CRM
+  Category: Communications
+  Frequency: None
+  Coverage: None
+  Pricing: paid
+  Auth: oauth
+  Source: https://docs.qontak.com/
+  BaseUrl: https://service-chat.qontak.com
+
+ID: qiscus-omnichannel-api
+  Title: Qiscus ~ omnichannel chat & WhatsApp Business API
+  Category: Communications
+  Frequency: None
+  Coverage: None
+  Pricing: paid
+  Auth: apiKey
+  Source: https://documentation.qiscus.com/
+  BaseUrl: https://multichannel.qiscus.com
+
+ID: singpass-myinfo-business
+  Title: Singpass Myinfo Business ~ verified company & entity KYB data
+  Category: Auth & identity
+  Frequency: None
+  Coverage: None
+  Pricing: free
+  Auth: oauth
+  Source: https://docs.corppass.gov.sg/products/myinfo-business
+  BaseUrl: https://api.myinfo.gov.sg
+
+ID: wttr-in
+  Title: wttr.in ~ weather you can curl
+  Category: Fun & playground
+  Frequency: None
+  Coverage: None
+  Pricing: free
+  Auth: none
+  Source: https://github.com/chubin/wttr.in
+  BaseUrl: https://wttr.in/Kuala+Lumpur?format=j1

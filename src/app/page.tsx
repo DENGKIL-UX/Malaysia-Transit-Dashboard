@@ -33,6 +33,8 @@ import { BusiestStationsKTMB } from '@/components/dashboard/busiest-stations-ktm
 import { TopRoutesRapidRail, TopRoutesKTMB } from '@/components/dashboard/top-routes';
 import { DayTypeAnalytics } from '@/components/dashboard/day-type-analytics';
 import { FeatureCardsSection } from '@/components/dashboard/feature-cards';
+import { EnvironmentAlertsPanel } from '@/components/dashboard/environment-alerts';
+import { WeatherForecastWidget } from '@/components/dashboard/weather-forecast';
 import { OfflineBanner } from '@/components/dashboard/offline-banner';
 import { InstallPrompt } from '@/components/dashboard/install-prompt';
 import { DataUpdateToast } from '@/components/dashboard/data-update-toast';
@@ -565,6 +567,11 @@ function DashboardView() {
           <div className="px-4 sm:px-6 md:px-10 pb-8">
             <div className="max-w-[1400px] mx-auto">
 
+              {/* Environment Alerts — weather/flood/seismic via data.gov.my (pasarapi.xyz) */}
+              <div className="mb-5">
+                <EnvironmentAlertsPanel />
+              </div>
+
               {/* Glowing Feature Cards */}
               <div className="mb-10">
                 <FeatureCardsSection />
@@ -675,16 +682,21 @@ function DashboardView() {
                 <PrasaranaWeeklyChart />
               </div>
 
-              {/* Day-Type Analytics */}
-              <div className="mb-6">
-                <div className="flex items-center gap-3 mb-5 animate-fade-in-up">
-                  <div className="w-1 h-6 rounded-full bg-sky-400/40" />
-                  <div>
-                    <h2 className="text-base font-semibold text-[var(--text-primary)]">Day-Type Analysis</h2>
-                    <p className="text-[10px] text-[var(--text-faint)] mt-0.5">Weekday vs weekend patterns · Holiday impact detection</p>
+              {/* Day-Type Analytics + Weather Forecast side by side */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 mb-6 items-start">
+                <div className="lg:col-span-7 xl:col-span-8">
+                  <div className="flex items-center gap-3 mb-5 animate-fade-in-up">
+                    <div className="w-1 h-6 rounded-full bg-sky-400/40" />
+                    <div>
+                      <h2 className="text-base font-semibold text-[var(--text-primary)]">Day-Type Analysis</h2>
+                      <p className="text-[10px] text-[var(--text-faint)] mt-0.5">Weekday vs weekend patterns · Holiday impact detection</p>
+                    </div>
                   </div>
+                  <DayTypeAnalytics />
                 </div>
-                <DayTypeAnalytics />
+                <div className="lg:col-span-5 xl:col-span-4">
+                  <WeatherForecastWidget />
+                </div>
               </div>
 
               {/* Demand Analytics — Decision Layer */}
