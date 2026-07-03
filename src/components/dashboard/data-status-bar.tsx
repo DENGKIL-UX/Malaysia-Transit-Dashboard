@@ -139,72 +139,81 @@ export function DataStatusBar() {
   if (!sources.length) return null;
 
   return (
-    <div className="relative w-full px-4 sm:px-6 md:px-10 py-2.5 flex items-center gap-4 sm:gap-6 overflow-x-auto">
-      {sources.map((s) => (
-        <Tooltip key={s.label}>
-          <TooltipTrigger asChild>
-            <div
-              className="flex items-center gap-2 shrink-0 rounded-lg bg-[var(--surface-card)] border border-[var(--border-faint)] px-3 py-1.5 cursor-default"
-            >
-              {freshnessIcon(s.freshness)}
-              <div className="flex items-center gap-1.5">
-                <span className="text-[11px] sm:text-xs text-[var(--text-muted)] font-medium">
-                  {s.label}
-                </span>
-                <span className="w-px h-3 bg-[var(--border-subtle)]" />
-                <span
-                  className={`text-[11px] sm:text-xs font-semibold tabular-nums ${
-                    freshnessColor(s.freshness)
-                  }`}
+    <div className="relative w-full py-2.5">
+      <div className="flex items-center gap-3 px-4 sm:px-6 md:px-10">
+        {/* Scrollable badges */}
+        <div className="relative flex-1 min-w-0 overflow-x-auto custom-scrollbar">
+          {/* Right fade on mobile */}
+          <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-[var(--bg-elevated)] to-transparent z-10 pointer-events-none sm:hidden" />
+          <div className="flex items-center gap-3 sm:gap-4">
+            {sources.map((s) => (
+              <Tooltip key={s.label}>
+                <TooltipTrigger asChild>
+                  <div
+                    className="flex items-center gap-2 shrink-0 rounded-lg bg-[var(--surface-card)] border border-[var(--border-faint)] px-3 py-1.5 cursor-default"
+                  >
+                    {freshnessIcon(s.freshness)}
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] sm:text-xs text-[var(--text-muted)] font-medium">
+                        {s.label}
+                      </span>
+                      <span className="w-px h-3 bg-[var(--border-subtle)]" />
+                      <span
+                        className={`text-[11px] sm:text-xs font-semibold tabular-nums ${
+                          freshnessColor(s.freshness)
+                        }`}
+                      >
+                        {s.lastDate}
+                      </span>
+                      <span className="text-[10px] text-[var(--text-ghost)] tabular-nums hidden sm:inline">
+                        ({formatLag(s.hoursAgo)})
+                      </span>
+                    </div>
+                    {s.lagExplainedBy.length > 0 && s.lagExplainedBy[0] !== 'normal T-1 batch' && (
+                      <span className="text-[9px] px-1 py-0.5 rounded bg-orange-400/10 text-orange-400 border border-orange-400/20 flex items-center gap-0.5">
+                        <Calendar className="w-2.5 h-2.5" />
+                        {s.lagExplainedBy[0].length > 10 ? 'holiday delay' : s.lagExplainedBy[0]}
+                      </span>
+                    )}
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent
+                  side="bottom"
+                  sideOffset={6}
+                  className="bg-[var(--bg-tooltip)] text-[var(--text-primary)] border border-[var(--border-subtle)] rounded-lg shadow-xl backdrop-blur-xl px-3 py-2.5 text-[11px] leading-relaxed max-w-[240px]"
                 >
-                  {s.lastDate}
-                </span>
-                <span className="text-[10px] text-[var(--text-ghost)] tabular-nums">
-                  ({formatLag(s.hoursAgo)})
-                </span>
+                  <div className="space-y-1">
+                    <div className="font-semibold text-[var(--text-secondary)]">{s.label}</div>
+                    <div>Lag: {s.lagDays} {s.lagDays === 1 ? 'day' : 'days'}</div>
+                    {lastCheckedStr && (
+                      <div className="text-[var(--text-muted)]">Checked: {lastCheckedStr}</div>
+                    )}
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            ))}
+
+            {/* Today's blackout indicator */}
+            {todayIsBlackout && metadata?.holiday_context && (
+              <div className="flex items-center gap-1.5 shrink-0 text-[9px] text-[var(--text-faint)]">
+                <Calendar className="w-3 h-3 text-orange-400/60" />
+                <span>Today: non-working day</span>
               </div>
-              {/* Holiday indicator when lag is explained by calendar */}
-              {s.lagExplainedBy.length > 0 && s.lagExplainedBy[0] !== 'normal T-1 batch' && (
-                <span className="text-[9px] px-1 py-0.5 rounded bg-orange-400/10 text-orange-400 border border-orange-400/20 flex items-center gap-0.5">
-                  <Calendar className="w-2.5 h-2.5" />
-                  {s.lagExplainedBy[0].length > 10 ? 'holiday delay' : s.lagExplainedBy[0]}
-                </span>
-              )}
-            </div>
-          </TooltipTrigger>
-          <TooltipContent
-            side="bottom"
-            sideOffset={6}
-            className="bg-[var(--bg-tooltip)] text-[var(--text-primary)] border border-[var(--border-subtle)] rounded-lg shadow-xl backdrop-blur-xl px-3 py-2.5 text-[11px] leading-relaxed max-w-[240px]"
-          >
-            <div className="space-y-1">
-              <div className="font-semibold text-[var(--text-secondary)]">{s.label}</div>
-              <div>Lag: {s.lagDays} {s.lagDays === 1 ? 'day' : 'days'}</div>
-              {lastCheckedStr && (
-                <div className="text-[var(--text-muted)]">Checked: {lastCheckedStr}</div>
-              )}
-            </div>
-          </TooltipContent>
-        </Tooltip>
-      ))}
-
-      {/* Today's blackout indicator */}
-      {todayIsBlackout && metadata?.holiday_context && (
-        <div className="flex items-center gap-1.5 shrink-0 text-[9px] text-[var(--text-faint)]">
-          <Calendar className="w-3 h-3 text-orange-400/60" />
-          <span>Today: non-working day</span>
+            )}
+          </div>
         </div>
-      )}
 
-      <button
-        onClick={() => setShowTooltip((v) => !v)}
-        className="ml-auto flex items-center gap-1.5 text-[var(--text-ghost)] hover:text-[var(--text-secondary)] transition-colors shrink-0 rounded-lg hover:bg-[var(--surface-card)] px-2.5 py-1.5 border border-transparent hover:border-[var(--border-faint)]"
-      >
-        <HelpCircle className="w-3.5 h-3.5" />
-        <span className="text-[10px] sm:text-[11px] hidden sm:inline font-medium">
-          Why three sources?
-        </span>
-      </button>
+        {/* Help button — always visible */}
+        <button
+          onClick={() => setShowTooltip((v) => !v)}
+          className="shrink-0 flex items-center gap-1.5 text-[var(--text-ghost)] hover:text-[var(--text-secondary)] transition-colors rounded-lg hover:bg-[var(--surface-card)] px-2.5 py-1.5 border border-transparent hover:border-[var(--border-faint)]"
+        >
+          <HelpCircle className="w-3.5 h-3.5" />
+          <span className="text-[10px] sm:text-[11px] hidden sm:inline font-medium">
+            Why three sources?
+          </span>
+        </button>
+      </div>
 
       {/* Tooltip dropdown */}
       {showTooltip && (
@@ -254,7 +263,6 @@ export function DataStatusBar() {
               </div>
             </div>
 
-            {/* Holiday-aware lag info */}
             {metadata?.holiday_context && (
               <div className="mt-3 pt-3 border-t border-[var(--border-faint)]">
                 <p className="text-[10px] text-[var(--text-faint)] leading-relaxed">

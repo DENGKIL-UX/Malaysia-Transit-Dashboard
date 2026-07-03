@@ -67,10 +67,16 @@ export function CommandPalette() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="hidden sm:flex items-center justify-center w-9 h-9 rounded-full bg-[var(--surface-hover)] border border-[var(--border-subtle)] text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--surface-active)] transition-all duration-200"
+        className="hidden sm:flex items-center gap-2 rounded-full bg-[var(--surface-hover)] border border-[var(--border-subtle)] text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--surface-active)] hover:border-[var(--border-subtle)] transition-all duration-200 pl-3 pr-2 py-1.5 h-9 min-w-[36px] group"
         aria-label="Search (⌘K)"
       >
-        <Search className="w-4 h-4" />
+        <Search className="w-4 h-4 shrink-0" />
+        <span className="hidden lg:inline text-xs font-medium text-[var(--text-faint)] group-hover:text-[var(--text-muted)] transition-colors">
+          Search...
+        </span>
+        <kbd className="hidden lg:inline-flex items-center gap-0.5 text-[9px] font-medium text-[var(--text-ghost)] bg-[var(--surface-card)] border border-[var(--border-faint)] rounded px-1 py-0.5 leading-none">
+          ⌘K
+        </kbd>
       </button>
 
       <CommandDialog open={open} onOpenChange={setOpen}>

@@ -267,6 +267,28 @@
   animation: shimmer 3s ease-in-out infinite;
 }
 
+@keyframes notification-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0);
+  }
+}
+
+.animate-notification-pulse {
+  animation: notification-pulse 2s ease-in-out infinite;
+}
+
+@keyframes subtle-breathe {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.animate-subtle-breathe {
+  animation: subtle-breathe 3s ease-in-out infinite;
+}
+
 /* Custom scrollbar — theme-aware */
 .dashboard-scroll::-webkit-scrollbar,
 .custom-scrollbar::-webkit-scrollbar {

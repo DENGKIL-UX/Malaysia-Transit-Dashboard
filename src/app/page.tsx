@@ -13,6 +13,7 @@ import {
   Clock,
   AlertCircle,
   RefreshCw,
+  GitCompareArrows,
 } from 'lucide-react';
 import { format, isYesterday, isSameDay, differenceInHours } from 'date-fns';
 import { NavBar } from '@/components/dashboard/nav-bar';
@@ -131,7 +132,7 @@ function AboutSection() {
       {/* About grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {/* Data Freshness — now holiday-aware */}
-        <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 animate-fade-in-up">
+        <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 animate-fade-in-up hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
           <div className="w-9 h-9 rounded-xl bg-amber-400/10 border border-amber-400/20 flex items-center justify-center mb-4">
             <Clock className="w-4 h-4 text-amber-400" />
           </div>
@@ -182,7 +183,7 @@ function AboutSection() {
         </div>
 
         {/* Data Source */}
-        <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 animate-fade-in-up" style={{ animationDelay: '80ms', opacity: 0 }}>
+        <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 animate-fade-in-up hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300" style={{ animationDelay: '80ms', opacity: 0 }}>
           <div className="w-9 h-9 rounded-xl bg-[#85AB8B]/10 border border-[#85AB8B]/20 flex items-center justify-center mb-4">
             <Database className="w-4 h-4 text-[#85AB8B]" />
           </div>
@@ -204,7 +205,7 @@ function AboutSection() {
         </div>
 
         {/* Coverage */}
-        <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 animate-fade-in-up" style={{ animationDelay: '80ms', opacity: 0 }}>
+        <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 animate-fade-in-up hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300" style={{ animationDelay: '80ms', opacity: 0 }}>
           <div className="w-9 h-9 rounded-xl bg-amber-400/10 border border-amber-400/20 flex items-center justify-center mb-4">
             <Train className="w-4 h-4 text-amber-400" />
           </div>
@@ -237,7 +238,7 @@ function AboutSection() {
         </div>
 
         {/* Pipeline Info */}
-        <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 animate-fade-in-up" style={{ animationDelay: '160ms', opacity: 0 }}>
+        <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 animate-fade-in-up hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300" style={{ animationDelay: '160ms', opacity: 0 }}>
           <div className="w-9 h-9 rounded-xl bg-sky-400/10 border border-sky-400/20 flex items-center justify-center mb-4">
             <AlertCircle className="w-4 h-4 text-sky-400" />
           </div>
@@ -279,7 +280,7 @@ function AboutSection() {
         </div>
 
         {/* Holiday Scope */}
-        <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 animate-fade-in-up" style={{ animationDelay: '240ms', opacity: 0 }}>
+        <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 animate-fade-in-up hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300" style={{ animationDelay: '240ms', opacity: 0 }}>
           <div className="w-9 h-9 rounded-xl bg-sky-400/10 border border-sky-400/20 flex items-center justify-center mb-4">
             <Scale className="w-4 h-4 text-sky-400" />
           </div>
@@ -296,7 +297,7 @@ function AboutSection() {
         </div>
 
         {/* Data Integrity */}
-        <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 animate-fade-in-up" style={{ animationDelay: '320ms', opacity: 0 }}>
+        <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 animate-fade-in-up hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300" style={{ animationDelay: '320ms', opacity: 0 }}>
           <div className="w-9 h-9 rounded-xl bg-orange-400/10 border border-orange-400/20 flex items-center justify-center mb-4">
             <Shield className="w-4 h-4 text-orange-400" />
           </div>
@@ -314,7 +315,7 @@ function AboutSection() {
         </div>
 
         {/* Confidence Levels */}
-        <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 animate-fade-in-up" style={{ animationDelay: '400ms', opacity: 0 }}>
+        <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 animate-fade-in-up hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300" style={{ animationDelay: '400ms', opacity: 0 }}>
           <div className="w-9 h-9 rounded-xl bg-emerald-400/10 border border-emerald-400/20 flex items-center justify-center mb-4">
             <Shield className="w-4 h-4 text-emerald-400" />
           </div>
@@ -340,7 +341,7 @@ function AboutSection() {
         </div>
 
         {/* Technology */}
-        <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 animate-fade-in-up" style={{ animationDelay: '400ms', opacity: 0 }}>
+        <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 animate-fade-in-up hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300" style={{ animationDelay: '400ms', opacity: 0 }}>
           <div className="w-9 h-9 rounded-xl bg-violet-400/10 border border-violet-400/20 flex items-center justify-center mb-4">
             <Code className="w-4 h-4 text-violet-400" />
           </div>
@@ -460,7 +461,7 @@ export default function Home() {
     : 'Latest';
 
   return (
-    <section className="relative w-full min-h-screen overflow-hidden bg-[var(--bg-base)]">
+    <section className="relative w-full min-h-screen overflow-hidden bg-[var(--bg-base)] flex flex-col">
       {/* Scroll progress indicator */}
       <ScrollProgress />
 
@@ -706,6 +707,11 @@ export default function Home() {
               </div>
             </div>
           </div>
+
+          {/* ─── Section Divider ─── */}
+          <div className="max-w-[1400px] mx-auto w-full px-4 sm:px-6 md:px-10">
+            <div className="h-px bg-gradient-to-r from-transparent via-[var(--border-subtle)] to-transparent" />
+          </div>
         </div>
 
         {/* ═══ ANALYTICS SECTION ═══ */}
@@ -795,8 +801,10 @@ export default function Home() {
         </div>
 
         {/* ═══ PIPELINE STATUS SECTION ═══ */}
-        <div className="px-4 sm:px-6 md:px-10">
+        <div className="px-4 sm:px-6 md:px-10 pt-4">
           <div className="max-w-[1400px] mx-auto">
+            {/* ─── Section Divider ─── */}
+            <div className="mb-6 h-px bg-gradient-to-r from-transparent via-[var(--border-subtle)] to-transparent" />
             <PipelineStatusPanel meta={meta} />
           </div>
         </div>
@@ -810,7 +818,7 @@ export default function Home() {
 
         {/* ═══ FOOTER ═══ */}
         <footer
-          className="mt-10 flex flex-col items-center gap-4 px-4 sm:px-6 md:px-10 pb-8 animate-fade-in-up"
+          className="mt-auto flex flex-col items-center gap-4 px-4 sm:px-6 md:px-10 pb-8 pt-10 safe-bottom animate-fade-in-up"
           style={{ animationDelay: '650ms', opacity: 0 }}
         >
           <div className="w-full bg-gradient-to-r from-transparent via-[#85AB8B]/20 to-transparent h-px" />
@@ -852,6 +860,21 @@ export default function Home() {
 
       {/* Scroll to top button */}
       <ScrollToTop />
+
+      {/* Compare Mode floating indicator */}
+      {selectedDates.length === 2 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 animate-fade-in-up">
+          <div className="flex items-center gap-2.5 rounded-full bg-[var(--bg-elevated)]/95 backdrop-blur-xl border border-[var(--border-subtle)] shadow-2xl shadow-black/20 px-4 py-2.5">
+            <GitCompareArrows className="w-3.5 h-3.5 text-[#85AB8B]" />
+            <span className="text-[11px] font-medium text-[var(--text-secondary)]">
+              Compare mode
+            </span>
+            <span className="text-[10px] text-[var(--text-faint)]">
+              {format(selectedDates[0], 'd MMM')} vs {format(selectedDates[1], 'd MMM')}
+            </span>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

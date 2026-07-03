@@ -1,8 +1,9 @@
 'use client';
 
-import { Train, Users, Bus, TramFront } from 'lucide-react';
+import { Train, Users, Bus, TramFront, MousePointer2 } from 'lucide-react';
 import type { RidershipDay } from '@/hooks/use-ridership';
 import { cn } from '@/lib/utils';
+import { useAppStore } from '@/lib/store';
 
 type MetricKey = 'mrtKajang' | 'mrtPutrajaya' | 'total' | 'busKl' | 'ets' | 'intercity';
 
@@ -111,6 +112,8 @@ interface KpiCardsProps {
 export function KpiCards({ data, loading }: KpiCardsProps) {
   const latest = data[data.length - 1];
   const prev = data[data.length - 2];
+  const highlightedLine = useAppStore((s) => s.highlightedLine);
+  const setHighlightedLine = useAppStore((s) => s.setHighlightedLine);
 
   const delta = (curr: number, last: number) =>
     last ? (((curr - last) / last) * 100).toFixed(1) : '0.0';
@@ -220,14 +223,24 @@ export function KpiCards({ data, loading }: KpiCardsProps) {
           <div
             key={c.label}
             className={cn(
-              'relative overflow-hidden rounded-2xl border',
+              'relative overflow-hidden rounded-2xl border cursor-pointer',
               c.border,
               c.bg,
               'backdrop-blur-md p-5 shadow-lg',
               c.glow,
-              'animate-fade-in-up'
+              'animate-fade-in-up group',
+              'hover:shadow-xl hover:scale-[1.02] transition-all duration-300',
+              highlightedLine === c.metricKey && 'ring-1 ring-[var(--border-subtle)] shadow-xl scale-[1.02]'
             )}
             style={{ animationDelay: `${100 + i * 100}ms`, opacity: 0 }}
+            onClick={() => setHighlightedLine(highlightedLine === c.metricKey ? null : c.metricKey)}
+            role="button"
+            tabIndex={0}
+            aria-pressed={highlightedLine === c.metricKey}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ')
+                setHighlightedLine(highlightedLine === c.metricKey ? null : c.metricKey);
+            }}
           >
             {/* Decorative gradient dot */}
             <div
@@ -257,11 +270,17 @@ export function KpiCards({ data, loading }: KpiCardsProps) {
               <div className="mt-2">
                 <Sparkline data={sparkData} color={c.sparkColor} />
               </div>
-              {/* Source badge */}
-              <div className="mt-1.5">
-                <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-orange-400/15 text-orange-300/70">
-                  ● headline audited
+              {/* Source badge — bus is OD, others are headline */}
+              <div className="mt-1.5 flex items-center justify-between">
+                <span className={cn(
+                  'text-[9px] font-medium px-1.5 py-0.5 rounded',
+                  c.metricKey === 'busKl'
+                    ? 'bg-emerald-400/15 text-emerald-300/70'
+                    : 'bg-orange-400/15 text-orange-300/70'
+                )}>
+                  ● {c.metricKey === 'busKl' ? 'batch OD' : 'headline audited'}
                 </span>
+                <MousePointer2 className="w-3 h-3 text-[var(--text-ghost)] opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
             </div>
           </div>

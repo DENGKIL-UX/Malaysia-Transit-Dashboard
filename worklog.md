@@ -148,3 +148,64 @@ Known constraints:
 4. **P2: Purge dead dependencies** — Remove unused packages to reduce bundle size
 5. **P3: Split page.tsx into section components** — Extract HeroSection, DashboardPanels, StationSection, AnalyticsSection
 6. **P3: 30-Day Rail Ridership chart zoom/unzoom** — Previously requested, partially done (brush exists)
+
+---
+Task ID: 4
+Agent: Main
+Task: Styling improvements + new features + CF build verification
+
+## CF Build Log Analysis
+
+Build `9547712d` deployed successfully at 2026-07-03T06:18:45Z:
+- 19.5s compile, 343.5ms static pages, 24ms worker startup
+- Total upload: 5693.53 KiB / gzip: 1181.27 KiB (well under CF limits)
+- Warnings are all from third-party libs (html2canvas duplicate-case, Floating UI duplicate-object-key) — not actionable, zero impact
+- No R2 binding (bucket not yet created — user action required)
+
+## Bug Fixes (1)
+1. **FeatureCards "Day-Type Intelligence" blue gradient** — Changed from `#1E40AF → #93C5FD → #3B82F6` (indigo/blue) to `#0d9488 → #5EEAD4 → #14B8A6` (teal). Resolves the design rule violation.
+
+## Styling Improvements (9 changes)
+1. **Sticky footer** — Root section now uses `flex flex-col`, footer has `mt-auto`. Footer sticks to viewport bottom on short pages, pushed down naturally on long pages. Added `safe-bottom` class for iOS safe area.
+2. **Section dividers** — Added gradient dividers (`from-transparent via-[var(--border-subtle)] to-transparent`) between Dashboard → Analytics, Analytics → Pipeline Status sections.
+3. **About section card hovers** — All 7 About cards now have `hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300` for a subtle lift effect.
+4. **QuickInsights banner v2** — Richer insight text from analytics state (anomaly count + trend + peak day). Context-aware icon color (orange for anomalies, emerald for up-trend, amber for down-trend). Weekly growth rate badge. "AI" label badge.
+5. **NavBar logo hover** — Logo box now has `group-hover:shadow-lg group-hover:shadow-[#85AB8B]/10` for a subtle glow on hover.
+6. **DataStatusBar mobile** — Restructured with separate scrollable badges area and fixed help button. Added right-fade gradient on mobile. Hidden lag text (`Xh ago`) on small screens to save space.
+7. **Command palette button** — Expanded from circle to pill shape on desktop: shows "Search..." text and `⌘K` keyboard shortcut badge on `lg:` screens. Circle fallback on smaller screens.
+8. **globals.css new animations** — Added `notification-pulse` (red ring pulse for unread badge) and `subtle-breathe` (opacity cycle) keyframes.
+9. **Footer layout** — Changed from `mt-10` to `mt-auto pt-10 safe-bottom` for proper sticky behavior.
+
+## New Features (4 features)
+1. **KPI card click-to-highlight** — Click any KPI card to highlight that line in the RidershipChart and TransitBreakdown. Click again to clear. Keyboard accessible (Enter/Space). Visual feedback: `ring-1`, `scale-[1.02]`, `shadow-xl` on selected card. Mouse pointer icon appears on hover.
+2. **TransitBreakdown share percentages** — Each line now shows its percentage of total ridership (e.g., "23.5%") right-aligned next to the value. BRT line also shows percentage.
+3. **Compare Mode floating indicator** — When 2 dates are selected in the CalendarPicker, a floating pill badge appears at the bottom center showing "Compare mode · 15 Jun vs 22 Jun" with GitCompareArrows icon. Uses `animate-fade-in-up`.
+4. **Notification badge pulse** — Unread count badge on the notification bell now has a `animate-notification-pulse` red ring pulse animation (2s cycle) to draw attention.
+
+## Files Changed
+| File | Change |
+|------|--------|
+| `src/components/dashboard/feature-cards.tsx` | Blue → teal gradient on Day-Type Intelligence card |
+| `src/app/page.tsx` | Sticky footer (`flex flex-col` + `mt-auto`), section dividers, compare mode indicator, About card hovers, GitCompareArrows import |
+| `src/components/dashboard/quick-insights.tsx` | Richer insight engine integration, context-aware icons, weekly growth badge, "AI" label |
+| `src/components/dashboard/nav-bar.tsx` | Logo hover glow effect |
+| `src/components/dashboard/command-palette.tsx` | Expanded pill button with "Search..." + `⌘K` hint on desktop |
+| `src/components/dashboard/transit-breakdown.tsx` | Share percentage per line, total-based bar widths |
+| `src/components/dashboard/kpi-cards.tsx` | Click-to-highlight, hover scale effect, pipeline source badges, mouse pointer icon |
+| `src/components/dashboard/notification-bell.tsx` | Pulse animation on unread badge |
+| `src/components/dashboard/data-status-bar.tsx` | Restructured layout: scrollable badges + fixed help button, mobile fade, hidden lag on mobile |
+| `src/app/globals.css` | `notification-pulse` and `subtle-breathe` keyframe animations |
+
+## Verification Results
+- `bun run lint` — zero errors, zero warnings
+- Dev server — compiles in 967ms, HTTP 200, 110KB HTML, no runtime errors
+- No new dependencies added
+- No new API routes
+- No new Zustand store (uses existing `highlightedLine` field)
+- All changes are client-side only — zero backend impact
+
+## Remaining Items from Previous Sessions
+1. **R2 bucket creation** — User action: `npx wrangler r2 bucket create malaysia-transit-cache`
+2. **Week pagination for Rapid Rail & BRT Daily Ridership** — Not started
+3. **Dead dependency purge** — `@serwist/next`, `parquet-wasm`, `sharp`, `html2canvas`, `@dnd-kit/*` (~200KB bundle savings)
+4. **Split page.tsx** — 870+ lines, could extract sections (low priority)

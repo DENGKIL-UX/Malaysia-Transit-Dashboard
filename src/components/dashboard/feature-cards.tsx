@@ -83,7 +83,7 @@ const CARDS: FeatureCardProps[] = [
     description:
       '90-day rolling weekday baseline with Monday-through-Friday total averaging. Weekend-to-weekday ratio computation and percentage deviation tooltips for pattern-of-life transit intelligence.',
     icon: <CalendarDays size={32} strokeWidth={2.5} />,
-    gradient: 'linear-gradient(137deg, #1E40AF 0%, #93C5FD 45%, #3B82F6 100%)',
+    gradient: 'linear-gradient(137deg, #0d9488 0%, #5EEAD4 45%, #14B8A6 100%)',
     delay: 0.3,
   },
 ];

@@ -51,9 +51,10 @@ export function TransitBreakdown() {
   const delta = (curr: number, last: number) =>
     last ? (((curr - last) / last) * 100).toFixed(1) : '0.0';
 
-  const maxVal = latest
-    ? Math.max(...lines.map((l) => latest[l.key]), latestPrasarana?.brt ?? 0)
+  const totalValue = latest
+    ? lines.reduce((s, l) => s + (latest[l.key] ?? 0), 0) + (latestPrasarana?.brt ?? 0)
     : 0;
+  const maxVal = totalValue;
 
   if (loading) {
     return (
@@ -158,6 +159,9 @@ export function TransitBreakdown() {
                   <span className="text-xs font-semibold text-[var(--text-primary)] tabular-nums">
                     {value.toLocaleString()}
                   </span>
+                  <span className="text-[9px] text-[var(--text-ghost)] tabular-nums min-w-[32px] text-right">
+                    {totalValue > 0 ? ((value / totalValue) * 100).toFixed(1) : '0.0'}%
+                  </span>
                   <div className="flex items-center gap-0.5">
                     <TrendIcon value={d} />
                     <span
@@ -235,6 +239,9 @@ export function TransitBreakdown() {
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-semibold text-[var(--text-primary)] tabular-nums">
                     {latestPrasarana.brt.toLocaleString()}
+                  </span>
+                  <span className="text-[9px] text-[var(--text-ghost)] tabular-nums min-w-[32px] text-right">
+                    {totalValue > 0 ? ((latestPrasarana.brt / totalValue) * 100).toFixed(1) : '0.0'}%
                   </span>
                   {prevPrasarana && (
                     <div className="flex items-center gap-0.5">

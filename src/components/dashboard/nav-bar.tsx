@@ -73,7 +73,7 @@ export function NavBar() {
           onClick={() => scrollTo('dashboard')}
           className="flex items-center gap-2.5 group"
         >
-          <div className="w-8 h-8 rounded-lg bg-[#85AB8B]/20 border border-[#85AB8B]/30 flex items-center justify-center transition-colors duration-200 group-hover:bg-[#85AB8B]/30">
+          <div className="w-8 h-8 rounded-lg bg-[#85AB8B]/20 border border-[#85AB8B]/30 flex items-center justify-center transition-all duration-200 group-hover:bg-[#85AB8B]/30 group-hover:shadow-lg group-hover:shadow-[#85AB8B]/10">
             <Activity className="w-4 h-4 text-[#85AB8B]" />
           </div>
           <span className="text-lg sm:text-xl font-semibold tracking-tight text-[var(--text-primary)]">
