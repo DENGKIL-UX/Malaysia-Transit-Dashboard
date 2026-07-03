@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback, useSyncExternalStore, useRef } from 'react';
 import {
   Activity,
   Database,
@@ -44,6 +44,7 @@ import { PeriodComparison } from '@/components/dashboard/period-comparison';
 import { SeasonalityHeatmap } from '@/components/dashboard/seasonality-heatmap';
 import { ModeShareTrend } from '@/components/dashboard/mode-share-trend';
 import { GrowthRankings } from '@/components/dashboard/growth-rankings';
+import { LandingPage } from '@/components/dashboard/landing-page';
 import { useRidership } from '@/hooks/use-ridership';
 import { useAppStore } from '@/lib/store';
 import { useAnalytics } from '@/hooks/use-analytics';
@@ -390,7 +391,7 @@ function AboutSection() {
   );
 }
 
-export default function Home() {
+function DashboardView() {
   const { data, loading, refetch: refetchRidership } = useRidership();
   const { metadata: meta } = useDataMetadata();
   useNotifications(); // triggers initial fetch + auto-refresh, syncs to Zustand store
@@ -917,4 +918,41 @@ export default function Home() {
       )}
     </section>
   );
+}
+
+// ponytail: localStorage gate, upgrade to route-based split if landing grows
+
+// Lightweight pub/sub for landing state (avoids storage event cross-tab limitation)
+const landingListeners: Array<() => void> = [];
+function subscribeLanding(cb: () => void) {
+  landingListeners.push(cb);
+  return () => {
+    const idx = landingListeners.indexOf(cb);
+    if (idx > -1) landingListeners.splice(idx, 1);
+  };
+}
+function getLandingSnapshot() {
+  return localStorage.getItem('rapidstats-landing-dismissed') === '1';
+}
+function getLandingServerSnapshot() {
+  return false;
+}
+
+export default function Home() {
+  const landingDismissed = useSyncExternalStore(
+    subscribeLanding,
+    getLandingSnapshot,
+    getLandingServerSnapshot
+  );
+
+  const handleEnter = useCallback(() => {
+    localStorage.setItem('rapidstats-landing-dismissed', '1');
+    landingListeners.forEach((l) => l());
+  }, []);
+
+  if (!landingDismissed) {
+    return <LandingPage onEnter={handleEnter} />;
+  }
+
+  return <DashboardView />;
 }

@@ -476,3 +476,38 @@ Stage Summary:
 - Zero new dependencies, zero new hooks/routes/stores (ponytail compliant)
 - Data computed client-side from existing useAnalytics ridership dataset (2019-present, ~2600 days)
 - Section layout: Seasonality + Growth side-by-side (7/12 + 5/12), Mode Share full width below
+
+---
+Task ID: 8
+Agent: Main
+Task: Create cinematic video-background landing page for Malaysia Transit Dashboard
+
+Work Log:
+- Analyzed project constraints from AGENT.md: no new deps, no new store, no new routes, use existing animations, sage-green theme
+- Copied uploaded Train_whoosh_on_track_202607031749.mp4 (2.6MB) to public/hero-bg.mp4
+- Created src/components/dashboard/landing-page.tsx with:
+  - Full-viewport video background hero with gradient overlay and ambient glow orbs
+  - RapidStats MY branding with framer-motion entrance animations
+  - 14 service color-coded pills (MRT, LRT, Monorail, KTM, Bus)
+  - Stats bar (14 services, T-1 freshness, 3 pipelines, 24/7 refresh)
+  - 4-card features grid (ridership tracking, multi-source pipeline, anomaly detection, period comparison)
+  - Bottom CTA section with "Enter Dashboard" button
+  - Footer matching dashboard theme
+  - Scanline effect overlay for cinematic feel
+  - Keyboard accessible (Enter/Space to enter), ARIA labels
+- Modified src/app/page.tsx:
+  - Extracted existing Home into DashboardView (preserves all hooks/data fetching)
+  - New Home export with useSyncExternalStore localStorage gate
+  - Server snapshot returns false (show landing), client reads localStorage
+  - Lightweight pub/sub for same-tab notification (avoids storage event cross-tab limitation)
+  - Returning visitors skip landing entirely (synchronous re-render via useSyncExternalStore)
+- Used useSyncExternalStore (React 19 approved pattern) instead of useState+useEffect to satisfy react-hooks/set-state-in-effect lint rule
+- All existing CSS animations reused (pulse-glow, shimmer)
+
+Stage Summary:
+- Files created: src/components/dashboard/landing-page.tsx, public/hero-bg.mp4
+- Files modified: src/app/page.tsx (added gate + LandingPage import)
+- No new dependencies added (framer-motion already installed)
+- No new API routes, no new Zustand store
+- Lint passes cleanly, server compiles and renders HTTP 200
+- Compiled JS verified to contain LandingPage, DashboardView, rapidstats-landing, useSyncExternalStore
