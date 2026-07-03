@@ -313,14 +313,14 @@ export async function GET(request: NextRequest) {
   const headlineFreshness = computeHeadlineFreshness(headlineLatest, today);
 
   // ── 5. Compute freshest date ──
+  // ponytail: Only count data sources that the charts ACTUALLY display.
+  // Prasarana Meta (GitHub) is excluded — it reflects upstream parquet publication,
+  // not what the dashboard serves. Including it caused a misleading "3d ago" badge
+  // when chart data was 41 days stale.
   const candidates: Array<{ date: string; source: string }> = [];
   if (ktmbFreshness.latest_date) candidates.push({ date: ktmbFreshness.latest_date, source: 'KTMB OD' });
   if (prasaranaFreshness.latest_date) candidates.push({ date: prasaranaFreshness.latest_date, source: 'Rapid Rail OD' });
   if (headlineFreshness.latest_date) candidates.push({ date: headlineFreshness.latest_date, source: 'Headline Audit' });
-  if (prasaranaMeta.data_as_of) {
-    const prasDate = prasaranaMeta.data_as_of.split(' ')[0];
-    candidates.push({ date: prasDate, source: 'Prasarana Meta' });
-  }
   candidates.sort((a, b) => b.date.localeCompare(a.date));
 
   const freshest = candidates.length > 0 ? candidates[0] : { date: '', source: '' };

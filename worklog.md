@@ -209,3 +209,135 @@ Build `9547712d` deployed successfully at 2026-07-03T06:18:45Z:
 2. **Week pagination for Rapid Rail & BRT Daily Ridership** — Not started
 3. **Dead dependency purge** — `@serwist/next`, `parquet-wasm`, `sharp`, `html2canvas`, `@dnd-kit/*` (~200KB bundle savings)
 4. **Split page.tsx** — 870+ lines, could extract sections (low priority)
+
+---
+Task ID: 5
+Agent: Main
+Task: Investigate why dashboard says "3d ago" but shows 2-month-old data. Assess D1 feasibility.
+
+## Root Cause
+
+The "3d ago" badge shows `data_as_of: 2026-06-30` from GitHub `datagovmy-meta` repo. This is the UPSTREAM parquet publication date — the charts NEVER read from this source. Actual chart data comes from static JSON files baked into the build, last regenerated **41 days ago** (2026-05-23).
+
+## Data Freshness Audit (as of 2026-07-03)
+
+| Source | Mechanism | Last Date | Age |
+|---|---|---|---|
+| Hero badge "Prasarana Meta · 3d ago" | GitHub metadata (LIVE fetch, metadata only) | 2026-06-30 | 3 days — MISLEADING |
+| Prasarana per-line chart data | `public/prasarana-daily-totals.json` (STATIC) | 2026-05-23 | **41 days stale** |
+| Headline totals chart data | `public/headline-recent.json` (STATIC) | 2026-04-30 | 64 days (live API has 05-31!) |
+| KTMB weekly chart | `api.data.gov.my` (LIVE proxy) | 2026-07-02 | 1 day ✅ |
+| Headline API (live, but unused by charts) | `api.data.gov.my` (LIVE) | 2026-05-31 | 33 days (expected for T-26 audited) |
+| Upstream parquet file | `storage.data.gov.my/dashboards/prasarana_timeseries.parquet` | 2026-07-02 | 1 day ✅ (but dashboard never fetches it) |
+
+## Why Prasarana Can't Just Use the API
+
+data.gov.my has NO REST API for Prasarana daily totals. Tested all variants:
+- `ridership_prasarana_daily` → 404
+- `ridership_rapid_rail` → 404
+- `ridership_od_rapidrail_daily` → 404
+
+Only KTMB (`ridership_ktmb_daily`) and Headline (`ridership_headline`) have REST APIs. Prasarana OD data is ONLY available as bulk parquet downloads.
+
+## Why the Badge is Misleading
+
+In `/api/metadata/route.ts` lines 316-326, `freshest_date` is the MAX across 4 candidates. The GitHub metadata date (2026-06-30) wins because it's the newest, but no chart ever reads from it.
+
+## D1 Feasibility
+
+**YES — D1 is a good fit.** Free tier (5M reads/day, 100K writes/day, 5GB) is far more than sufficient.
+
+Architecture: Separate Cron Worker fetches parquet → parses → upserts into D1. Dashboard API routes read from D1 instead of static JSON.
+
+Challenges: (1) CF Workers can't run Python/pandas for parquet parsing — need parquet-wasm or GitHub Actions runner, (2) CF Pages Functions don't support cron — need a standalone Worker, (3) Free tier 10ms CPU may be tight for 2.2MB parquet parse.
+
+Simpler alternative: GitHub Actions cron → runs `process_parquet.py` → commits new JSON → triggers CF Pages rebuild.
+
+## Quick Wins Identified
+
+| Priority | Fix | Impact |
+|---|---|---|
+| P0 | Fix misleading badge — show actual chart data date, not GitHub metadata | Eliminates user confusion |
+| P1 | Make comparison-data use live headline API instead of static file | +31 days of data instantly |
+| P1 | Set up data refresh (D1 cron or GitHub Actions) | Eliminates 41-day staleness |
+| P2 | Remove redundant ktmb-daily.json (live API is always newer) | Cleanup |
+
+Stage Summary:
+- No code changes in this task — investigation and report only
+- Upstream data (parquet, KTMB API, headline API) is all fresh
+- Only the Prasarana static JSONs are stale due to lack of automated refresh
+- D1 is feasible and recommended for long-term solution
+
+---
+Task ID: 6
+Agent: Main
+Task: Fix misleading badge, add live headline extension, set up automated data refresh
+
+## Problem
+Dashboard showed "Prasarana Meta · 3d ago" but chart data was 41 days stale. Root cause: the freshest_date election included a GitHub metadata source that no chart ever read.
+
+## Changes
+
+### P0: Fix misleading freshness badge
+- **File**: `src/app/api/metadata/route.ts`
+- Removed `Prasarana Meta` (GitHub) from the `freshest_date` candidate election
+- Badge now shows `Headline Audit · 33d ago` (accurate) instead of `Prasarana Meta · 3d ago` (misleading)
+- Prasarana Meta data is still fetched and returned in the response for informational display
+
+### P1: Live headline API extension
+- **File**: `src/app/api/comparison-data/route.ts`
+- Added `fetchHeadlineLive()` — fetches headline API for dates BEYOND the static file
+- Charts now show 907 rows (was 851) — date range extends from 2026-05-23 to 2026-07-02
+- Headline data extends from 2026-04-30 (static) to 2026-05-31 (live API) — +31 days instantly
+- KTMB data extends to 2026-07-02 via existing live API
+- Extension deduplication: dates already covered by headline live are excluded from Prasarana/KTMB extension
+
+### Daily data refresh (GitHub Actions)
+- **File**: `.github/workflows/refresh-data.yml` (NEW)
+- Cron: daily at 22:15 UTC (06:15 MYT) — 15 min after data.gov.my batch window
+- Runs `scripts/process_parquet.py` → regenerates all Prasarana + KTMB JSON files
+- Auto-commits to repo → triggers CF Pages rebuild (~3 min)
+- Skips commit if no data changed (avoids unnecessary rebuilds)
+
+### Monthly headline refresh (GitHub Actions)
+- **File**: `.github/workflows/refresh-data.yml` (same workflow, second cron)
+- Cron: 12th of each month at 22:30 UTC (06:30 MYT)
+- Runs `scripts/refresh-headline.js` → fetches full headline from live API
+- Updates `headline-recent.json` with latest audited data
+
+### Data refresh scripts
+- **File**: `scripts/process_parquet.py` (NEW — CI-friendly version)
+  - Based on `mini-services/prasarana-service/process_parquet.py`
+  - Outputs to `OUTPUT_DIR` env var (default: `/tmp`, CI sets to `public/`)
+  - Cleans up temp parquet files after processing
+  - Uses `subprocess.run` instead of `os.system` for reliability
+- **File**: `scripts/refresh-headline.js` (NEW)
+  - Fetches headline data from live API in 6-month chunks
+  - Deduplicates against existing data by date
+  - Outputs to `HEADLINE_OUTPUT` env var (default: `public/headline-recent.json`)
+
+### AGENT.md updates
+- Updated data architecture section to reflect automated refresh
+- Added data refresh scripts to file map
+- Updated anti-pattern for "Data is stale"
+- Updated comparison-data route description
+
+### Other
+- `.gitignore`: Added `public/_*.parquet` and `upload/`
+
+## Verification
+- `bun run lint` — zero errors
+- Dev server: compiles, all routes return 200
+- `/api/metadata`: freshest_source = "Headline Audit" (2026-05-31) — no more "Prasarana Meta"
+- `/api/comparison-data`: 907 rows, range 2024-01-01 to 2026-07-02, headline_through=2026-05-31
+
+## Files Changed
+| File | Change |
+|------|--------|
+| `src/app/api/metadata/route.ts` | Remove Prasarana Meta from freshest election |
+| `src/app/api/comparison-data/route.ts` | Add `fetchHeadlineLive()` for live headline extension |
+| `.github/workflows/refresh-data.yml` | **NEW** — Daily + monthly data refresh cron |
+| `scripts/process_parquet.py` | **NEW** — CI-friendly parquet processor |
+| `scripts/refresh-headline.js` | **NEW** — Monthly headline refresh script |
+| `AGENT.md` | Updated data architecture, anti-patterns, file map |
+| `.gitignore` | Added temp parquet and upload patterns |

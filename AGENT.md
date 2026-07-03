@@ -70,19 +70,32 @@ Daily ridership analytics dashboard for Malaysia's 14 public transit services (1
 | Runtime | Bun | — |
 | **No database** | Stateless, static-JSON-backed | — |
 
-### Data architecture — three pipelines (NOT stale)
+### Data architecture — three pipelines + automated refresh
 
 ```
-Tier 1: KTMB OD       — 5 rail services   — T-1 to T-3 lag  — Daily batch
-Tier 1: Prasarana OD  — 5 rail + BRT     — T-1 to T-3 lag  — Daily batch
-Tier 2: Headline       — All 14 services   — ~T-26 lag      — Monthly audited
+Tier 1: KTMB OD       — 5 rail services   — T-1 to T-3 lag  — LIVE API (runtime)
+Tier 1: Prasarana OD  — 5 rail + BRT     — T-1 to T-3 lag  — STATIC JSON (daily GitHub Actions cron)
+Tier 2: Headline       — All 14 services   — ~T-26 lag      — LIVE API (runtime) + STATIC (monthly refresh)
 ```
+
+**Automated data refresh (GitHub Actions):**
+- **Daily** (22:15 UTC): `.github/workflows/refresh-data.yml` runs `scripts/process_parquet.py`
+  → Downloads latest parquets from `storage.data.gov.my/dashboards/`
+  → Regenerates `prasarana-daily-totals.json`, `ktmb-daily.json`, station/route JSONs
+  → Auto-commits to repo → triggers CF Pages rebuild (~3 min)
+- **Monthly** (12th, 22:30 UTC): Same workflow runs `scripts/refresh-headline.js`
+  → Fetches headline data from live API → updates `headline-recent.json`
+
+**Runtime data extension (no CI/CD needed):**
+- `/api/comparison-data` fetches live headline API BEYOND the static file
+  → Charts show headline data through ~T-26 without waiting for monthly rebuild
+  → KTMB data extends to T-1 via live API
 
 Static JSON in `public/`:
-- `headline-recent.json` (241KB) — 2024+ headline subset
-- `ktmb-daily.json` (8KB) — KTMB daily totals
-- `prasarana-daily.json` (7.5KB) — Prasarana daily totals
-- `prasarana-daily-totals.json` — per-line breakdown
+- `headline-recent.json` (241KB) — 2024+ headline subset (monthly refresh + live API extension)
+- `ktmb-daily.json` (8KB) — KTMB daily totals (daily refresh; also available live)
+- `prasarana-daily.json` (7.5KB) — Prasarana daily totals (daily refresh)
+- `prasarana-daily-totals.json` — per-line breakdown (daily refresh)
 - `ktmb-stations.json`, `prasarana-stations.json` — top-20 stations + daily series
 - `ktmb-routes.json`, `prasarana-routes.json` — top-20 O-D routes
 - `holidays-2025.json`, `holidays-2026.json`, `holidays-2027.json` — prebuilt holiday classifications
@@ -91,7 +104,7 @@ Static JSON in `public/`:
 
 | Route | Purpose | Cache |
 |-------|---------|-------|
-| `/api/comparison-data` | 3-tier merge: headline + prasarana + KTMB | `s-maxage=21600`, 6h in-memory |
+| `/api/comparison-data` | 3-tier merge: static headline + LIVE headline extension + prasarana + LIVE KTMB | `s-maxage=21600`, 6h in-memory |
 | `/api/metadata` | Holiday context + 3 pipeline freshness | `s-maxage=1800` |
 | `/api/notifications` | Anomaly detection (Z-score), trend, forecast | `s-maxage=600` |
 | `/api/ridership` | Merged KTMB + Prasarana daily (requires start/end_date) | `s-maxage=300` |
@@ -134,6 +147,12 @@ interface DataMetadata {
 
 Note: `DataMetadata` has no `lastChecked` field. Use `useAppStore.dataUpdateTimestamp` (epoch ms, set on cascade refresh completion) as the nearest proxy for "last checked."
 
+### Data refresh scripts
+
+- `scripts/process_parquet.py` — Downloads parquets → outputs JSON to `public/` (OUTPUT_DIR env)
+- `scripts/refresh-headline.js` — Fetches headline from live API → updates `headline-recent.json`
+- `.github/workflows/refresh-data.yml` — Daily (22:15 UTC) + Monthly (12th 22:30 UTC) cron
+
 ### File map
 
 ```
@@ -143,7 +162,7 @@ src/
     layout.tsx                        # Root: ThemeProvider, Geist fonts, Toaster, SW reg
     globals.css                       # ALL custom CSS vars (dark+light), animations, scrollbar
     api/
-      comparison-data/route.ts        # 3-tier merge pipeline
+      comparison-data/route.ts        # 3-tier merge + live headline extension
       metadata/route.ts               # Holiday-aware freshness + parallel fetches
       notifications/route.ts          # Anomaly Z-score, trend regression, 3-day forecast
       ridership/route.ts              # Merged KTMB + Prasarana
@@ -178,6 +197,8 @@ wrangler.jsonc                       # CF Pages config (smart placement APAC, no
 open-next.config.ts                  # OpenNext adapter (R2 cache commented out)
 next.config.ts                       # ignoreBuildErrors: true, strictMode: false
 scripts/build-holidays.js            # Build-time: MyCal API → public/holidays-*.json
+  scripts/process_parquet.py          # Data refresh: parquet → public/*.json (GitHub Actions daily)
+  scripts/refresh-headline.js         # Data refresh: live API → public/headline-recent.json (monthly)
 ```
 
 ### Color system — custom CSS variables (NOT Tailwind defaults)
@@ -199,7 +220,7 @@ MRT Kajang=`amber-400` | MRT Putrajaya=`sky-400` | LRT Kelana Jaya=`violet-400` 
 
 | Wrong Assumption | Reality |
 |---|---|
-| "Data is stale / 2 months old" | Three pipelines with different lags by design. OD is T-1, Headline is T-26 (monthly audited). Freshness system shows exact lag. |
+| "Data is stale / 2 months old" | Static JSONs refreshed daily via GitHub Actions cron. Live APIs extend data at runtime. Badge shows actual chart date. |
 | "Fix the fetch interval" | Already 5-min polling + cascade refresh via `pendingRefresh`. Working. |
 | "Use parquet-wasm at runtime" | Pre-generated JSON at build time. Runtime parquet parsing is unnecessary. |
 | "This is Cloudflare Workers" | **Cloudflare Pages via OpenNext.** Different model. |

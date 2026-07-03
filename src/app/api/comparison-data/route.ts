@@ -83,6 +83,39 @@ async function fetchPrasaranaDaily(
   }
 }
 
+/**
+ * Fetch headline rows beyond the static file from the live API.
+ * Returns rows that are NEWER than the static headline-recent.json.
+ * ponytail: This is the same API the metadata route already calls for freshness.
+ * Adding it here extends chart data without any new infrastructure.
+ */
+async function fetchHeadlineLive(
+  afterDate: string,
+  today: string
+): Promise<HeadlineRow[]> {
+  try {
+    const url = new URL('https://api.data.gov.my/data-catalogue');
+    url.searchParams.set('id', 'ridership_headline');
+    url.searchParams.set('date_start', `${afterDate}@date`);
+    url.searchParams.set('date_end', `${today}@date`);
+
+    const res = await fetch(url.toString(), {
+      headers: { Accept: 'application/json' },
+    });
+    if (!res.ok) return [];
+
+    const raw: HeadlineRow[] = await res.json();
+    if (!Array.isArray(raw)) return [];
+
+    // API columns match HeadlineRow interface exactly (snake_case).
+    // Only take rows newer than the static file.
+    return raw.filter((r) => r.date && r.date > afterDate);
+  } catch (err) {
+    console.warn('Headline live fetch failed:', err);
+    return [];
+  }
+}
+
 async function fetchKtmbDaily(
   startDate: string,
   endDate: string
@@ -174,15 +207,38 @@ export async function GET(request: NextRequest) {
     const today = new Date().toISOString().split('T')[0];
 
     // 3. Fetch extension data in parallel
-    const [prasaranaDaily, ktmbDaily] = await Promise.all([
+    // Headline live API extends audited data beyond the static file.
+    // ponytail: The live headline API returns data through ~T-26 (monthly audit lag).
+    // Static file may lag behind by weeks if not recently rebuilt.
+    const [headlineLive, prasaranaDaily, ktmbDaily] = await Promise.all([
+      fetchHeadlineLive(headlineMaxDate, today),
       fetchPrasaranaDaily(headlineMaxDate, baseUrl),
       fetchKtmbDaily(headlineMaxDate, today),
     ]);
 
-    // 4. Build extension rows (dates beyond headline)
+    // 4. Merge live headline extension into base data
+    if (headlineLive.length > 0) {
+      const existingDates = new Set(data.map((r) => r.date));
+      for (const row of headlineLive) {
+        if (!existingDates.has(row.date)) {
+          data.push(row);
+        }
+      }
+    }
+
+    // 5. Build extension rows (dates beyond headline + live headline)
+    // Only add dates that neither the static file nor the live API cover.
+    // ponytail: Without this guard, extension rows would duplicate/override
+    // the richer headline live data for overlapping date ranges.
+    const newHeadlineMax = data[data.length - 1]?.date ?? headlineMaxDate;
+    const headlineDates = new Set(data.map((r) => r.date));
     const extensionDates = new Set<string>();
-    for (const d of prasaranaDaily.keys()) extensionDates.add(d);
-    for (const d of ktmbDaily.keys()) extensionDates.add(d);
+    for (const d of prasaranaDaily.keys()) {
+      if (!headlineDates.has(d)) extensionDates.add(d);
+    }
+    for (const d of ktmbDaily.keys()) {
+      if (!headlineDates.has(d)) extensionDates.add(d);
+    }
 
     const extension: HeadlineRow[] = [];
     for (const date of extensionDates) {
@@ -207,15 +263,15 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // 5. Merge: headline data + extension
+    // 6. Merge: headline data + extension
     const merged = [...data, ...extension].sort((a, b) =>
       a.date.localeCompare(b.date)
     );
 
-    // 6. Cache the result
+    // 7. Cache the result
     cachedResponse = { data: merged, timestamp: Date.now() };
 
-    // 7. Filter and return
+    // 8. Filter and return
     const filtered = filterData(merged, startDate, endDate, datesParam);
     return NextResponse.json(buildResponse(filtered, merged), {
       headers: noCache
