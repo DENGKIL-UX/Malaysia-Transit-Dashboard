@@ -341,3 +341,61 @@ Dashboard showed "Prasarana Meta · 3d ago" but chart data was 41 days stale. Ro
 | `scripts/refresh-headline.js` | **NEW** — Monthly headline refresh script |
 | `AGENT.md` | Updated data architecture, anti-patterns, file map |
 | `.gitignore` | Added temp parquet and upload patterns |
+
+---
+Task ID: 7
+Agent: Main
+Task: Fix ACTUAL stale data — VLM-verified before/after
+
+## Problem (User Report)
+
+User reported "even older datasets and dates regressing further from the daily and monthly." Previous Task 6 only fixed the metadata badge and added live extensions to `/api/comparison-data`, but the **main RidershipChart** used `/api/ridership` which read ONLY stale static files. Three root causes found:
+
+1. **Wrong data source**: `useRidership` hook called `/api/ridership` (stale static-only) instead of `/api/comparison-data` (has live extensions). The chart never received any of the Task 6 improvements.
+2. **Field name mapping bug**: `comparison-data/route.ts` typed Prasarana JSON as `{rail_lrt_ampang: number}` but the actual parquet output uses `{lrt_ampang: number}`. All Prasarana extension rows were silently 0.
+3. **Static JSON files were 41 days stale**: `prasarana-daily-totals.json` last regenerated May 23, `ktmb-daily.json` May 24.
+
+## VLM Before (Live Deployed Site)
+- X-axis: **2026-05-01 to 2026-05-31** (May only)
+- Badge: "Last updated 2026-05-31"
+- No June/July data visible
+
+## VLM After (Local with Fixes)
+- X-axis: **2026-06-03 to 2026-07-02** (current!)
+- Badge: "Latest: 2026-07-02"
+- Full Rapid Rail data through July 1, KTMB through July 2
+
+## Changes
+
+### Code Fixes
+- **`src/hooks/use-ridership.ts`**: Switched from `/api/ridership` to `/api/comparison-data` as primary data source. Removed MCP path (comparison-data already includes headline live). Added 5-min in-memory cache.
+- **`src/app/api/comparison-data/route.ts`**: Added `PrasaranaRawRow` interface for actual parquet output format. Added field name mapping in `fetchPrasaranaDaily()` (lrt_ampang → rail_lrt_ampang, mrt_pjy → rail_mrt_pjy, etc.). This bug existed since Task 6 — Prasarana extension was always 0.
+- **`scripts/refresh-headline.js`**: Converted from TypeScript to valid JavaScript (GitHub Actions couldn't run `bun run` on TS file).
+- **`.github/workflows/refresh-data.yml`**: Changed headline refresh from `bun run` to `node` (removed unnecessary bun setup step).
+
+### Data Refresh
+- Ran `scripts/process_parquet.py` to regenerate ALL static JSON files from upstream parquet:
+  - `prasarana-daily-totals.json`: 57 rows, May 6 → **Jul 1** (was Mar 28 → May 23)
+  - `prasarana-daily.json`: same (written by same script)
+  - `ktmb-daily.json`: 50 rows, May 7 → **Jul 2** (was Mar 29 → May 24)
+  - Station and route JSONs: refreshed with latest top-20 data
+- Ran headline refresh: `headline-recent.json` now 882 rows through **May 31** (was 851 through Apr 30)
+
+### Metadata Impact
+- KTMB OD: 2026-05-24 (40d stale, overdue) → **2026-07-02 (1d, expected)**
+- Rapid Rail OD: 2026-05-23 (41d stale, overdue) → **2026-07-01 (2d, delayed)**
+- Headline Audit: 2026-05-31 (33d) → unchanged (expected monthly audit lag)
+- Freshest badge: "Headline Audit · 33d ago" → **"KTMB OD · 1d ago"**
+
+## Verification
+- `bun run lint` — zero errors
+- VLM analysis: confirmed June 3 – July 2 data on chart, badge shows "Latest: 2026-07-02"
+- comparison-data API: 914 days, prasarana_through=2026-07-01, ktmb_through=2026-07-02
+- Metadata API: freshest=KTMB OD 2026-07-02, no overdue warnings
+- Git push: 9486ee6 → main
+
+Stage Summary:
+- 3 root causes fixed (wrong data source, field mapping bug, stale static files)
+- Chart data advanced from May 31 to July 2 (+32 days)
+- GitHub Actions daily cron will keep data fresh going forward
+- Commit: 9486ee6
