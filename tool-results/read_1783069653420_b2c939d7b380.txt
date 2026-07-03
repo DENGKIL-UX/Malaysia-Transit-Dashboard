@@ -1,0 +1,963 @@
+     1→'use client';
+     2→
+     3→import { useState, useEffect, useMemo, useCallback } from 'react';
+     4→import {
+     5→  BarChart,
+     6→  Bar,
+     7→  XAxis,
+     8→  YAxis,
+     9→  Tooltip,
+    10→  ResponsiveContainer,
+    11→  CartesianGrid,
+    12→  ReferenceLine,
+    13→} from 'recharts';
+    14→import { format, subDays } from 'date-fns';
+    15→import { useAppStore } from '@/lib/store';
+    16→import {
+    17→  BarChart3,
+    18→  TrendingDown,
+    19→  TrendingUp,
+    20→  Minus,
+    21→  Eye,
+    22→  EyeOff,
+    23→  RefreshCw,
+    24→  CalendarDays,
+    25→  ChevronLeft,
+    26→  ChevronRight,
+    27→} from 'lucide-react';
+    28→
+    29→// ─── Types ───────────────────────────────────────────────────────────
+    30→
+    31→interface KtmbRow {
+    32→  date: string;
+    33→  ets: number;
+    34→  intercity: number;
+    35→  komuter: number;
+    36→  komuter_utara: number;
+    37→  tebrau: number;
+    38→  total: number;
+    39→}
+    40→
+    41→interface PrasaranaRow {
+    42→  date: string;
+    43→  brt: number;
+    44→  lrt_ampang: number;
+    45→  lrt_kj: number;
+    46→  monorail: number;
+    47→  mrt_pjy: number;
+    48→  total: number;
+    49→}
+    50→
+    51→interface SeriesDef {
+    52→  key: string;
+    53→  label: string;
+    54→  color: string;
+    55→}
+    56→
+    57→interface DayTypeResult {
+    58→  chartData: Array<Record<string, number | string>>;
+    59→  weekdayAvg: number;
+    60→  peakDay: string;
+    61→  peakValue: number;
+    62→  lowDay: string;
+    63→  lowValue: number;
+    64→  weekendWeekdayRatio: number;
+    65→  windowDays: number;
+    66→  windowStart: string;
+    67→  windowEnd: string;
+    68→  perServiceWeekdayAvg: Record<string, number>;
+    69→}
+    70→
+    71→interface WindowDef {
+    72→  start: string;
+    73→  end: string;
+    74→  days: number;
+    75→}
+    76→
+    77→// ─── Constants ───────────────────────────────────────────────────────
+    78→
+    79→const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    80→const DAY_FULL = [
+    81→  'Monday',
+    82→  'Tuesday',
+    83→  'Wednesday',
+    84→  'Thursday',
+    85→  'Friday',
+    86→  'Saturday',
+    87→  'Sunday',
+    88→];
+    89→
+    90→const WINDOW_SIZE = 28;
+    91→const MIN_WINDOW_DAYS = 10;
+    92→
+    93→const KTMB_SERVICES: SeriesDef[] = [
+    94→  { key: 'komuter', label: 'Komuter', color: '#2dd4bf' },
+    95→  { key: 'ets', label: 'ETS', color: '#06b6d4' },
+    96→  { key: 'komuter_utara', label: 'Komuter Utara', color: '#f472b6' },
+    97→  { key: 'intercity', label: 'Intercity', color: '#a3e635' },
+    98→  { key: 'tebrau', label: 'Shuttle Tebrau', color: '#facc15' },
+    99→];
+   100→
+   101→const PRASARANA_LINES: SeriesDef[] = [
+   102→  { key: 'mrt_pjy', label: 'MRT Putrajaya', color: '#38bdf8' },
+   103→  { key: 'lrt_kj', label: 'LRT Kelana Jaya', color: '#a78bfa' },
+   104→  { key: 'lrt_ampang', label: 'LRT Ampang', color: '#fb7185' },
+   105→  { key: 'monorail', label: 'Monorail', color: '#34d399' },
+   106→  { key: 'brt', label: 'BRT Sunway', color: '#fdba74' },
+   107→];
+   108→
+   109→const SKELETON_HEIGHTS = [60, 82, 48, 90, 74, 52, 68, 56, 80, 44, 70, 62, 84, 50];
+   110→
+   111→// ─── Skeleton ───────────────────────────────────────────────────────
+   112→
+   113→function ChartSkeleton() {
+   114→  return (
+   115→    <div className="h-[520px] rounded-2xl border border-[var(--border-subtle)] bg-[var(--skeleton-bg)] backdrop-blur-md animate-pulse flex items-end gap-1 p-6">
+   116→      {SKELETON_HEIGHTS.map((h, i) => (
+   117→        <div
+   118→          key={i}
+   119→          className="flex-1 bg-[var(--skeleton-bg)] rounded-t"
+   120→          style={{ height: `${h}%` }}
+   121→        />
+   122→      ))}
+   123→    </div>
+   124→  );
+   125→}
+   126→
+   127→// ─── Window Computation ──────────────────────────────────────────────
+   128→
+   129→function computeWindows<T extends { date: string }>(data: T[]): WindowDef[] {
+   130→  if (!data.length) return [];
+   131→
+   132→  // Extract and sort unique dates
+   133→  const dates = data.map((d) => d.date.split(' ')[0]).sort();
+   134→  const latestStr = dates[dates.length - 1];
+   135→  const earliestStr = dates[0];
+   136→
+   137→  const latest = new Date(latestStr + 'T00:00:00');
+   138→  const earliest = new Date(earliestStr + 'T00:00:00');
+   139→
+   140→  const windows: WindowDef[] = [];
+   141→  let windowEnd = new Date(latest);
+   142→
+   143→  while (true) {
+   144→    const windowStart = subDays(windowEnd, WINDOW_SIZE - 1);
+   145→    const startMs = windowStart.getTime();
+   146→    const endMs = windowEnd.getTime();
+   147→
+   148→    if (startMs < earliest.getTime()) {
+   149→      // Last (partial) window — include only if it meets minimum threshold
+   150→      const actualDays = Math.round((endMs - earliest.getTime()) / 864e5) + 1;
+   151→      if (actualDays >= MIN_WINDOW_DAYS) {
+   152→        windows.push({
+   153→          start: earliestStr,
+   154→          end: format(windowEnd, 'yyyy-MM-dd'),
+   155→          days: actualDays,
+   156→        });
+   157→      }
+   158→      break;
+   159→    }
+   160→
+   161→    windows.push({
+   162→      start: format(windowStart, 'yyyy-MM-dd'),
+   163→      end: format(windowEnd, 'yyyy-MM-dd'),
+   164→      days: WINDOW_SIZE,
+   165→    });
+   166→
+   167→    // Next window ends the day before this one starts
+   168→    windowEnd = subDays(windowStart, 1);
+   169→  }
+   170→
+   171→  return windows; // index 0 = latest
+   172→}
+   173→
+   174→// ─── Day-Type Computation ───────────────────────────────────────────
+   175→
+   176→function computeDayTypeAverages<T extends { date: string }>(
+   177→  data: T[],
+   178→  keys: string[],
+   179→  windowStart?: string,
+   180→  windowEnd?: string
+   181→): DayTypeResult {
+   182→  if (!data.length) {
+   183→    return {
+   184→      chartData: [],
+   185→      weekdayAvg: 0,
+   186→      peakDay: 'N/A',
+   187→      peakValue: 0,
+   188→      lowDay: 'N/A',
+   189→      lowValue: 0,
+   190→      weekendWeekdayRatio: 0,
+   191→      windowDays: 0,
+   192→      windowStart: '',
+   193→      windowEnd: '',
+   194→      perServiceWeekdayAvg: {},
+   195→    };
+   196→  }
+   197→
+   198→  // Filter to explicit window
+   199→  const filtered = data.filter((d) => {
+   200→    const dateStr = d.date.split(' ')[0];
+   201→    if (windowStart && dateStr < windowStart) return false;
+   202→    if (windowEnd && dateStr > windowEnd) return false;
+   203→    return true;
+   204→  });
+   205→
+   206→  // ── Daily-total-first approach ──
+   207→  // For each day, compute the daily total first, then group by DOW.
+   208→  // This is robust to partial data (missing services on some days),
+   209→  // whereas averaging per-service-then-summing drifts with incomplete records.
+   210→  //
+   211→  // DOW convention: Mon=0 … Sun=6 (chart axis order).
+   212→  // NOTE: JS getDay() returns Sun=0 … Sat=6; we remap below.
+   213→
+   214→  interface DayRow {
+   215→    dow: number; // Mon=0, Sun=6
+   216→    dailyTotal: number;
+   217→    perService: Record<string, number>;
+   218→  }
+   219→
+   220→  const dayRows: DayRow[] = [];
+   221→  for (const row of filtered) {
+   222→    const dateStr = row.date.split(' ')[0];
+   223→    const dt = new Date(dateStr + 'T00:00:00');
+   224→    let dow = dt.getDay() - 1; // JS getDay(): Sun=0 → Mon=-1, so remap
+   225→    if (dow < 0) dow = 6; // Sunday → index 6
+   226→
+   227→    const perService: Record<string, number> = {};
+   228→    let dailyTotal = 0;
+   229→    for (const key of keys) {
+   230→      const val = (row as unknown as Record<string, unknown>)[key];
+   231→      if (typeof val === 'number') {
+   232→        perService[key] = val;
+   233→        dailyTotal += val;
+   234→      }
+   235→    }
+   236→    dayRows.push({ dow, dailyTotal, perService });
+   237→  }
+   238→
+   239→  // Group daily totals by DOW for accurate statistics
+   240→  const dowTotals: number[][] = Array.from({ length: 7 }, () => []);
+   241→
+   242→  // Group per-service values by DOW for stacked bar averages
+   243→  const dowServiceBuckets: Record<number, Record<string, number[]>> = {};
+   244→  for (let i = 0; i < 7; i++) {
+   245→    dowServiceBuckets[i] = Object.fromEntries(keys.map((k) => [k, [] as number[]]));
+   246→  }
+   247→
+   248→  for (const dr of dayRows) {
+   249→    dowTotals[dr.dow].push(dr.dailyTotal);
+   250→    for (const key of keys) {
+   251→      if (dr.perService[key] !== undefined) {
+   252→        dowServiceBuckets[dr.dow][key].push(dr.perService[key]);
+   253→      }
+   254→    }
+   255→  }
+   256→
+   257→  // Compute chart data: per-service averages for stacked bars,
+   258→  // daily-total average for the `total` field used in stats.
+   259→  const chartData = DAY_NAMES.map((day, i) => {
+   260→    const entry: Record<string, number | string> = {
+   261→      day,
+   262→      dayLabel: DAY_FULL[i],
+   263→    };
+   264→
+   265→    // Per-service averages (for stacked bar visualization)
+   266→    for (const key of keys) {
+   267→      const vals = dowServiceBuckets[i][key];
+   268→      entry[key] =
+   269→        vals.length > 0 ? Math.round(vals.reduce((s, v) => s + v, 0) / vals.length) : 0;
+   270→    }
+   271→
+   272→    // Daily-total-first average (statistically correct baseline)
+   273→    const dailyTotals = dowTotals[i];
+   274→    entry.total =
+   275→      dailyTotals.length > 0
+   276→        ? Math.round(dailyTotals.reduce((s, v) => s + v, 0) / dailyTotals.length)
+   277→        : 0;
+   278→
+   279→    return entry;
+   280→  });
+   281→
+   282→  // Weekday average (Mon-Fri, indices 0-4) — from daily totals
+   283→  const weekdayDailyTotals = dayRows
+   284→    .filter((dr) => dr.dow >= 0 && dr.dow <= 4)
+   285→    .map((dr) => dr.dailyTotal);
+   286→  const weekdayAvg =
+   287→    weekdayDailyTotals.length > 0
+   288→      ? Math.round(
+   289→          weekdayDailyTotals.reduce((s, v) => s + v, 0) / weekdayDailyTotals.length
+   290→        )
+   291→      : 0;
+   292→
+   293→  // Per-service weekday averages (for tooltip breakdown)
+   294→  const perServiceWeekdayAvg: Record<string, number> = {};
+   295→  for (const key of keys) {
+   296→    const allVals: number[] = [];
+   297→    for (let i = 0; i <= 4; i++) {
+   298→      allVals.push(...dowServiceBuckets[i][key]);
+   299→    }
+   300→    perServiceWeekdayAvg[key] =
+   301→      allVals.length > 0 ? Math.round(allVals.reduce((s, v) => s + v, 0) / allVals.length) : 0;
+   302→  }
+   303→
+   304→  // Peak / low / weekend ratio — all from daily-total averages
+   305→  const totals = chartData.map((d) => d.total as number);
+   306→  const peakIdx = totals.indexOf(Math.max(...totals));
+   307→  const lowIdx = totals.indexOf(Math.min(...totals));
+   308→
+   309→  const weekendDailyTotals = dayRows
+   310→    .filter((dr) => dr.dow === 5 || dr.dow === 6)
+   311→    .map((dr) => dr.dailyTotal);
+   312→  const weekendAvg =
+   313→    weekendDailyTotals.length > 0
+   314→      ? weekendDailyTotals.reduce((s, v) => s + v, 0) / weekendDailyTotals.length
+   315→      : 0;
+   316→  const weekendWeekdayRatio =
+   317→    weekdayAvg > 0 ? Math.round((weekendAvg / weekdayAvg) * 100) / 100 : 0;
+   318→
+   319→  return {
+   320→    chartData,
+   321→    weekdayAvg,
+   322→    peakDay: DAY_FULL[peakIdx],
+   323→    peakValue: totals[peakIdx],
+   324→    lowDay: DAY_FULL[lowIdx],
+   325→    lowValue: totals[lowIdx],
+   326→    weekendWeekdayRatio,
+   327→    windowDays: filtered.length,
+   328→    windowStart: filtered[0]?.date.split(' ')[0] ?? '',
+   329→    windowEnd: filtered[filtered.length - 1]?.date.split(' ')[0] ?? '',
+   330→    perServiceWeekdayAvg,
+   331→  };
+   332→}
+   333→
+   334→// ─── Tooltip ─────────────────────────────────────────────────────────
+   335→
+   336→interface TooltipPayloadItem {
+   337→  name: string;
+   338→  value: number;
+   339→  color: string;
+   340→  payload?: {
+   341→    dayLabel?: string;
+   342→    total?: number;
+   343→  };
+   344→}
+   345→
+   346→function DayTypeTooltip({
+   347→  active,
+   348→  payload,
+   349→  weekdayAvg,
+   350→}: {
+   351→  active?: boolean;
+   352→  payload?: TooltipPayloadItem[];
+   353→  weekdayAvg: number;
+   354→}) {
+   355→  if (!active || !payload?.length) return null;
+   356→  const pl = payload[0]?.payload;
+   357→  const total = payload.reduce((sum, p) => sum + p.value, 0);
+   358→  const totalVsAvg =
+   359→    weekdayAvg > 0 ? Math.round(((total - weekdayAvg) / weekdayAvg) * 100) / 100 : 0;
+   360→
+   361→  return (
+   362→    <div className="bg-[var(--bg-tooltip)] backdrop-blur-md border border-[var(--border-subtle)] rounded-xl p-3 shadow-xl min-w-[240px]">
+   363→      <p className="text-[10px] font-medium text-[#85AB8B] uppercase tracking-widest mb-1">
+   364→        {pl?.dayLabel ?? ''}
+   365→      </p>
+   366→      <div className="space-y-1">
+   367→        {payload.map((item) => (
+   368→          <div key={item.name} className="flex items-center justify-between gap-6">
+   369→            <div className="flex items-center gap-2">
+   370→              <span
+   371→                className="w-2 h-2 rounded-full shrink-0"
+   372→                style={{ backgroundColor: item.color }}
+   373→              />
+   374→              <span className="text-[11px] text-[var(--text-muted)]">
+   375→                {item.name}
+   376→              </span>
+   377→            </div>
+   378→            <span className="text-[11px] font-semibold text-[var(--text-primary)] tabular-nums">
+   379→              {item.value.toLocaleString()}
+   380→            </span>
+   381→          </div>
+   382→        ))}
+   383→        <div className="border-t border-[var(--border-faint)] pt-1 mt-1">
+   384→          <div className="flex items-center justify-between gap-6">
+   385→            <span className="text-[11px] font-medium text-[var(--text-secondary)]">
+   386→              Total
+   387→            </span>
+   388→            <span className="text-[11px] font-bold text-[var(--text-primary)] tabular-nums">
+   389→              {total.toLocaleString()}
+   390→            </span>
+   391→          </div>
+   392→          <div className="flex items-center justify-between gap-6 mt-0.5">
+   393→            <span className="text-[10px] text-[var(--text-faint)]">vs Wkday Avg</span>
+   394→            <span
+   395→              className={`text-[10px] font-semibold tabular-nums ${
+   396→                totalVsAvg >= 0 ? 'text-emerald-400' : 'text-red-400'
+   397→              }`}
+   398→            >
+   399→              {totalVsAvg >= 0 ? '+' : ''}
+   400→              {(totalVsAvg * 100).toFixed(1)}%
+   401→            </span>
+   402→          </div>
+   403→        </div>
+   404→      </div>
+   405→    </div>
+   406→  );
+   407→}
+   408→
+   409→// ─── Main Component ──────────────────────────────────────────────────
+   410→
+   411→export function DayTypeAnalytics() {
+   412→  const [ktmbData, setKtmbData] = useState<KtmbRow[]>([]);
+   413→  const [prasData, setPrasData] = useState<PrasaranaRow[]>([]);
+   414→  const [activeTab, setActiveTab] = useState<'ktmb' | 'prasarana'>('ktmb');
+   415→  const [hiddenLines, setHiddenLines] = useState<Set<string>>(new Set());
+   416→  const [loading, setLoading] = useState(true);
+   417→  const [windowOffset, setWindowOffset] = useState(0); // 0 = latest window
+   418→
+   419→  // Centralized metadata from Zustand
+   420→  const meta = useAppStore((s) => s.metadata);
+   421→
+   422→  // Fetch data on mount
+   423→  const fetchData = useCallback(async () => {
+   424→    setLoading(true);
+   425→    try {
+   426→      const [ktmb, pras] = await Promise.all([
+   427→        fetch('/ktmb-daily.json').then((r) => r.json()),
+   428→        fetch('/prasarana-daily.json').then((r) => r.json()),
+   429→      ]);
+   430→      setKtmbData(ktmb);
+   431→      setPrasData(pras);
+   432→    } catch {
+   433→      // Silently fail
+   434→    } finally {
+   435→      setLoading(false);
+   436→    }
+   437→  }, []);
+   438→
+   439→  useEffect(() => {
+   440→    fetchData();
+   441→  }, [fetchData]);
+   442→
+   443→  // Compute available windows for each data source
+   444→  const ktmbWindows = useMemo(() => computeWindows(ktmbData), [ktmbData]);
+   445→  const prasWindows = useMemo(() => computeWindows(prasData), [prasData]);
+   446→
+   447→  // Active windows based on tab
+   448→  const windows = activeTab === 'ktmb' ? ktmbWindows : prasWindows;
+   449→
+   450→  // Clamp offset to available windows
+   451→  const safeOffset = Math.min(windowOffset, Math.max(0, windows.length - 1));
+   452→  const activeWindow = windows[safeOffset] ?? windows[0];
+   453→
+   454→  // Reset offset when tab changes
+   455→  useEffect(() => {
+   456→    setWindowOffset(0);
+   457→  }, [activeTab]);
+   458→
+   459→  // Navigation
+   460→  const canGoPrev = safeOffset < windows.length - 1;
+   461→  const canGoNext = safeOffset > 0;
+   462→
+   463→  const goPrev = useCallback(() => {
+   464→    if (canGoPrev) setWindowOffset((o) => o + 1);
+   465→  }, [canGoPrev]);
+   466→
+   467→  const goNext = useCallback(() => {
+   468→    if (canGoNext) setWindowOffset((o) => o - 1);
+   469→  }, [canGoNext]);
+   470→
+   471→  // Compute day-type averages for the active window
+   472→  const ktmbResult = useMemo(
+   473→    () =>
+   474→      computeDayTypeAverages<KtmbRow>(
+   475→        ktmbData,
+   476→        KTMB_SERVICES.map((s) => s.key),
+   477→        activeWindow?.start,
+   478→        activeWindow?.end
+   479→      ),
+   480→    [ktmbData, activeWindow]
+   481→  );
+   482→
+   483→  const prasResult = useMemo(
+   484→    () =>
+   485→      computeDayTypeAverages<PrasaranaRow>(
+   486→        prasData,
+   487→        PRASARANA_LINES.map((s) => s.key),
+   488→        activeWindow?.start,
+   489→        activeWindow?.end
+   490→      ),
+   491→    [prasData, activeWindow]
+   492→  );
+   493→
+   494→  // Current result based on active tab
+   495→  const result = activeTab === 'ktmb' ? ktmbResult : prasResult;
+   496→  const series = activeTab === 'ktmb' ? KTMB_SERVICES : PRASARANA_LINES;
+   497→
+   498→  // Compute previous window result for delta comparison
+   499→  const prevWindow = windows[safeOffset + 1];
+   500→  const prevResult = useMemo(() => {
+   501→    if (!prevWindow) return null;
+   502→    if (activeTab === 'ktmb') {
+   503→      return computeDayTypeAverages<KtmbRow>(
+   504→        ktmbData,
+   505→        KTMB_SERVICES.map((s) => s.key),
+   506→        prevWindow.start,
+   507→        prevWindow.end
+   508→      );
+   509→    }
+   510→    return computeDayTypeAverages<PrasaranaRow>(
+   511→      prasData,
+   512→      PRASARANA_LINES.map((s) => s.key),
+   513→      prevWindow.start,
+   514→      prevWindow.end
+   515→    );
+   516→  }, [prevWindow, activeTab, ktmbData, prasData]);
+   517→
+   518→  // Delta vs previous window
+   519→  const weekdayAvgDelta = useMemo(() => {
+   520→    if (!prevResult || prevResult.weekdayAvg === 0) return null;
+   521→    return ((result.weekdayAvg - prevResult.weekdayAvg) / prevResult.weekdayAvg) * 100;
+   522→  }, [result.weekdayAvg, prevResult]);
+   523→
+   524→  // Toggle line visibility
+   525→  const toggleLine = useCallback((key: string) => {
+   526→    setHiddenLines((prev) => {
+   527→      const next = new Set(prev);
+   528→      if (next.has(key)) next.delete(key);
+   529→      else next.add(key);
+   530→      return next;
+   531→    });
+   532→  }, []);
+   533→
+   534→  const showAll = useCallback(() => setHiddenLines(new Set()), []);
+   535→  const hideAll = useCallback(
+   536→    () => setHiddenLines(new Set(series.map((s) => s.key))),
+   537→    [series]
+   538→  );
+   539→
+   540→  // Format helper for Y-axis
+   541→  const formatY = (v: number) => {
+   542→    if (v >= 1000000) return `${(v / 1000000).toFixed(1)}M`;
+   543→    if (v >= 1000) return `${(v / 1000).toFixed(0)}k`;
+   544→    return v.toString();
+   545→  };
+   546→
+   547→  // Dynamic lag label
+   548→  const lagLabel = useMemo(() => {
+   549→    if (!meta?.freshest_date) return '';
+   550→    const dateMs = new Date(meta.freshest_date + 'T00:00:00').getTime();
+   551→    const hoursAgo = Math.round((Date.now() - dateMs) / 36e5);
+   552→    if (hoursAgo < 24) return `${hoursAgo}h ago`;
+   553→    return `${Math.round(hoursAgo / 24)}d ago`;
+   554→  }, [meta]);
+   555→
+   556→  if (loading) return <ChartSkeleton />;
+   557→
+   558→  if (!result.chartData.length) {
+   559→    return (
+   560→      <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md flex items-center justify-center h-[520px]">
+   561→        <div className="text-center">
+   562→          <BarChart3 className="w-8 h-8 text-[var(--text-ghost)] mx-auto mb-2" />
+   563→          <p className="text-[var(--text-faint)] text-sm">
+   564→            No daily data available for day-type analysis
+   565→          </p>
+   566→        </div>
+   567→      </div>
+   568→    );
+   569→  }
+   570→
+   571→  const deltaIsPositive = weekdayAvgDelta !== null && weekdayAvgDelta > 0;
+   572→  const deltaIsNegative = weekdayAvgDelta !== null && weekdayAvgDelta < 0;
+   573→
+   574→  return (
+   575→    <div
+   576→      data-chart
+   577→      className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md p-5 sm:p-6 shadow-lg animate-fade-in-up"
+   578→    >
+   579→      {/* ── Header ── */}
+   580→      <div className="flex flex-col gap-4 mb-5">
+   581→        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+   582→          <div className="flex-1">
+   583→            <div className="flex items-center gap-2.5">
+   584→              <BarChart3 className="w-4 h-4 text-[#85AB8B]" />
+   585→              <h3 className="text-sm font-semibold text-[var(--text-primary)]">
+   586→                Day-Type Analytics
+   587→              </h3>
+   588→            </div>
+   589→            <p className="text-[10px] text-[var(--text-faint)] mt-1 ml-[26px]">
+   590→              Averages computed over{' '}
+   591→              <span className="text-[var(--text-muted)] font-medium">
+   592→                {result.windowDays}-day window
+   593→              </span>
+   594→              {result.windowStart && (
+   595→                <>
+   596→                  {' '}
+   597→                  ·{' '}
+   598→                  <span className="text-[var(--text-muted)] font-medium tabular-nums">
+   599→                    {result.windowStart}
+   600→                  </span>{' '}
+   601→                  →{' '}
+   602→                  <span className="text-[var(--text-muted)] font-medium tabular-nums">
+   603→                    {result.windowEnd}
+   604→                  </span>
+   605→                </>
+   606→              )}{' '}
+   607→                  · Baseline:{' '}
+   608→              <span className="text-[#85AB8B] font-medium">Weekday Avg</span>
+   609→            </p>
+   610→          </div>
+   611→
+   612→          {/* Pagination + timestamp badge */}
+   613→          <div className="flex items-center gap-2 flex-wrap">
+   614→            {/* Window pagination */}
+   615→            {windows.length > 1 && (
+   616→              <div className="flex items-center rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] overflow-hidden">
+   617→                <button
+   618→                  onClick={goPrev}
+   619→                  disabled={!canGoPrev}
+   620→                  className="flex items-center justify-center w-8 h-8 transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[var(--surface-active)] active:bg-[var(--border-subtle)]"
+   621→                  aria-label="Previous window"
+   622→                >
+   623→                  <ChevronLeft className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+   624→                </button>
+   625→                <div className="flex items-center px-2.5 min-w-[120px] justify-center">
+   626→                  <span className="text-[10px] font-medium text-[var(--text-secondary)] tabular-nums">
+   627→                    {safeOffset === 0 ? 'Latest batch' : `${windows.length - safeOffset} / ${windows.length}`}
+   628→                  </span>
+   629→                </div>
+   630→                <button
+   631→                  onClick={goNext}
+   632→                  disabled={!canGoNext}
+   633→                  className="flex items-center justify-center w-8 h-8 transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[var(--surface-active)] active:bg-[var(--border-subtle)]"
+   634→                  aria-label="Next window"
+   635→                >
+   636→                  <ChevronRight className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+   637→                </button>
+   638→              </div>
+   639→            )}
+   640→
+   641→            {/* Dynamic timestamp badge */}
+   642→            {meta?.freshest_date && (
+   643→              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#85AB8B]/10 border border-[#85AB8B]/20">
+   644→                <span className="w-1.5 h-1.5 rounded-full bg-[#85AB8B] animate-pulse" />
+   645→                <span className="text-[9px] text-[#85AB8B] font-medium tabular-nums">
+   646→                  {meta.freshest_date}
+   647→                </span>
+   648→                {lagLabel && (
+   649→                  <span className="text-[9px] text-[#85AB8B]/60">({lagLabel})</span>
+   650→                )}
+   651→              </div>
+   652→            )}
+   653→            <button
+   654→              onClick={fetchData}
+   655→              className="flex items-center gap-1 px-2 py-1 rounded-full bg-[var(--surface-hover)] border border-[var(--border-subtle)] text-[var(--text-ghost)] hover:text-[var(--text-secondary)] hover:border-[var(--border-subtle)] transition-all"
+   656→              title="Refresh data"
+   657→            >
+   658→              <RefreshCw className="w-3 h-3" />
+   659→            </button>
+   660→          </div>
+   661→        </div>
+   662→
+   663→        {/* ── Tabs ── */}
+   664→        <div className="flex items-center gap-1">
+   665→          <button
+   666→            onClick={() => {
+   667→              setActiveTab('ktmb');
+   668→              setHiddenLines(new Set());
+   669→            }}
+   670→            className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
+   671→              activeTab === 'ktmb'
+   672→                ? 'bg-teal-400/10 text-teal-400 border border-teal-400/20'
+   673→                : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)] border border-transparent hover:border-[var(--border-subtle)]'
+   674→            }`}
+   675→          >
+   676→            KTMB Services
+   677→          </button>
+   678→          <button
+   679→            onClick={() => {
+   680→              setActiveTab('prasarana');
+   681→              setHiddenLines(new Set());
+   682→            }}
+   683→            className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
+   684→              activeTab === 'prasarana'
+   685→                ? 'bg-amber-400/10 text-amber-400 border border-amber-400/20'
+   686→                : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)] border border-transparent hover:border-[var(--border-subtle)]'
+   687→            }`}
+   688→          >
+   689→            Rapid Rail Lines
+   690→          </button>
+   691→
+   692→          <div className="w-px h-5 bg-[var(--border-subtle)] mx-1" />
+   693→
+   694→          <button
+   695→            onClick={showAll}
+   696→            className="p-1.5 rounded-lg text-[var(--text-ghost)] hover:text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] transition-all"
+   697→            title="Show all lines"
+   698→          >
+   699→            <Eye className="w-3.5 h-3.5" />
+   700→          </button>
+   701→          <button
+   702→            onClick={hideAll}
+   703→            className="p-1.5 rounded-lg text-[var(--text-ghost)] hover:text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] transition-all"
+   704→            title="Hide all lines"
+   705→          >
+   706→            <EyeOff className="w-3.5 h-3.5" />
+   707→          </button>
+   708→        </div>
+   709→
+   710→        {/* ── Line toggles ── */}
+   711→        <div className="flex flex-wrap items-center gap-2">
+   712→          {series.map((s) => {
+   713→            const isHidden = hiddenLines.has(s.key);
+   714→            return (
+   715→              <button
+   716→                key={s.key}
+   717→                onClick={() => toggleLine(s.key)}
+   718→                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium transition-all border ${
+   719→                  isHidden
+   720→                    ? 'bg-[var(--surface-card)] border-[var(--border-subtle)] text-[var(--text-ghost)] opacity-50'
+   721→                    : 'bg-[var(--bg-elevated)] border-[var(--border-faint)] text-[var(--text-muted)] hover:border-[var(--border-subtle)]'
+   722→                }`}
+   723→              >
+   724→                <span
+   725→                  className="w-2 h-2 rounded-full shrink-0 transition-opacity"
+   726→                  style={{
+   727→                    backgroundColor: s.color,
+   728→                    opacity: isHidden ? 0.3 : 1,
+   729→                  }}
+   730→                />
+   731→                <span className={isHidden ? 'line-through' : ''}>
+   732→                  {s.label}
+   733→                </span>
+   734→              </button>
+   735→            );
+   736→          })}
+   737→        </div>
+   738→      </div>
+   739→
+   740→      {/* ── Stats Row ── */}
+   741→      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-5">
+   742→        <div className="rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-faint)] p-3">
+   743→          <div className="flex items-center gap-1 mb-1">
+   744→            <TrendingUp className="w-3 h-3 text-emerald-400" />
+   745→            <span className="text-[9px] text-[var(--text-faint)] uppercase tracking-widest font-medium">
+   746→              Peak Day
+   747→            </span>
+   748→          </div>
+   749→          <div className="text-base font-semibold text-[var(--text-primary)] tabular-nums tracking-tight">
+   750→            {result.peakDay}
+   751→          </div>
+   752→          <span className="text-[10px] text-[var(--text-faint)] tabular-nums">
+   753→            {result.peakValue.toLocaleString()} avg
+   754→          </span>
+   755→        </div>
+   756→
+   757→        <div className="rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-faint)] p-3">
+   758→          <div className="flex items-center gap-1 mb-1">
+   759→            <TrendingDown className="w-3 h-3 text-red-400" />
+   760→            <span className="text-[9px] text-[var(--text-faint)] uppercase tracking-widest font-medium">
+   761→              Lowest Day
+   762→            </span>
+   763→          </div>
+   764→          <div className="text-base font-semibold text-[var(--text-primary)] tabular-nums tracking-tight">
+   765→            {result.lowDay}
+   766→          </div>
+   767→          <span className="text-[10px] text-[var(--text-faint)] tabular-nums">
+   768→            {result.lowValue.toLocaleString()} avg
+   769→          </span>
+   770→        </div>
+   771→
+   772→        <div className="rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-faint)] p-3">
+   773→          <span className="text-[9px] text-[var(--text-faint)] uppercase tracking-widest font-medium">
+   774→            Weekend / Weekday
+   775→          </span>
+   776→          <div className="text-base font-semibold text-[var(--text-primary)] tabular-nums tracking-tight mt-1">
+   777→            {result.weekendWeekdayRatio.toFixed(2)}
+   778→          </div>
+   779→          <span className="text-[10px] text-[var(--text-faint)]">ratio</span>
+   780→        </div>
+   781→
+   782→        <div className="rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-faint)] p-3">
+   783→          <div className="flex items-center gap-1 mb-1">
+   784→            <CalendarDays className="w-3 h-3 text-[#85AB8B]" />
+   785→            <span className="text-[9px] text-[var(--text-faint)] uppercase tracking-widest font-medium">
+   786→              Weekday Avg
+   787→            </span>
+   788→          </div>
+   789→          <div className="text-base font-semibold text-[#85AB8B] tabular-nums tracking-tight">
+   790→            {result.weekdayAvg.toLocaleString()}
+   791→          </div>
+   792→          <span className="text-[10px] text-[var(--text-faint)]">baseline</span>
+   793→        </div>
+   794→
+   795→        {/* vs Prev Window delta */}
+   796→        <div className="rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-faint)] p-3">
+   797→          <span className="text-[9px] text-[var(--text-faint)] uppercase tracking-widest font-medium">
+   798→            vs Prev Window
+   799→          </span>
+   800→          <div
+   801→            className={`text-base font-semibold tabular-nums tracking-tight mt-1 flex items-center gap-1 ${
+   802→              deltaIsPositive
+   803→                ? 'text-emerald-400'
+   804→                : deltaIsNegative
+   805→                  ? 'text-red-400'
+   806→                  : 'text-[var(--text-muted)]'
+   807→            }`}
+   808→          >
+   809→            {weekdayAvgDelta !== null ? (
+   810→              <>
+   811→                {deltaIsPositive ? (
+   812→                  <TrendingUp className="w-3.5 h-3.5" />
+   813→                ) : deltaIsNegative ? (
+   814→                  <TrendingDown className="w-3.5 h-3.5" />
+   815→                ) : (
+   816→                  <Minus className="w-3.5 h-3.5" />
+   817→                )}
+   818→                {Math.abs(weekdayAvgDelta).toFixed(1)}%
+   819→              </>
+   820→            ) : (
+   821→              <span className="text-[var(--text-ghost)]">—</span>
+   822→            )}
+   823→          </div>
+   824→          {prevWindow && (
+   825→            <span className="text-[10px] text-[var(--text-faint)] tabular-nums">
+   826→              {prevWindow.start} → {prevWindow.end}
+   827→            </span>
+   828→          )}
+   829→        </div>
+   830→      </div>
+   831→
+   832→      {/* ── Chart ── */}
+   833→      <div className="h-64 sm:h-72 md:h-80 w-full">
+   834→        <ResponsiveContainer width="100%" height="100%">
+   835→          <BarChart
+   836→            data={result.chartData}
+   837→            margin={{ top: 10, right: 5, left: -20, bottom: 0 }}
+   838→            barCategoryGap="14%"
+   839→          >
+   840→            <defs>
+   841→              {series.map((s) => (
+   842→                <linearGradient
+   843→                  key={s.key}
+   844→                  id={`dt-${s.key}`}
+   845→                  x1="0"
+   846→                  y1="0"
+   847→                  x2="0"
+   848→                  y2="1"
+   849→                >
+   850→                  <stop offset="5%" stopColor={s.color} stopOpacity={0.9} />
+   851→                  <stop offset="95%" stopColor={s.color} stopOpacity={0.5} />
+   852→                </linearGradient>
+   853→              ))}
+   854→            </defs>
+   855→            <CartesianGrid
+   856→              strokeDasharray="3 3"
+   857→              stroke="var(--chart-grid)"
+   858→              vertical={false}
+   859→            />
+   860→            <XAxis
+   861→              dataKey="day"
+   862→              stroke="var(--chart-axis)"
+   863→              fontSize={11}
+   864→              fontWeight={600}
+   865→              tickLine={false}
+   866→              axisLine={false}
+   867→              dy={8}
+   868→            />
+   869→            <YAxis
+   870→              stroke="var(--chart-axis)"
+   871→              fontSize={10}
+   872→              tickFormatter={formatY}
+   873→              tickLine={false}
+   874→              axisLine={false}
+   875→            />
+   876→            <Tooltip
+   877→              content={
+   878→                <DayTypeTooltip weekdayAvg={result.weekdayAvg} />
+   879→              }
+   880→              cursor={{ fill: 'var(--chart-hover)', radius: 4 }}
+   881→            />
+   882→
+   883→            {/* Weekday Average reference line */}
+   884→            <ReferenceLine
+   885→              y={result.weekdayAvg}
+   886→              stroke="#85AB8B"
+   887→              strokeDasharray="6 4"
+   888→              strokeWidth={1.5}
+   889→              strokeOpacity={0.6}
+   890→              label={{
+   891→                value: `Weekday Avg: ${result.weekdayAvg.toLocaleString()}`,
+   892→                position: 'insideTopRight',
+   893→                fill: '#85AB8B',
+   894→                fontSize: 10,
+   895→                fontWeight: 500,
+   896→              }}
+   897→            />
+   898→
+   899→            {/* Stacked bars — only show visible series */}
+   900→            {series.map((s) =>
+   901→              !hiddenLines.has(s.key) ? (
+   902→                <Bar
+   903→                  key={s.key}
+   904→                  dataKey={s.key}
+   905→                  name={s.label}
+   906→                  fill={`url(#dt-${s.key})`}
+   907→                  stackId="daytype"
+   908→                  maxBarSize={52}
+   909→                  radius={
+   910→                    series.filter((x) => !hiddenLines.has(x.key)).indexOf(s) ===
+   911→                    series.filter((x) => !hiddenLines.has(x.key)).length - 1
+   912→                      ? [4, 4, 0, 0]
+   913→                      : [0, 0, 0, 0]
+   914→                  }
+   915→                />
+   916→              ) : null
+   917→            )}
+   918→          </BarChart>
+   919→        </ResponsiveContainer>
+   920→      </div>
+   921→
+   922→      {/* ── Footer ── */}
+   923→      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mt-4 pt-3 border-t border-[var(--border-faint)]">
+   924→        <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+   925→          <span className="text-[10px] text-[var(--text-faint)]">
+   926→            <span className="text-[var(--text-muted)] font-medium">
+   927→              Window:
+   928→            </span>{' '}
+   929→            {result.windowDays} days
+   930→            {result.windowStart && (
+   931→              <>
+   932→                {' '}
+   933→                ·{' '}
+   934→                <span className="tabular-nums">
+   935→                  {result.windowStart} → {result.windowEnd}
+   936→                </span>
+   937→              </>
+   938→            )}
+   939→          </span>
+   940→          <span className="text-[10px] text-[var(--text-faint)]">
+   941→            <span className="text-[var(--text-muted)] font-medium">
+   942→              {activeTab === 'ktmb' ? 'Services' : 'Lines'}:
+   943→            </span>{' '}
+   944→            {series.filter((s) => !hiddenLines.has(s.key)).length}/
+   945→            {series.length} visible
+   946→          </span>
+   947→          {windows.length > 1 && (
+   948→            <span className="text-[10px] text-[var(--text-faint)]">
+   949→              <span className="text-[var(--text-muted)] font-medium">
+   950→                {windows.length} windows
+   951→              </span>{' '}
+   952→              ({WINDOW_SIZE}-day each)
+   953→            </span>
+   954→          )}
+   955→        </div>
+   956→        <span className="text-[9px] text-[var(--text-faint)] uppercase tracking-widest">
+   957→          Source: data.gov.my · parquet
+   958→        </span>
+   959→      </div>
+   960→    </div>
+   961→  );
+   962→}
+   963→

@@ -451,3 +451,28 @@ Pattern: Daily OD data publishes 2-3 days after each day (T-1 to T-2). Headline 
 
 ## Commit
 bebb51c → main
+
+---
+Task ID: 8
+Agent: Main
+Task: Research and implement decision-layer analytics enhancements
+
+Work Log:
+- Analyzed user's research input on high-value transit analytics (OD flows, peak load, reliability, accessibility, network criticality)
+- Cross-referenced with AGENT.md constraints: no new deps (Recharts only), no new hooks/routes, no new stores
+- Identified 3 highest-value analytics achievable with existing data sources:
+  1. Seasonality Heatmap (demand pattern visualization)
+  2. Mode Share Trend (structural shift analysis)
+  3. YoY Growth Rankings (service-level growth comparison)
+- Created seasonality-heatmap.tsx: CSS grid 4×12 (day-type × month), sage-green color scale, year selector, absolute/% toggle
+- Created mode-share-trend.tsx: Recharts 100% stacked AreaChart, monthly resolution, 24-month paginated windows, grouped tooltip
+- Created growth-rankings.tsx: Recharts horizontal BarChart, per-service YoY growth, total rail summary card, absolute values list
+- Integrated all 3 into page.tsx as new "Demand Analytics" section between Day-Type Analytics and Station Analytics
+- Lint passes clean, dev server compiles without warnings/errors
+- Pushed to GitHub (commit edb9549), triggers CF Pages rebuild
+
+Stage Summary:
+- 3 new decision-layer analytics components (1200 lines total)
+- Zero new dependencies, zero new hooks/routes/stores (ponytail compliant)
+- Data computed client-side from existing useAnalytics ridership dataset (2019-present, ~2600 days)
+- Section layout: Seasonality + Growth side-by-side (7/12 + 5/12), Mode Share full width below
