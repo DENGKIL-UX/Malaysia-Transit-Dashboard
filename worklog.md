@@ -399,3 +399,55 @@ Stage Summary:
 - Chart data advanced from May 31 to July 2 (+32 days)
 - GitHub Actions daily cron will keep data fresh going forward
 - Commit: 9486ee6
+
+---
+Task ID: 8
+Agent: Main
+Task: Add Period Comparison feature + research DOSM metadata catalog
+
+## User Request
+User wanted time-segmentation comparison (this month vs last month, this year vs last year, this week vs last week) and research of the DOSM datagovmy-meta GitHub data-catalogue for data freshness patterns.
+
+## DOSM Research Findings
+
+The `datagovmy-meta/data-catalogue/` directory on GitHub contains 10 ridership metadata JSON files with per-line freshness:
+
+| File | data_as_of | Update Cadence |
+|---|---|---|
+| ridership_headline.json | 2026-05-31 23:59 | Monthly (~12th) |
+| ridership_od_rapidrail_daily.json | 2026-07-01 23:59 | Daily (T-1) |
+| ridership_od_brt_daily.json | 2026-07-01 23:59 | Daily (T-1) |
+| ridership_ktmb_daily.json | 2026-07-02 23:59 | Daily (T-1) |
+| ridership_od_komuter.json | 2026-07-02 23:59 | Daily (T-1) |
+| ridership_od_ets.json | 2026-07-02 23:59 | Daily (T-1) |
+| ridership_od_intercity.json | 2026-07-02 23:59 | Daily (T-1) |
+| ridership_od_komuter_utara.json | 2026-07-02 23:59 | Daily (T-1) |
+| ridership_od_shuttle_tebrau.json | 2026-07-02 23:59 | Daily (T-1) |
+| ridership_ktmb_monthly.json | 2026-06-30 | Monthly |
+
+Pattern: Daily OD data publishes 2-3 days after each day (T-1 to T-2). Headline publishes monthly ~12th. All are automated via GitHub Actions in the datagovmy-meta repo (23K+ commits).
+
+## New Feature: Period Comparison
+
+### Files Created
+- `src/hooks/use-period-comparison.ts` — Hook fetching 13-month data range, computing 3 comparisons
+- `src/components/dashboard/period-comparison.tsx` — 3-card responsive grid component
+
+### Comparison Logic
+- **MoM**: Current month (partial) vs last month (full) — amber accent
+- **WoW**: Current Mon-Sun vs previous Mon-Sun — teal accent
+- **YoY**: This month annualized (daily avg × days in month) vs same month last year — emerald accent
+
+### Design
+- 3 cards in responsive grid (1 col mobile, 3 cols desktop)
+- Each shows: period labels, totals, % change badge (green/red), trend icon, proportion bar
+- Skeleton loading, error fallback
+- Staggered animate-fade-in-up (100/200/300ms)
+
+## VLM Verification
+- Period Comparison section renders with all 3 cards visible
+- Chart still shows June 3 – July 2 data
+- Data freshness badge: 2026-07-02
+
+## Commit
+bebb51c → main
