@@ -30,9 +30,11 @@ import pandas as pd
 import json
 import sys
 import os
+import platform
 import glob
 
-DATA_DIR = '/tmp/dosm-sync'
+# Cross-platform data dir: Git Bash and Windows Python must agree on the path
+DATA_DIR = 'C:/tmp/dosm-sync' if platform.system() == 'Windows' else '/tmp/dosm-sync'
 
 # Line mapping: station prefix → output field name
 LINE_MAP = {

@@ -13,7 +13,12 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-DATA_DIR="/tmp/dosm-sync"
+# Cross-platform data dir: Git Bash and Windows Python must agree on the path
+if [[ "${OSTYPE:-}" == msys* || "${OSTYPE:-}" == win32* || -n "${MSYSTEM:-}" ]]; then
+  DATA_DIR="C:/tmp/dosm-sync"
+else
+  DATA_DIR="/tmp/dosm-sync"
+fi
 STATE_FILE="$DATA_DIR/state.json"
 mkdir -p "$DATA_DIR"
 
