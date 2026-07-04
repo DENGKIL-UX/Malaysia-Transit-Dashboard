@@ -38,8 +38,10 @@ function ChartSkeleton() {
 
 interface TooltipPayloadItem {
   name: string;
-  value: number;
+  value: number | null;
   color: string;
+  dataKey?: string;
+  payload?: Record<string, unknown>;
 }
 
 function CustomTooltip({
@@ -53,14 +55,20 @@ function CustomTooltip({
 }) {
   if (!active || !payload?.length) return null;
 
-  // Group by operator
+  // Group by operator (exclude null-value items from the total)
   const rapidRailItems = payload.filter((p) =>
     ['MRT Kajang', 'MRT Putrajaya', 'LRT Kelana Jaya', 'LRT Ampang', 'Monorail'].includes(p.name)
   );
   const ktmbItems = payload.filter((p) =>
     ['Komuter', 'ETS', 'Intercity', 'Komuter Utara', 'Tebrau'].includes(p.name)
   );
-  const total = payload.reduce((s, p) => s + p.value, 0);
+  const total = payload.reduce((s, p) => s + (p.value ?? 0), 0);
+
+  // Check if any service is missing data for this date
+  const hasMissingData = payload.some((p) => p.value === null);
+  // Check if this row is from a date where kajang data is unavailable
+  const rowPayload = payload[0]?.payload;
+  const kajangMissing = rowPayload?.kajangMissing === true;
 
   return (
     <div className="bg-[var(--bg-tooltip)] backdrop-blur-md border border-[var(--border-subtle)] border-l-2 border-l-[#85AB8B] rounded-xl p-4 shadow-xl max-h-[340px] overflow-y-auto custom-scrollbar">
@@ -77,6 +85,9 @@ function CustomTooltip({
         <span className="text-xs font-semibold text-[var(--text-primary)]">Total Rail</span>
         <span className="text-xs font-bold text-[#85AB8B] tabular-nums">
           {total.toLocaleString()}
+          {hasMissingData && (
+            <span className="ml-1.5 text-[8px] font-normal text-amber-400/80 normal-case tracking-normal">partial</span>
+          )}
         </span>
       </div>
 
@@ -89,11 +100,16 @@ function CustomTooltip({
             {rapidRailItems.map((item) => (
               <div key={item.name} className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                  <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: item.color, opacity: item.value === null ? 0.3 : 1 }} />
                   <span className="text-[11px] text-[var(--text-muted)]">{item.name}</span>
                 </div>
-                <span className="text-[11px] text-[var(--text-secondary)] tabular-nums">
-                  {item.value.toLocaleString()}
+                <span className={cn(
+                  'text-[11px] tabular-nums',
+                  item.value === null
+                    ? 'text-[var(--text-faint)] italic'
+                    : 'text-[var(--text-secondary)]'
+                )}>
+                  {item.value === null ? 'Pending audit' : item.value.toLocaleString()}
                 </span>
               </div>
             ))}
@@ -110,11 +126,16 @@ function CustomTooltip({
             {ktmbItems.map((item) => (
               <div key={item.name} className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                  <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: item.color, opacity: item.value === null ? 0.3 : 1 }} />
                   <span className="text-[11px] text-[var(--text-muted)]">{item.name}</span>
                 </div>
-                <span className="text-[11px] text-[var(--text-secondary)] tabular-nums">
-                  {item.value.toLocaleString()}
+                <span className={cn(
+                  'text-[11px] tabular-nums',
+                  item.value === null
+                    ? 'text-[var(--text-faint)] italic'
+                    : 'text-[var(--text-secondary)]'
+                )}>
+                  {item.value === null ? 'Pending audit' : item.value.toLocaleString()}
                 </span>
               </div>
             ))}
@@ -523,7 +544,12 @@ export function RidershipChart() {
         </span>
         <div className="flex items-center gap-3">
           <span className="text-[10px] text-[var(--text-faint)]">
-            {stats.dayCount} days · Stacked areas sum to total rail
+            {stats.dayCount} days
+            {chartData.some((d) => d.kajangMissing) ? (
+              <span className="text-amber-400/70"> · MRT Kajang gap after headline audit</span>
+            ) : (
+              ' · Stacked areas sum to total rail'
+            )}
           </span>
           {windows.length > 1 && (
             <span className="text-[9px] text-[var(--text-faint)] uppercase tracking-widest">

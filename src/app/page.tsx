@@ -601,7 +601,7 @@ function DashboardView() {
                     value: loading
                       ? '—'
                       : latest
-                        ? (latest.mrtKajang >= latest.mrtPutrajaya
+                        ? (latest.mrtKajang != null && latest.mrtKajang >= latest.mrtPutrajaya
                             ? 'SBK'
                             : 'SSP')
                         : '—',

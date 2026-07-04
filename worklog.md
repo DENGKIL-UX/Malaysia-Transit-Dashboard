@@ -677,3 +677,34 @@ Stage Summary:
 - RATIO METHOD REJECTED: DOSM explicitly warns against it
 - METADATA BUG FOUND: headline_through in API response is inaccurate
 - BEST APPROACH: null-aware pipeline (backend + parser + charts) + per-field source tagging + accurate metadata boundaries
+---
+Task ID: implement-null-safe-pipeline
+Agent: main
+Task: Implement P0+P1 fixes for MRT Kajang zero-value bug
+
+Work Log:
+- Updated HeadlineRow interface: rail_mrt_kajang, bus_rkn, bus_rpn → number | null
+- Updated PrasaranaDailyRow: rail_mrt_kajang → number | null
+- Changed fetchPrasaranaDaily: rail_mrt_kajang = null (was 0)
+- Changed extension row builder: bus_rkn = null, bus_rpn = null, rail_mrt_kajang from null
+- Fixed buildResponse: now takes headlineBoundaryDate parameter instead of flawed findLastIndex
+- headline_through now correctly returns "2026-05-31" (was "2026-07-01")
+- prasarana_through now uses (KJ||Ampang||Monorail||PJY) check, excluding Kajang
+- Cached response path also computes boundary correctly via findLastIndex on non-null kajang
+- Rewrote parse-ridership.ts: all fields can be number | null, parseField() helper, null-safe totals
+- Added kajangMissing and servicesAvailable metadata to ParsedRidershipRow
+- Updated ridership-chart tooltip: null → "Pending audit" display, total shows "partial" badge
+- Updated ridership-chart footer: "MRT Kajang gap after headline audit" when data has nulls
+- Updated kpi-cards: null → "—" display, delta → "pending audit" label, amber source badge
+- Updated use-period-comparison: sumRail() now skips null values
+- Fixed page.tsx: Top Line comparison guards against null mrtKajang
+- Fixed export-dropdown: null values exported as empty string in CSV
+- Updated legacy /api/ridership route: rail_mrt_kajang = null (was 0)
+- Lint passes clean
+- API verified: headline_through=2026-05-31, all extension rows have null for SBK/bus_rkn/bus_rpn
+
+Stage Summary:
+- 8 files modified: comparison-data/route.ts, ridership/route.ts, parse-ridership.ts, ridership-chart.tsx, kpi-cards.tsx, use-period-comparison.ts, page.tsx, export-dropdown.tsx
+- No new dependencies
+- Full null pipeline: backend → parser → charts → KPI cards → CSV export
+- OpenDOSM research confirmed: only ridership_headline and ridership_ktmb_daily are API-accessible; all OD datasets are download-only (404 on API)

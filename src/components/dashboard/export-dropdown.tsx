@@ -33,7 +33,7 @@ function buildCSV(data: ReturnType<typeof useRidership>['data']): string {
   ];
 
   const rows = data.map((d) =>
-    [d.date, d.mrtKajang, d.mrtPutrajaya, d.lrtKelanaJaya, d.lrtAmpang, d.monorail, d.komuter, d.ets, d.intercity, d.komuterUtara, d.tebrau, d.busKl, d.busKuantan, d.busRpn, d.total].join(',')
+    [d.date, d.mrtKajang ?? '', d.mrtPutrajaya, d.lrtKelanaJaya, d.lrtAmpang, d.monorail, d.komuter, d.ets, d.intercity, d.komuterUtara, d.tebrau, d.busKl, d.busKuantan ?? '', d.busRpn ?? '', d.total].join(',')
   );
 
   return [headers.join(','), ...rows].join('\n');

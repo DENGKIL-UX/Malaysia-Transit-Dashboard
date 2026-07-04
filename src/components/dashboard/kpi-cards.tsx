@@ -115,13 +115,15 @@ export function KpiCards({ data, loading }: KpiCardsProps) {
   const highlightedLine = useAppStore((s) => s.highlightedLine);
   const setHighlightedLine = useAppStore((s) => s.setHighlightedLine);
 
-  const delta = (curr: number, last: number) =>
-    last ? (((curr - last) / last) * 100).toFixed(1) : '0.0';
+  const delta = (curr: number | null, last: number | null) => {
+    if (curr == null || last == null || last === 0) return null;
+    return (((curr - last) / last) * 100).toFixed(1);
+  };
 
   const cards: {
     label: string;
-    value: number;
-    delta: string;
+    value: number | null;
+    delta: string | null;
     metricKey: MetricKey;
     sparkColor: string;
     icon: typeof Train;
@@ -132,8 +134,8 @@ export function KpiCards({ data, loading }: KpiCardsProps) {
   }[] = [
     {
       label: 'MRT Kajang Line',
-      value: latest?.mrtKajang ?? 0,
-      delta: latest && prev ? delta(latest.mrtKajang, prev.mrtKajang) : '0.0',
+      value: latest?.mrtKajang ?? null,
+      delta: delta(latest?.mrtKajang ?? null, prev?.mrtKajang ?? null),
       metricKey: 'mrtKajang',
       sparkColor: '#fbbf24',
       icon: Train,
@@ -144,8 +146,8 @@ export function KpiCards({ data, loading }: KpiCardsProps) {
     },
     {
       label: 'MRT Putrajaya Line',
-      value: latest?.mrtPutrajaya ?? 0,
-      delta: latest && prev ? delta(latest.mrtPutrajaya, prev.mrtPutrajaya) : '0.0',
+      value: latest?.mrtPutrajaya ?? null,
+      delta: delta(latest?.mrtPutrajaya ?? null, prev?.mrtPutrajaya ?? null),
       metricKey: 'mrtPutrajaya',
       sparkColor: '#38bdf8',
       icon: TramFront,
@@ -156,8 +158,8 @@ export function KpiCards({ data, loading }: KpiCardsProps) {
     },
     {
       label: 'Total Ridership',
-      value: latest?.total ?? 0,
-      delta: latest && prev ? delta(latest.total, prev.total) : '0.0',
+      value: latest?.total ?? null,
+      delta: delta(latest?.total ?? null, prev?.total ?? null),
       metricKey: 'total',
       sparkColor: '#85AB8B',
       icon: Users,
@@ -168,8 +170,8 @@ export function KpiCards({ data, loading }: KpiCardsProps) {
     },
     {
       label: 'Bus (KL)',
-      value: latest?.busKl ?? 0,
-      delta: latest && prev ? delta(latest.busKl, prev.busKl) : '0.0',
+      value: latest?.busKl ?? null,
+      delta: delta(latest?.busKl ?? null, prev?.busKl ?? null),
       metricKey: 'busKl',
       sparkColor: '#fb923c',
       icon: Bus,
@@ -180,8 +182,8 @@ export function KpiCards({ data, loading }: KpiCardsProps) {
     },
     {
       label: 'ETS',
-      value: latest?.ets ?? 0,
-      delta: latest && prev ? delta(latest.ets, prev.ets) : '0.0',
+      value: latest?.ets ?? null,
+      delta: delta(latest?.ets ?? null, prev?.ets ?? null),
       metricKey: 'ets',
       sparkColor: '#22d3ee',
       icon: Train,
@@ -192,8 +194,8 @@ export function KpiCards({ data, loading }: KpiCardsProps) {
     },
     {
       label: 'KTM Intercity',
-      value: latest?.intercity ?? 0,
-      delta: latest && prev ? delta(latest.intercity, prev.intercity) : '0.0',
+      value: latest?.intercity ?? null,
+      delta: delta(latest?.intercity ?? null, prev?.intercity ?? null),
       metricKey: 'intercity',
       sparkColor: '#a3e635',
       icon: Train,
@@ -257,28 +259,37 @@ export function KpiCards({ data, loading }: KpiCardsProps) {
                 </span>
                 <c.icon className={cn('w-4 h-4', c.accent)} />
               </div>
-              <div className="text-2xl sm:text-3xl font-semibold text-[var(--text-primary)] tabular-nums tracking-tight">
-                {c.value.toLocaleString()}
+              <div className={cn(
+                'text-2xl sm:text-3xl font-semibold tabular-nums tracking-tight',
+                c.value === null
+                  ? 'text-[var(--text-faint)] italic'
+                  : 'text-[var(--text-primary)]'
+              )}>
+                {c.value === null ? '—' : c.value.toLocaleString()}
               </div>
               <div className="mt-1.5 flex items-center gap-1.5">
-                <DeltaBadge value={c.delta} />
+                {c.delta !== null ? <DeltaBadge value={c.delta} /> : (
+                  <span className="text-[10px] text-amber-400/70 italic">pending audit</span>
+                )}
                 <span className="text-[10px] text-[var(--text-faint)]" title={prev ? `vs ${prev.date}` : undefined}>
                   vs prior day
                 </span>
               </div>
               {/* 7-day sparkline */}
               <div className="mt-2">
-                <Sparkline data={sparkData} color={c.sparkColor} />
+                <Sparkline data={sparkData.filter((v): v is number => v !== null)} color={c.sparkColor} />
               </div>
               {/* Source badge — bus is OD, others are headline */}
               <div className="mt-1.5 flex items-center justify-between">
                 <span className={cn(
                   'text-[9px] font-medium px-1.5 py-0.5 rounded',
-                  c.metricKey === 'busKl'
-                    ? 'bg-emerald-400/15 text-emerald-300/70'
-                    : 'bg-orange-400/15 text-orange-300/70'
+                  c.value === null
+                    ? 'bg-amber-400/15 text-amber-300/70'
+                    : c.metricKey === 'busKl'
+                      ? 'bg-emerald-400/15 text-emerald-300/70'
+                      : 'bg-orange-400/15 text-orange-300/70'
                 )}>
-                  ● {c.metricKey === 'busKl' ? 'batch OD' : 'headline audited'}
+                  ● {c.value === null ? 'audit pending' : c.metricKey === 'busKl' ? 'batch OD' : 'headline audited'}
                 </span>
                 <MousePointer2 className="w-3 h-3 text-[var(--text-ghost)] opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>

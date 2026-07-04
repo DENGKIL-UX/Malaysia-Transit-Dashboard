@@ -14,10 +14,10 @@ function isValidDate(s: string): boolean {
 interface HeadlineRow {
   date: string;
   bus_rkl: number;
-  bus_rkn: number;
-  bus_rpn: number;
+  bus_rkn: number | null;
+  bus_rpn: number | null;
   rail_lrt_ampang: number;
-  rail_mrt_kajang: number;
+  rail_mrt_kajang: number | null;
   rail_lrt_kj: number;
   rail_monorail: number;
   rail_mrt_pjy: number;
@@ -50,7 +50,7 @@ interface PrasaranaDailyRow {
   date: string;
   rail_lrt_ampang: number;
   rail_lrt_kj: number;
-  rail_mrt_kajang: number;
+  rail_mrt_kajang: number | null;
   rail_mrt_pjy: number;
   rail_monorail: number;
   bus_rkl: number;
@@ -100,7 +100,7 @@ async function fetchPrasaranaDaily(
           date: row.date,
           rail_lrt_ampang: row.lrt_ampang ?? 0,
           rail_lrt_kj: row.lrt_kj ?? 0,
-          rail_mrt_kajang: 0, // SBK line not in parquet OD data
+          rail_mrt_kajang: null, // SBK line not in parquet OD data — null = unavailable, not zero
           rail_mrt_pjy: row.mrt_pjy ?? 0,
           rail_monorail: row.monorail ?? 0,
           bus_rkl: row.brt ?? 0, // BRT maps to bus_rkl for chart display
@@ -222,7 +222,15 @@ export async function GET(request: NextRequest) {
         endDate,
         datesParam
       );
-      return NextResponse.json(buildResponse(filtered, cachedResponse.data), {
+      // For cached responses, we don't have the exact headlineBoundaryDate.
+      // Use the data to find the last row where MRT Kajang is non-null (headline-sourced).
+      const cachedHeadlineBoundary = cachedResponse.data.findLastIndex(
+        (d) => d.rail_mrt_kajang != null && d.rail_mrt_kajang > 0
+      );
+      const cachedBoundaryDate = cachedHeadlineBoundary >= 0
+        ? cachedResponse.data[cachedHeadlineBoundary].date
+        : null;
+      return NextResponse.json(buildResponse(filtered, cachedResponse.data, cachedBoundaryDate), {
         headers: noCache
           ? { 'Cache-Control': 'no-cache' }
           : { 'Cache-Control': 'public, s-maxage=21600, stale-while-revalidate=86400' },
@@ -289,10 +297,10 @@ export async function GET(request: NextRequest) {
       extension.push({
         date,
         bus_rkl: pras?.bus_rkl ?? 0,
-        bus_rkn: 0,
-        bus_rpn: 0,
+        bus_rkn: null,    // No OD source for RapidKuantan bus
+        bus_rpn: null,    // No OD source for RapidPenang bus
         rail_lrt_ampang: pras?.rail_lrt_ampang ?? 0,
-        rail_mrt_kajang: pras?.rail_mrt_kajang ?? 0,
+        rail_mrt_kajang: pras?.rail_mrt_kajang ?? null, // SBK not in OD parquet
         rail_lrt_kj: pras?.rail_lrt_kj ?? 0,
         rail_monorail: pras?.rail_monorail ?? 0,
         rail_mrt_pjy: pras?.rail_mrt_pjy ?? 0,
@@ -314,7 +322,7 @@ export async function GET(request: NextRequest) {
 
     // 8. Filter and return
     const filtered = filterData(merged, startDate, endDate, datesParam);
-    return NextResponse.json(buildResponse(filtered, merged), {
+    return NextResponse.json(buildResponse(filtered, merged, newHeadlineMax), {
       headers: noCache
         ? { 'Cache-Control': 'no-cache' }
         : { 'Cache-Control': 'public, s-maxage=21600, stale-while-revalidate=86400' },
@@ -349,22 +357,20 @@ function filterData(
   });
 }
 
-function buildResponse(filtered: HeadlineRow[], full: HeadlineRow[]) {
-  const headlineEnd = full.findLastIndex(
-    (d) =>
-      d.rail_mrt_kajang > 0 ||
-      d.rail_lrt_kj > 0 ||
-      d.rail_lrt_ampang > 0
-  );
-  const headlineMax = headlineEnd >= 0 ? full[headlineEnd].date : null;
+function buildResponse(filtered: HeadlineRow[], full: HeadlineRow[], headlineBoundaryDate: string | null) {
+  // Use the actual headline boundary date from the merge logic, not findLastIndex.
+  // findLastIndex was incorrect because Prasarana OD also populates KJ/Ampang/PJY,
+  // making it impossible to distinguish headline-sourced rows from extension rows.
+  const headlineMax = headlineBoundaryDate;
 
+  // Prasarana: find last row with any Rapid Rail OD data (excludes KTMB).
+  // MRT Kajang is excluded since it's never in OD — we check the other 4 lines.
   const prasaranaEnd = full.findLastIndex(
     (d) =>
-      d.rail_mrt_kajang > 0 ||
-      d.rail_lrt_kj > 0 ||
-      d.rail_lrt_ampang > 0 ||
-      d.rail_monorail > 0 ||
-      d.rail_mrt_pjy > 0
+      (d.rail_lrt_kj ?? 0) > 0 ||
+      (d.rail_lrt_ampang ?? 0) > 0 ||
+      (d.rail_monorail ?? 0) > 0 ||
+      (d.rail_mrt_pjy ?? 0) > 0
   );
   const prasaranaMax = prasaranaEnd >= 0 ? full[prasaranaEnd].date : headlineMax;
 

@@ -59,7 +59,9 @@ type RawRow = Record<string, unknown>;
 function sumRail(row: RawRow): number {
   let total = 0;
   for (const key of RAIL_KEYS) {
-    total += Number(row[key] ?? 0);
+    const v = row[key];
+    if (v != null) total += Number(v);
+    // null = data unavailable, excluded from sum (not treated as 0)
   }
   return total;
 }

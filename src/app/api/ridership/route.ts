@@ -117,9 +117,9 @@ export async function GET(request: NextRequest) {
       merged.push({
         date,
         // NOTE: MRT Kajang (SBK) is NOT available in local parquet JSON.
-        // It only exists in the headline dataset. Set to 0 here —
+        // It only exists in the headline dataset. Set to null (unavailable) —
         // the MCP route provides full headline data including mrt_kajang.
-        rail_mrt_kajang: 0,
+        rail_mrt_kajang: null,
         rail_mrt_pjy: prasarana?.mrt_pjy ?? 0,
         rail_lrt_kj: prasarana?.lrt_kj ?? 0,
         rail_lrt_ampang: prasarana?.lrt_ampang ?? 0,
