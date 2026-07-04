@@ -13,13 +13,22 @@ const nextConfig: NextConfig = {
   reactStrictMode: false,
   async headers() {
     return [
+      // HTML pages — short cache so deploys propagate quickly
+      {
+        source: '/',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=0, s-maxage=300, stale-while-revalidate=600' },
+        ],
+      },
+      // All routes — security & privacy headers
       {
         source: '/(.*)',
         headers: [
           { key: 'X-Content-Type-Options', value: 'nosniff' },
-          { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+          // Modern replacement for X-Frame-Options: DENY
+          { key: 'Content-Security-Policy', value: "frame-ancestors 'none'" },
         ],
       },
     ];

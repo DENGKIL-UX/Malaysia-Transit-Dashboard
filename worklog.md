@@ -628,3 +628,25 @@ Stage Summary:
 - Critical fixes: SSRF validation, fetch timeouts, security headers, nocache restriction
 - All changes are backward-compatible, no behavioral regressions
 - Changes NOT yet committed — awaiting human review
+---
+Task ID: console-errors-fix
+Agent: Main
+Task: Fix F12 console errors from deployed Cloudflare Workers site
+
+Work Log:
+- Diagnosed `__name is not defined` error — Bun's bundler on CF Pages build env injects __name() calls into client JS chunks without providing the helper function
+- Added defensive polyfill `window.__name=window.__name||((t,v)=>t);` in layout.tsx <head> BEFORE any other scripts
+- Removed `maximumScale: 1` and `userScalable: false` from viewport config (accessibility anti-patterns that prevent zooming)
+- Replaced deprecated `X-Frame-Options: DENY` with modern CSP `frame-ancestors 'none'`
+- Added Cache-Control header for `/` route: `max-age=0, s-maxage=300, stale-while-revalidate=600` (was inheriting s-maxage=31536000)
+- Confirmed CSP blocking eval is from Cloudflare dashboard-level config (not project code) — informational only, no fix needed
+- Noted content-type charset warnings are Cloudflare CDN behavior for static assets — not fixable from project code
+- Verified all fixes via `next build` — HTML output confirmed correct viewport, __name polyfill, no X-Frame-Options
+- Lint passes clean
+
+Stage Summary:
+- 3 files modified: `src/app/layout.tsx`, `next.config.ts`, `public/_headers`
+- `__name` polyfill prevents Uncaught ReferenceError on CF Pages deployment
+- Viewport now allows user zoom (accessibility compliant)
+- X-Frame-Options replaced with CSP frame-ancestors (modern standard)
+- HTML page cache reduced from 1 year to 5 minutes with SWR

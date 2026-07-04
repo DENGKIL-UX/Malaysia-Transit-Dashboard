@@ -17,8 +17,6 @@ const geistMono = Geist_Mono({
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
   viewportFit: 'cover',
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#f5f5f0' },
@@ -80,6 +78,13 @@ export default function RootLayout({
         {/* Theme color fallback for browsers that don't support viewport export */}
         <meta name="theme-color" content="#070e07" />
 
+        {/* Defensive polyfill: Bun's bundler on CF Pages may inject __name() calls
+            into client chunks. This no-op shim prevents "__name is not defined" errors. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.__name=window.__name||((t,v)=>t);`,
+          }}
+        />
         {/* Register minimal service worker — Chrome requires SW with fetch handler for A2HS install prompt */}
         <script
           dangerouslySetInnerHTML={{
