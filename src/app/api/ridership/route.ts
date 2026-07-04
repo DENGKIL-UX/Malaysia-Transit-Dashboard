@@ -48,7 +48,7 @@ interface MergedRow {
  */
 async function readLocalJson<T>(baseUrl: string, filename: string): Promise<T[]> {
   try {
-    const res = await fetch(`${baseUrl}/${filename}`);
+    const res = await fetch(`${baseUrl}/${filename}`, { signal: AbortSignal.timeout(10000) });
     if (!res.ok) return [];
     return (await res.json()) as T[];
   } catch {

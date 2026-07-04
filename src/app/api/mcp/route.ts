@@ -107,6 +107,7 @@ async function queryRidership(args: {
 
   const res = await fetch(url.toString(), {
     headers: { Accept: 'application/json' },
+    signal: AbortSignal.timeout(15000),
   });
 
   if (!res.ok) {
@@ -131,11 +132,18 @@ async function getMetadata(args: { dataset_id: string }): Promise<string> {
   const cached = await getCached(cacheKey);
   if (cached) return cached.text();
 
+  // Validate dataset_id — allowlist of known explorer IDs
+  const DATASET_ID_PATTERN = /^[a-z][a-z0-9_]*$/;
+  if (!args.dataset_id || !DATASET_ID_PATTERN.test(args.dataset_id)) {
+    return JSON.stringify({ error: 'Invalid dataset_id format' });
+  }
+
   // Try prasarana.json from datagovmy-meta repo
   const metaUrl = `https://raw.githubusercontent.com/data-gov-my/datagovmy-meta/main/explorers/${args.dataset_id}.json`;
 
   const res = await fetch(metaUrl, {
     headers: { Accept: 'application/json' },
+    signal: AbortSignal.timeout(15000),
   });
 
   if (!res.ok) {

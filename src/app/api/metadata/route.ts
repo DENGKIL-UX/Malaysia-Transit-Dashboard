@@ -66,7 +66,7 @@ async function fetchWithTimeout(
 async function getLatestDateFromLocalJson(baseUrl: string, filename: string): Promise<string | null> {
   try {
     const url = `${baseUrl}/${filename}`;
-    const res = await fetch(url);
+    const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
     if (!res.ok) return null;
     const arr = (await res.json()) as Array<{ date: string }>;
     if (Array.isArray(arr) && arr.length > 0) {

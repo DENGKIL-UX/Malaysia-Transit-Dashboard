@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// ─── Date validation ─────────────────────────────────────────────────
+
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+function isValidDate(s: string): boolean {
+  if (!DATE_RE.test(s)) return false;
+  const d = new Date(s);
+  return !isNaN(d.getTime());
+}
+
 // ─── Types ────────────────────────────────────────────────────────────
 
 interface HeadlineRow {
@@ -76,7 +85,7 @@ async function fetchPrasaranaDaily(
   origin: string
 ): Promise<Map<string, PrasaranaDailyRow>> {
   try {
-    const res = await fetch(`${origin}/prasarana-daily-totals.json`);
+    const res = await fetch(`${origin}/prasarana-daily-totals.json`, { signal: AbortSignal.timeout(10000) });
     if (!res.ok) return new Map();
 
     const raw: PrasaranaRawRow[] = await res.json();
@@ -124,6 +133,7 @@ async function fetchHeadlineLive(
 
     const res = await fetch(url.toString(), {
       headers: { Accept: 'application/json' },
+      signal: AbortSignal.timeout(10000),
     });
     if (!res.ok) return [];
 
@@ -151,6 +161,7 @@ async function fetchKtmbDaily(
 
     const res = await fetch(url.toString(), {
       headers: { Accept: 'application/json' },
+      signal: AbortSignal.timeout(10000),
     });
     if (!res.ok) return new Map();
 
@@ -189,7 +200,14 @@ export async function GET(request: NextRequest) {
   const startDate = searchParams.get('start_date');
   const endDate = searchParams.get('end_date');
   const datesParam = searchParams.get('dates');
-  const noCache = searchParams.get('nocache') === '1';
+  const noCache = searchParams.get('nocache') === '1' && request.headers.get('x-debug') === 'true';
+
+  if ((startDate && !isValidDate(startDate)) || (endDate && !isValidDate(endDate))) {
+    return NextResponse.json(
+      { error: 'start_date and end_date must be valid YYYY-MM-DD dates' },
+      { status: 400, headers: { 'Cache-Control': 'no-cache' } }
+    );
+  }
 
   try {
     // Check cache
@@ -215,7 +233,7 @@ export async function GET(request: NextRequest) {
     // Uses headline-recent.json (2024+, ~241KB) instead of full file (~736KB)
     // to reduce CPU time from JSON.parse on cold cache miss.
     const baseUrl = new URL(request.url).origin;
-    const res = await fetch(`${baseUrl}/headline-recent.json`);
+    const res = await fetch(`${baseUrl}/headline-recent.json`, { signal: AbortSignal.timeout(10000) });
     if (!res.ok) {
       return NextResponse.json(
         { error: 'Failed to load headline data' },

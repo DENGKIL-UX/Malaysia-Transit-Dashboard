@@ -6,8 +6,6 @@ import {
   getNextWorkingDay,
   type Holiday,
 } from '@/lib/holidays';
-import { readFileSync } from 'fs';
-import { join } from 'path';
 
 // Types matching the Malaysia Calendar API response
 interface MyCalHoliday {
@@ -84,7 +82,7 @@ function readPrebuiltHolidays(year: number): PrebuiltHolidayData | null {
 async function fetchPrebuilt(year: number): Promise<PrebuiltHolidayData | null> {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
-    const res = await fetch(`${baseUrl}/holidays-${year}.json`);
+    const res = await fetch(`${baseUrl}/holidays-${year}.json`, { signal: AbortSignal.timeout(10000) });
     if (!res.ok) return null;
     return res.json();
   } catch {
@@ -99,7 +97,7 @@ async function fetchMyCal(
   state: string
 ): Promise<{ classifications: DayClassification[]; holidays: Holiday[] }> {
   const res = await fetch(
-    `https://mycal-api.huijun00100101.workers.dev/v1/holidays?year=${year}&state=${state}`,
+    `https://mycal-api.huijun00100101.workers.dev/v1/holidays?year=${year}&state=${encodeURIComponent(state)}`,
     { signal: AbortSignal.timeout(8000) }
   );
 
@@ -320,7 +318,9 @@ function fallbackClassifications(year: number): DayClassification[] {
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const year = parseInt(searchParams.get('year') || String(new Date().getFullYear()));
+  const rawYear = parseInt(searchParams.get('year') || String(new Date().getFullYear()), 10);
+  const currentYear = new Date().getFullYear();
+  const year = Math.max(2020, Math.min(rawYear, currentYear + 1));
   const state = searchParams.get('state') || 'selangor';
 
   try {
@@ -336,7 +336,7 @@ export async function GET(request: NextRequest) {
       const baseUrl = request.headers.get('x-forwarded-host')
         ? ''
         : '';
-      const res = await fetch(`/holidays-${year}.json`);
+      const res = await fetch(`/holidays-${year}.json`, { signal: AbortSignal.timeout(10000) });
       if (res.ok) {
         const prebuilt = await res.json() as PrebuiltHolidayData;
         classifications = prebuilt.classifications;

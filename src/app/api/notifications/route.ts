@@ -76,7 +76,7 @@ async function readJsonFile<T>(baseUrl: string, filename: string): Promise<T[]> 
   try {
     // Use fetch for Cloudflare Pages compatibility (no filesystem access)
     const url = `${baseUrl}/${filename}`;
-    const res = await fetch(url);
+    const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
     if (!res.ok) return [];
     return (await res.json()) as T[];
   } catch {
