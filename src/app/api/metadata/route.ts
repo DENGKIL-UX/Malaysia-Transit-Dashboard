@@ -28,6 +28,12 @@ interface HolidayContext {
   upcomingHolidays: Holiday[];
 }
 
+interface DosmOdMeta {
+  rapidrail: { data_as_of: string; last_updated: string; exclude_openapi: boolean };
+  brt: { data_as_of: string; last_updated: string; exclude_openapi: boolean };
+  commit_message?: string;
+}
+
 interface MetaResult {
   headline: PipelineFreshness;
   prasarana: {
@@ -38,9 +44,14 @@ interface MetaResult {
   };
   ktmb: PipelineFreshness;
   prasarana_od: PipelineFreshness;
+  dosm_od_daily: {
+    meta: DosmOdMeta | null;
+    freshness: PipelineFreshness;
+    has_mrt_kajang: boolean;
+    row_count: number;
+  };
   freshest_date: string;
   freshest_source: string;
-  // Holiday-aware fields (new)
   holiday_context: HolidayContext | null;
   pipeline_insights: string[];
 }
@@ -246,7 +257,7 @@ export async function GET(request: NextRequest) {
     .toISOString()
     .split('T')[0];
 
-  const [ktmbLocalDate, prasaranaLocalDate, headlineResult, prasaranaMetaResult] =
+  const [ktmbLocalDate, prasaranaLocalDate, headlineResult, prasaranaMetaResult, dosmOdResult] =
     await Promise.all([
       // 1a. Local KTMB daily JSON
       getLatestDateFromLocalJson(baseUrl, 'ktmb-daily.json'),
@@ -300,6 +311,25 @@ export async function GET(request: NextRequest) {
         } catch { /* silently fail */ }
         return { data_as_of: '', last_updated: '', next_update: '', source: '' };
       })(),
+      // 4. DOSM OD Daily metadata (new: RapidRail + BRT from datagovmy-meta)
+      (async () => {
+        try {
+          const res = await fetchWithTimeout(
+            `${baseUrl}/dosm-meta-rapidrail.json`,
+            5000
+          );
+          if (res && res.ok) {
+            const meta = (await res.json()) as {
+              data_as_of?: string;
+              last_updated?: string;
+              exclude_openapi?: boolean;
+              commit_message?: string;
+            };
+            return meta;
+          }
+        } catch { /* silently fail */ }
+        return null;
+      })(),
     ]);
 
   const headlineLatest = headlineResult;
@@ -321,6 +351,28 @@ export async function GET(request: NextRequest) {
   if (ktmbFreshness.latest_date) candidates.push({ date: ktmbFreshness.latest_date, source: 'KTMB OD' });
   if (prasaranaFreshness.latest_date) candidates.push({ date: prasaranaFreshness.latest_date, source: 'Rapid Rail OD' });
   if (headlineFreshness.latest_date) candidates.push({ date: headlineFreshness.latest_date, source: 'Headline Audit' });
+
+  // 5b. DOSM OD Daily (new annual parquet source)
+  let dosmOdDailyLatest = '';
+  let dosmOdHasKajang = false;
+  let dosmOdRowCount = 0;
+  const dosmOdDate = dosmOdResult?.data_as_of?.split(' ')[0] ?? '';
+  if (dosmOdDate) {
+    dosmOdDailyLatest = dosmOdDate;
+    candidates.push({ date: dosmOdDate, source: 'DOSM OD Daily' });
+    // Check if processed data has MRT Kajang
+    try {
+      const odData = await fetchWithTimeout(`${baseUrl}/dosm-od-daily-totals.json`, 5000);
+      if (odData && odData.ok) {
+        const odJson = (await odData.json()) as { data_as_of?: string; row_count?: number; data?: Array<{ mrt_kajang?: number }> };
+        dosmOdRowCount = odJson.row_count ?? 0;
+        if (odJson.data && odJson.data.length > 0) {
+          dosmOdHasKajang = (odJson.data[odJson.data.length - 1].mrt_kajang ?? 0) > 0;
+        }
+      }
+    } catch { /* skip */ }
+  }
+  const dosmOdFreshness = computeODFreshness(dosmOdDate, today, holidaySet);
   candidates.sort((a, b) => b.date.localeCompare(a.date));
 
   const freshest = candidates.length > 0 ? candidates[0] : { date: '', source: '' };
@@ -346,6 +398,9 @@ export async function GET(request: NextRequest) {
     if (!ktmbFreshness.is_overdue && !prasaranaFreshness.is_overdue && !headlineFreshness.is_overdue) {
       insights.push('All pipelines operating within expected parameters');
     }
+    if (dosmOdHasKajang && dosmOdDailyLatest) {
+      insights.push(`DOSM OD Daily has MRT Kajang data through ${dosmOdDailyLatest} (new annual parquet source)`);
+    }
   }
 
   const results: MetaResult = {
@@ -353,6 +408,19 @@ export async function GET(request: NextRequest) {
     prasarana: prasaranaMeta,
     ktmb: ktmbFreshness,
     prasarana_od: prasaranaFreshness,
+    dosm_od_daily: {
+      meta: dosmOdResult ? {
+        rapidrail: {
+          data_as_of: dosmOdResult.data_as_of ?? '',
+          last_updated: dosmOdResult.last_updated ?? '',
+          exclude_openapi: dosmOdResult.exclude_openapi ?? true,
+        },
+        brt: { data_as_of: '', last_updated: '', exclude_openapi: true },
+      } : null,
+      freshness: dosmOdFreshness,
+      has_mrt_kajang: dosmOdHasKajang,
+      row_count: dosmOdRowCount,
+    },
     freshest_date: freshest.date,
     freshest_source: freshest.source,
     holiday_context: holidayContext,

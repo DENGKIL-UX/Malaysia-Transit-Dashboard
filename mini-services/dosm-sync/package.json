@@ -1,0 +1,12 @@
+{
+  "name": "dosm-sync",
+  "version": "1.0.0",
+  "scripts": {
+    "sync": "bash sync.sh",
+    "sync:check": "bash sync.sh --check",
+    "sync:force": "bash sync.sh --force",
+    "dev": "bash sync.sh && bun index.ts",
+    "serve": "bun index.ts"
+  },
+  "dependencies": {}
+}

@@ -708,3 +708,37 @@ Stage Summary:
 - No new dependencies
 - Full null pipeline: backend → parser → charts → KPI cards → CSV export
 - OpenDOSM research confirmed: only ridership_headline and ridership_ktmb_daily are API-accessible; all OD datasets are download-only (404 on API)
+
+---
+Task ID: dosm-od-daily-cron
+Agent: main
+Task: Set up cron job for DOSM OD daily ridership metadata + check BRT relationship
+
+Work Log:
+- Fetched ridership_od_rapidrail_daily.json metadata from GitHub raw
+- Fetched ridership_od_brt_daily.json metadata from GitHub raw
+- Verified commit history: both updated in SAME commit (467e762e) with 0.8ms delta
+- Commit message: "Automated: RapidRail + BRT Ridership | 2026-07-02"
+- Both have exclude_openapi=true, frequency=DAILY, data_as_of=2026-07-02 23:59
+- Discovered metadata link_parquet is a TEMPLATE (YYYY-MM-DD) that returns 404
+- Found ACTUAL files use annual naming: rapidrail_2026_daily.parquet (2.7MB, 3M rows)
+- Analyzed rapidrail_2026_daily.parquet: 183 days, 6 line prefixes (AG, KG, KJ, MR, PYL, SP)
+- CRITICAL: KG prefix = MRT Kajang (SBK) Line — 29 stations, 247K-419K/day
+- Analyzed brt_2026_daily.parquet: 183 days, 7 BRT stations, 33K-74K/day
+- Compared OD vs headline values: ratios vary 0.69x-1.74x across lines (different methodology)
+- Created mini-services/dosm-sync/ with:
+  - sync.sh: Shell script for metadata check + parquet download + Python processing
+  - process_od_parquet.py: Processes annual parquets into per-line daily totals JSON
+  - index.ts: Simple Bun file server (port 3021)
+  - package.json: Scripts for sync, serve, dev
+- sync.sh copies output to public/ (dosm-od-daily-totals.json, dosm-rapidrail-daily.json, dosm-meta-*.json)
+- Updated src/app/api/metadata/route.ts: Added dosm_od_daily field with freshness, has_mrt_kajang, row_count
+- Added pipeline insight when MRT Kajang data is available from OD source
+
+Stage Summary:
+- Both RapidRail and BRT OD metadata co-published in single GitHub commit (single pipeline)
+- New annual parquet format (rapidrail_YYYY_daily.parquet) HAS MRT Kajang data (KG prefix)
+- OD values differ from headline (origin-sum includes transfers) — NOT directly substitutable
+- Cron infrastructure: sync.sh can be scheduled via system cron or GitHub Actions
+- Data pipeline: GitHub metadata → annual parquet → Python processing → public/ JSON → Next.js API
+- 4 new files in public/: dosm-od-daily-totals.json, dosm-rapidrail-daily.json, dosm-meta-rapidrail.json, dosm-meta-brt.json
