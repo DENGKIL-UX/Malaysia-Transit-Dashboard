@@ -650,3 +650,30 @@ Stage Summary:
 - Viewport now allows user zoom (accessibility compliant)
 - X-Frame-Options replaced with CSP frame-ancestors (modern standard)
 - HTML page cache reduced from 1 year to 5 minutes with SWR
+---
+Task ID: research-zeros-solutions
+Agent: main
+Task: Research and test proposed solutions for MRT Kajang zero-value bug (no implementation)
+
+Work Log:
+- Analyzed uploaded screenshot (GitHub data-catalogue directory listing) and token.txt (Cloudflare R2 credentials)
+- Tested null propagation through parseRidershipRow: confirmed `Number(null ?? 0) = 0` — backend-only null fix is INSUFFICIENT
+- Verified Recharts behavior: `0` creates visible dip in stacked area; `null` with `connectNulls=false` creates gap
+- Tested carry-forward feasibility: MRT Kajang CV=17.9%, DOW-aware carry-forward avg error=17.3%, max error=61.8% (holiday) — UNRELIABLE
+- Tested ratio-based estimation (Kajang/PJY ratio): avg ratio 1.643 but DOSM explicitly warns against deriving line totals from OD data
+- Confirmed upstream parquet (prasarana_timeseries.parquet) has ZERO SBK station codes (only KG, KJ, AG, SP, MR, BRT, PYL)
+- Confirmed new daily parquet format (rapidrail_YYYY-MM-DD_daily.parquet) returns 404 for all tested dates — not yet published
+- Verified headline API: returns 0 rows after 2026-05-31 — headline simply not published beyond that date
+- Discovered buildResponse metadata bug: headline_through shows latest date (e.g., July 1) instead of actual headline boundary (May 31) because findLastIndex can't distinguish headline-source rows from extension-source rows
+- Analyzed cron job impact: running cron today would NOT fix zeros — headline API has no data beyond May 31, and parquet lacks SBK entirely
+- Mapped all 4 consumers of comparison-data API: use-ridership.ts, use-analytics.ts, use-period-comparison.ts, and the DataStatusBar component
+- Verified KPI cards use `latest?.mrtKajang ?? 0` — also needs null handling
+
+Stage Summary:
+- ROOT CAUSE CONFIRMED: prasarana_timeseries.parquet has no SBK data; extension rows hardcode rail_mrt_kajang=0
+- THIRD-PARTY SUGGESTION PARTIALLY VALID: null is better than 0, but the suggestion misses that parseRidershipRow also defaults to 0, and that totals would become misleading
+- CRON JOB IS IRRELEVANT TO ZEROS: it only prevents staleness
+- CARRY-FORWARD REJECTED: 17.3% avg error, 61.8% max error — misleading
+- RATIO METHOD REJECTED: DOSM explicitly warns against it
+- METADATA BUG FOUND: headline_through in API response is inaccurate
+- BEST APPROACH: null-aware pipeline (backend + parser + charts) + per-field source tagging + accurate metadata boundaries
