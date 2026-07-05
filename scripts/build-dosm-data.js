@@ -102,6 +102,17 @@ function main() {
     log('⚠ Output file not created');
   }
 
+  // Also verify station analytics output
+  const stationsFile = path.join(PUBLIC_DIR, 'prasarana-stations.json');
+  if (fs.existsSync(stationsFile)) {
+    const stat = fs.statSync(stationsFile);
+    log(`✓ prasarana-stations.json: ${(stat.size / 1024).toFixed(1)} KB`);
+    try {
+      const data = JSON.parse(fs.readFileSync(stationsFile, 'utf-8'));
+      log(`✓ stations data_as_of: ${data.data_as_of}, total_stations: ${data.total_stations}`);
+    } catch {}
+  }
+
   // Also download fresh metadata
   log('Downloading fresh metadata...');
   const metaUrls = {

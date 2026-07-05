@@ -138,6 +138,158 @@ def process_brt(year: int) -> dict | None:
     }
 
 
+def process_rapidrail_stations(year: int) -> dict | None:
+    """Process rapidrail OD parquet → top-20 station analytics (same format as Explorer parquet output).
+
+    This replaces the Explorer parquet dependency for Rapid Rail station analytics.
+    The DOSM OD parquet is updated more frequently (T-1 lag vs T-3 for Explorer).
+    """
+    path = f'{DATA_DIR}/rapidrail_{year}_daily.parquet'
+    if not os.path.exists(path):
+        print(f'  [skip] {path} not found', file=sys.stderr)
+        return None
+
+    print(f'  Processing rapidrail_{year}_daily.parquet (stations)...', file=sys.stderr)
+    df = pd.read_parquet(path)
+
+    # Exclude A0 (All Stations aggregate)
+    df = df[~df['origin'].str.startswith('A0')].copy()
+
+    # Extract station code and name
+    df['origin_code'] = df['origin'].str.extract(r'^([A-Z]{2}\d+|PYL\d+)')
+    df['station_name'] = df['origin'].str.replace(r'^[A-Z]{2}\d+: ', '', regex=True)
+    df = df.dropna(subset=['origin_code'])
+
+    # Map to line
+    def get_line(code):
+        code = str(code)
+        if code.startswith('KG'): return 'mrt_pjy'      # MRT Kajang uses PJY line naming in dashboard
+        if code.startswith('KJ'): return 'lrt_kj'
+        if code.startswith('AG') or code.startswith('SP'): return 'lrt_ampang'
+        if code.startswith('MR'): return 'monorail'
+        if code.startswith('PYL'): return 'mrt_pjy'
+        return 'unknown'
+
+    df['line'] = df['origin_code'].apply(get_line)
+    df = df[df['line'] != 'unknown']
+
+    # Sum ridership per station per date (origin-based = total boardings)
+    station_daily = df.groupby(['date', 'origin_code', 'station_name', 'line'])['ridership'].sum().reset_index()
+
+    # Top 20 by latest date
+    latest_date = station_daily['date'].max()
+    latest = station_daily[station_daily['date'] == latest_date].sort_values('ridership', ascending=False)
+    top20 = latest.head(20)
+
+    top_stations = []
+    for _, row in top20.iterrows():
+        top_stations.append({
+            'code': row['origin_code'],
+            'name': row['station_name'],
+            'line': row['line'],
+            'passengers': int(row['ridership']),
+        })
+
+    # 30-day series for each top station
+    top_codes = set(s['code'] for s in top_stations)
+    recent = station_daily[station_daily['origin_code'].isin(top_codes)].copy()
+    recent = recent.sort_values('date').groupby('origin_code').tail(30)
+
+    station_series = {}
+    for code in top_codes:
+        rows = recent[recent['origin_code'] == code].sort_values('date')
+        station_series[code] = [
+            {'date': str(r['date'].date()) if hasattr(r['date'], 'date') else str(r['date']), 'passengers': int(r['ridership'])}
+            for _, r in rows.iterrows()
+        ]
+
+    # Per-line station counts
+    line_counts = station_daily[station_daily['date'] == latest_date].groupby('line')['origin_code'].nunique().to_dict()
+
+    output = {
+        'data_as_of': str(latest_date.date()) if hasattr(latest_date, 'date') else str(latest_date),
+        'total_stations': int(station_daily[station_daily['date'] == latest_date]['origin_code'].nunique()),
+        'stations_per_line': {k: int(v) for k, v in line_counts.items()},
+        'top_stations': top_stations,
+        'station_series': station_series,
+        'od_source': True,
+    }
+
+    print(f'    → {len(top_stations)} top stations, {output["total_stations"]} total, {output["data_as_of"]}', file=sys.stderr)
+    return output
+
+
+def process_brt_stations(year: int) -> list | None:
+    """Extract BRT station-level daily data to merge into Rapid Rail station analytics."""
+    path = f'{DATA_DIR}/brt_{year}_daily.parquet'
+    if not os.path.exists(path):
+        print(f'  [skip] {path} not found', file=sys.stderr)
+        return None
+
+    print(f'  Processing brt_{year}_daily.parquet (stations)...', file=sys.stderr)
+    df = pd.read_parquet(path)
+    df = df[~df['origin'].str.startswith('A0')].copy()
+
+    df['origin_code'] = df['origin'].str.extract(r'^(BRT\d+)')
+    df['station_name'] = df['origin'].str.replace(r'^BRT\d+: ', '', regex=True)
+    df = df.dropna(subset=['origin_code'])
+
+    # Sum ridership per station per date
+    station_daily = df.groupby(['date', 'origin_code', 'station_name'])['ridership'].sum().reset_index()
+
+    latest_date = station_daily['date'].max()
+    latest = station_daily[station_daily['date'] == latest_date].sort_values('ridership', ascending=False)
+
+    top_brt = []
+    for _, row in latest.head(20).iterrows():
+        top_brt.append({
+            'code': row['origin_code'],
+            'name': row['station_name'],
+            'line': 'brt',
+            'passengers': int(row['ridership']),
+        })
+
+    # 30-day series for BRT stations
+    brt_codes = set(s['code'] for s in top_brt)
+    recent = station_daily[station_daily['origin_code'].isin(brt_codes)].copy()
+    recent = recent.sort_values('date').groupby('origin_code').tail(30)
+
+    station_series = {}
+    for code in brt_codes:
+        rows = recent[recent['origin_code'] == code].sort_values('date')
+        station_series[code] = [
+            {'date': str(r['date'].date()) if hasattr(r['date'], 'date') else str(r['date']), 'passengers': int(r['ridership'])}
+            for _, r in rows.iterrows()
+        ]
+
+    brt_count = int(station_daily[station_daily['date'] == latest_date]['origin_code'].nunique())
+    print(f'    → {len(top_brt)} BRT stations, {brt_count} total', file=sys.stderr)
+    return {
+        'top_stations': top_brt,
+        'station_series': station_series,
+        'station_count': brt_count,
+    }
+
+
+def merge_stations_with_brt(rail_stations: dict, brt_stations_data: list | None) -> dict:
+    """Merge BRT station data into Rapid Rail station analytics."""
+    if not brt_stations_data:
+        return rail_stations
+
+    rail_stations['stations_per_line']['brt'] = brt_stations_data['station_count']
+    rail_stations['total_stations'] += brt_stations_data['station_count']
+
+    # Merge BRT top stations (only add if not already at 20)
+    remaining = 20 - len(rail_stations['top_stations'])
+    if remaining > 0:
+        rail_stations['top_stations'].extend(brt_stations_data['top_stations'][:remaining])
+
+    # Merge BRT station series
+    rail_stations['station_series'].update(brt_stations_data['station_series'])
+
+    return rail_stations
+
+
 def process_combined(rail_data: dict | None, brt_data: dict | None) -> dict | None:
     """Merge Rapid Rail + BRT into a single daily totals file."""
     if not rail_data:
@@ -241,11 +393,18 @@ def main():
     brt = process_brt(year) or process_brt(prev_year)
     combined = process_combined(rail, brt)
 
+    # Process station analytics from OD data (replaces Explorer parquet dependency)
+    stations = process_rapidrail_stations(year) or process_rapidrail_stations(prev_year)
+    brt_st = process_brt_stations(year) or process_brt_stations(prev_year)
+    if stations and brt_st:
+        stations = merge_stations_with_brt(stations, brt_st)
+
     # Write outputs
     outputs = {
         'dosm-od-daily-totals.json': combined,
         'dosm-rapidrail-daily.json': rail,
         'brt-daily-totals.json': brt,
+        'prasarana-stations.json': stations,  # Now sourced from DOSM OD (fresher than Explorer parquet)
     }
 
     for filename, data in outputs.items():

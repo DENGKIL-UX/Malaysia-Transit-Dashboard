@@ -58,11 +58,12 @@ jobs:
             "https://raw.githubusercontent.com/data-gov-my/datagovmy-meta/main/data-catalogue/ridership_ktmb_daily.json" \
             | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'KTMB Daily: data_as_of={d.get(\"data_as_of\",\"N/A\")}')"
 
-      - name: Run old parquet processor (Prasarana dashboard + KTMB dashboard)
+      - name: Run Explorer parquet processor (KTMB dashboard + routes only)
         run: python scripts/process_parquet.py
         env:
           OUTPUT_DIR: public
         continue-on-error: true
+        # Note: prasarana-stations.json from this step is overwritten by DOSM OD processor below
 
       - name: Run DOSM OD Daily processor (annual parquets + metadata)
         run: python mini-services/dosm-sync/process_od_parquet.py --download
