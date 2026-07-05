@@ -31,10 +31,16 @@ import json
 import sys
 import os
 import platform
+import subprocess
 import glob
 
 # Cross-platform data dir: Git Bash and Windows Python must agree on the path
-DATA_DIR = 'C:/tmp/dosm-sync' if platform.system() == 'Windows' else '/tmp/dosm-sync'
+# Override with OUTPUT_DIR env var (used by GitHub Actions)
+DEFAULT_DATA_DIR = 'C:/tmp/dosm-sync' if platform.system() == 'Windows' else '/tmp/dosm-sync'
+DATA_DIR = os.environ.get('OUTPUT_DIR', DEFAULT_DATA_DIR)
+
+# Whether to download parquets before processing (set by --download flag or env)
+AUTO_DOWNLOAD = os.environ.get('AUTO_DOWNLOAD', '').lower() in ('1', 'true')
 
 # Line mapping: station prefix → output field name
 LINE_MAP = {
@@ -163,21 +169,77 @@ def process_combined(rail_data: dict | None, brt_data: dict | None) -> dict | No
     }
 
 
+def download(url: str, path: str):
+    """Download a file via curl (works in GitHub Actions without extra deps)."""
+    print(f'  Downloading {os.path.basename(path)}...', file=sys.stderr)
+    subprocess.run(['curl', '-sL', '--max-time', '120', url, '-o', path], check=True)
+    size = os.path.getsize(path)
+    print(f'    → {size:,} bytes', file=sys.stderr)
+
+
+def download_parquets():
+    """Download annual parquets from DOSM storage."""
+    year = pd.Timestamp.now().year
+    prev_year = year - 1
+
+    sources = [
+        ('rapidrail', f'https://storage.data.gov.my/transportation/rail/rapidrail_{{y}}_daily.parquet'),
+        ('brt', f'https://storage.data.gov.my/transportation/bus/brt_{{y}}_daily.parquet'),
+    ]
+
+    for name, url_tpl in sources:
+        for y in [year, prev_year]:
+            url = url_tpl.format(y=y)
+            out = f'{DATA_DIR}/{name}_{y}_daily.parquet'
+            if os.path.exists(out) and os.path.getsize(out) > 0:
+                print(f'  [skip] {name}_{y}_daily.parquet exists ({os.path.getsize(out):,} bytes)', file=sys.stderr)
+                continue
+            try:
+                download(url, out)
+            except subprocess.CalledProcessError:
+                print(f'  [warn] Failed to download {url}', file=sys.stderr)
+                if os.path.exists(out):
+                    os.remove(out)
+
+
+def download_metadata():
+    """Download DOSM metadata files for the dashboard API."""
+    meta_urls = {
+        'dosm-meta-rapidrail.json': 'https://raw.githubusercontent.com/data-gov-my/datagovmy-meta/main/data-catalogue/ridership_od_rapidrail_daily.json',
+        'dosm-meta-brt.json': 'https://raw.githubusercontent.com/data-gov-my/datagovmy-meta/main/data-catalogue/ridership_od_brt_daily.json',
+    }
+    for filename, url in meta_urls.items():
+        out = f'{DATA_DIR}/{filename}'
+        try:
+            download(url, out)
+        except subprocess.CalledProcessError:
+            print(f'  [warn] Failed to download metadata {filename}', file=sys.stderr)
+
+
 def main():
+    # Support --download flag
+    auto_dl = '--download' in sys.argv or AUTO_DOWNLOAD
+
     print('=== Processing DOSM OD Daily Parquets ===', file=sys.stderr)
     os.makedirs(DATA_DIR, exist_ok=True)
 
-    year = pd.Timestamp.now().year
+    if auto_dl:
+        download_parquets()
+        download_metadata()
 
-    rail = process_rapidrail(year)
-    brt = process_brt(year)
+    year = pd.Timestamp.now().year
+    prev_year = year - 1
+
+    # Try current year, fall back to previous year
+    rail = process_rapidrail(year) or process_rapidrail(prev_year)
+    brt = process_brt(year) or process_brt(prev_year)
     combined = process_combined(rail, brt)
 
     # Write outputs
     outputs = {
-        'rapidrail-daily-totals.json': rail,
+        'dosm-od-daily-totals.json': combined,
+        'dosm-rapidrail-daily.json': rail,
         'brt-daily-totals.json': brt,
-        'combined-daily-totals.json': combined,
     }
 
     for filename, data in outputs.items():

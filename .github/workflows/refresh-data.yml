@@ -16,9 +16,9 @@ permissions:
 
 jobs:
   refresh-daily:
-    name: Refresh Prasarana & KTMB OD Data
+    name: Refresh All OD Data
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -31,15 +31,21 @@ jobs:
       - name: Install dependencies
         run: pip install pandas pyarrow requests --quiet
 
-      - name: Run parquet processor
+      - name: Run old parquet processor (Prasarana dashboard + KTMB dashboard)
         run: python scripts/process_parquet.py
         env:
           OUTPUT_DIR: public
 
+      - name: Run DOSM OD Daily processor (new annual parquets + metadata)
+        run: python mini-services/dosm-sync/process_od_parquet.py --download
+        env:
+          OUTPUT_DIR: public
+          AUTO_DOWNLOAD: 'true'
+
       - name: Check for changes
         id: diff
         run: |
-          if git diff --quiet public/prasarana-daily*.json public/ktmb-daily*.json public/*-stations.json public/*-routes.json 2>/dev/null; then
+          if git diff --quiet public/prasarana-daily*.json public/ktmb-daily*.json public/*-stations.json public/*-routes.json public/dosm-*.json 2>/dev/null; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "No data changes detected."
           else
@@ -53,7 +59,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add public/prasarana-daily*.json public/ktmb-daily*.json public/*-stations.json public/*-routes.json
+          git add public/prasarana-daily*.json public/ktmb-daily*.json public/*-stations.json public/*-routes.json public/dosm-*.json
           git commit -m "data: refresh OD parquet data $(date -u +%Y-%m-%d)"
           git push
 
