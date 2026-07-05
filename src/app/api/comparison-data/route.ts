@@ -165,7 +165,7 @@ async function fetchHeadlineLive(
   today: string
 ): Promise<HeadlineRow[]> {
   try {
-    const url = new URL('https://api.data.gov.my/data-catalogue');
+    const url = new URL('https://api.data.gov.my/data-catalogue/');
     url.searchParams.set('id', 'ridership_headline');
     url.searchParams.set('date_start', `${afterDate}@date`);
     url.searchParams.set('date_end', `${today}@date`);
@@ -193,7 +193,7 @@ async function fetchKtmbDaily(
   endDate: string
 ): Promise<Map<string, Record<string, number>>> {
   try {
-    const url = new URL('https://api.data.gov.my/data-catalogue');
+    const url = new URL('https://api.data.gov.my/data-catalogue/');
     url.searchParams.set('id', 'ridership_ktmb_daily');
     url.searchParams.set('date_start', `${startDate}@date`);
     url.searchParams.set('date_end', `${endDate}@date`);

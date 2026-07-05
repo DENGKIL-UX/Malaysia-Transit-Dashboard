@@ -178,9 +178,15 @@ def download(url: str, path: str):
 
 
 def download_parquets():
-    """Download annual parquets from DOSM storage."""
+    """Download annual parquets from DOSM storage.
+    
+    In CI (GitHub Actions), we always re-download to get the latest data.
+    Locally, we skip if the file already exists (for faster dev iteration).
+    """
     year = pd.Timestamp.now().year
     prev_year = year - 1
+    # In CI, always force re-download (no persistent storage between runs)
+    force = os.environ.get('CI', '') == 'true' or os.environ.get('FORCE_DOWNLOAD', '') == 'true'
 
     sources = [
         ('rapidrail', f'https://storage.data.gov.my/transportation/rail/rapidrail_{{y}}_daily.parquet'),
@@ -191,7 +197,7 @@ def download_parquets():
         for y in [year, prev_year]:
             url = url_tpl.format(y=y)
             out = f'{DATA_DIR}/{name}_{y}_daily.parquet'
-            if os.path.exists(out) and os.path.getsize(out) > 0:
+            if not force and os.path.exists(out) and os.path.getsize(out) > 0:
                 print(f'  [skip] {name}_{y}_daily.parquet exists ({os.path.getsize(out):,} bytes)', file=sys.stderr)
                 continue
             try:

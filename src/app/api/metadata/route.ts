@@ -31,7 +31,6 @@ interface HolidayContext {
 interface DosmOdMeta {
   rapidrail: { data_as_of: string; last_updated: string; exclude_openapi: boolean };
   brt: { data_as_of: string; last_updated: string; exclude_openapi: boolean };
-  commit_message?: string;
 }
 
 interface MetaResult {
@@ -259,15 +258,39 @@ export async function GET(request: NextRequest) {
 
   const [ktmbLocalDate, prasaranaLocalDate, headlineResult, prasaranaMetaResult, dosmOdResult] =
     await Promise.all([
-      // 1a. Local KTMB daily JSON
-      getLatestDateFromLocalJson(baseUrl, 'ktmb-daily.json'),
-      // 1b. Local Prasarana daily JSON
+      // 1a. KTMB daily — fetch LIVE from API (same as /api/ridership-ktmb-daily)
+      // Falls back to local static only if API fails.
+      (async (): Promise<string> => {
+        // Try live API first (use date_start=30d ago to avoid fetching entire history)
+        try {
+          const res = await fetchWithTimeout(
+            `https://api.data.gov.my/data-catalogue/?id=ridership_ktmb_daily&date_start=${threeMonthsAgo}@date`,
+            8000
+          );
+          if (res && res.ok) {
+            const rows = (await res.json()) as Array<{ date?: string }>;
+            if (Array.isArray(rows) && rows.length > 0) {
+              // Sort by date and take the latest
+              const dates = rows
+                .map((r) => (r.date ?? '').split(' ')[0])
+                .filter(Boolean)
+                .sort();
+              return dates[dates.length - 1] ?? '';
+            }
+          }
+        } catch { /* fall through to local */ }
+        // Fallback: local static file
+        return (await getLatestDateFromLocalJson(baseUrl, 'ktmb-daily.json')) ?? '';
+      })(),
+      // 1b. Prasarana daily — check local static (updated by GitHub Actions)
+      // DOSM OD Daily metadata (fetched live above in step 4) is used for freshness instead.
       getLatestDateFromLocalJson(baseUrl, 'prasarana-daily.json'),
       // 2. Headline API (latest date from 3-month window)
+      // NOTE: data.gov.my redirects to /data-catalogue/ (trailing slash)
       (async (): Promise<string> => {
         try {
           const res = await fetchWithTimeout(
-            `https://api.data.gov.my/data-catalogue?id=ridership_headline&date_start=${threeMonthsAgo}@date&date_end=${today}@date`,
+            `https://api.data.gov.my/data-catalogue/?id=ridership_headline&date_start=${threeMonthsAgo}@date&date_end=${today}@date`,
             10000
           );
           if (res && res.ok) {
@@ -311,21 +334,36 @@ export async function GET(request: NextRequest) {
         } catch { /* silently fail */ }
         return { data_as_of: '', last_updated: '', next_update: '', source: '' };
       })(),
-      // 4. DOSM OD Daily metadata (new: RapidRail + BRT from datagovmy-meta)
+      // 4. DOSM OD Daily metadata — LIVE from GitHub (not stale static file!)
+      // The datagovmy-meta repo is updated by DOSM whenever data is published.
+      // Fetching raw GitHub URL ensures we always get the latest data_as_of.
       (async () => {
         try {
-          const res = await fetchWithTimeout(
-            `${baseUrl}/dosm-meta-rapidrail.json`,
-            5000
-          );
-          if (res && res.ok) {
-            const meta = (await res.json()) as {
-              data_as_of?: string;
-              last_updated?: string;
-              exclude_openapi?: boolean;
-              commit_message?: string;
+          const [rrRes, brtRes] = await Promise.all([
+            fetchWithTimeout(
+              'https://raw.githubusercontent.com/data-gov-my/datagovmy-meta/main/data-catalogue/ridership_od_rapidrail_daily.json',
+              8000
+            ),
+            fetchWithTimeout(
+              'https://raw.githubusercontent.com/data-gov-my/datagovmy-meta/main/data-catalogue/ridership_od_brt_daily.json',
+              8000
+            ),
+          ]);
+          const rr: Record<string, unknown> | null = rrRes?.ok ? await rrRes.json() : null;
+          const brt: Record<string, unknown> | null = brtRes?.ok ? await brtRes.json() : null;
+          if (rr) {
+            return {
+              rapidrail: {
+                data_as_of: (rr.data_as_of as string) ?? '',
+                last_updated: (rr.last_updated as string) ?? '',
+                exclude_openapi: (rr.exclude_openapi as boolean) ?? true,
+              },
+              brt: {
+                data_as_of: (brt?.data_as_of as string) ?? '',
+                last_updated: (brt?.last_updated as string) ?? '',
+                exclude_openapi: (brt?.exclude_openapi as boolean) ?? true,
+              },
             };
-            return meta;
           }
         } catch { /* silently fail */ }
         return null;
@@ -352,15 +390,17 @@ export async function GET(request: NextRequest) {
   if (prasaranaFreshness.latest_date) candidates.push({ date: prasaranaFreshness.latest_date, source: 'Rapid Rail OD' });
   if (headlineFreshness.latest_date) candidates.push({ date: headlineFreshness.latest_date, source: 'Headline Audit' });
 
-  // 5b. DOSM OD Daily (new annual parquet source)
+  // 5b. DOSM OD Daily — freshness from LIVE metadata, data from static file
+  // The metadata is fetched live from GitHub (always fresh).
+  // The actual chart data (dosm-od-daily-totals.json) is updated by GitHub Actions.
   let dosmOdDailyLatest = '';
   let dosmOdHasKajang = false;
   let dosmOdRowCount = 0;
-  const dosmOdDate = dosmOdResult?.data_as_of?.split(' ')[0] ?? '';
+  const dosmOdDate = dosmOdResult?.rapidrail?.data_as_of?.split(' ')[0] ?? '';
   if (dosmOdDate) {
     dosmOdDailyLatest = dosmOdDate;
     candidates.push({ date: dosmOdDate, source: 'DOSM OD Daily' });
-    // Check if processed data has MRT Kajang
+    // Check if processed static data has MRT Kajang (for UI badge)
     try {
       const odData = await fetchWithTimeout(`${baseUrl}/dosm-od-daily-totals.json`, 5000);
       if (odData && odData.ok) {
@@ -409,14 +449,7 @@ export async function GET(request: NextRequest) {
     ktmb: ktmbFreshness,
     prasarana_od: prasaranaFreshness,
     dosm_od_daily: {
-      meta: dosmOdResult ? {
-        rapidrail: {
-          data_as_of: dosmOdResult.data_as_of ?? '',
-          last_updated: dosmOdResult.last_updated ?? '',
-          exclude_openapi: dosmOdResult.exclude_openapi ?? true,
-        },
-        brt: { data_as_of: '', last_updated: '', exclude_openapi: true },
-      } : null,
+      meta: dosmOdResult ?? null,
       freshness: dosmOdFreshness,
       has_mrt_kajang: dosmOdHasKajang,
       row_count: dosmOdRowCount,

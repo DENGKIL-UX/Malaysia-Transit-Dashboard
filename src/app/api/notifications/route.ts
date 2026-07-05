@@ -188,8 +188,39 @@ export async function GET(request: NextRequest) {
   const todayMs = new Date(todayStr + 'T00:00:00').getTime();
   const notifications: NotificationItem[] = [];
 
-  // ── Read local JSON data (fetch for Cloudflare compatibility) ──
-  const ktmbData = await readJsonFile<KtmbDay>(baseUrl, 'ktmb-daily.json');
+  // ── Read data ──
+  // KTMB: Try live API first (always fresh), fall back to local static
+  let ktmbData: KtmbDay[] = [];
+  try {
+    const thirtyDaysAgo = format(new Date(todayMs - 30 * 864e5), 'yyyy-MM-dd');
+    const res = await fetch(
+      `https://api.data.gov.my/data-catalogue/?id=ridership_ktmb_daily&date_start=${thirtyDaysAgo}@date&date_end=${todayStr}@date`,
+      { signal: AbortSignal.timeout(10000), headers: { Accept: 'application/json' } }
+    );
+    if (res.ok) {
+      const ktmbLong = (await res.json()) as Array<{ date: string; service: string; ridership: number }>;
+      // Pivot from long to wide format
+      const byDate = new Map<string, KtmbDay>();
+      for (const row of ktmbLong) {
+        if (!byDate.has(row.date)) {
+          byDate.set(row.date, { date: row.date, ets: 0, intercity: 0, komuter: 0, komuter_utara: 0, tebrau: 0, total: 0 });
+        }
+        const day = byDate.get(row.date)!;
+        if (row.service === 'ets') day.ets = row.ridership;
+        else if (row.service === 'intercity') day.intercity = row.ridership;
+        else if (row.service === 'komuter') day.komuter = row.ridership;
+        else if (row.service === 'komuter_utara') day.komuter_utara = row.ridership;
+        else if (row.service === 'shuttle_tebrau') day.tebrau = row.ridership;
+        day.total += row.ridership;
+      }
+      ktmbData = Array.from(byDate.values()).sort((a, b) => a.date.localeCompare(b.date));
+    }
+  } catch { /* fall through to static */ }
+  if (ktmbData.length === 0) {
+    ktmbData = await readJsonFile<KtmbDay>(baseUrl, 'ktmb-daily.json');
+  }
+
+  // Prasarana: Read local static (updated by GitHub Actions from explorer parquet)
   const prasaranaData = await readJsonFile<PrasaranaDay>(baseUrl, 'prasarana-daily.json');
 
   // ── Compute freshness ──

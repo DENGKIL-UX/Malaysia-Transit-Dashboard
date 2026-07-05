@@ -1,15 +1,26 @@
 name: Refresh Transit Data
 
 on:
-  # Daily at 06:15 MYT (22:15 UTC previous day)
-  # 15 min after data.gov.my's typical batch publication window
+  # Every 6 hours — DOSM OD data updates daily, KTMB updates ~T-1
+  # Schedule: 00:15, 06:15, 12:15, 18:15 MYT (16:15, 22:15, 04:15, 10:15 UTC)
   schedule:
-    - cron: '15 22 * * *'
+    - cron: '15 16 * * *'   # 00:15 MYT
+    - cron: '15 22 * * *'   # 06:15 MYT
+    - cron: '15 04 * * *'   # 12:15 MYT
+    - cron: '15 10 * * *'   # 18:15 MYT
   # Monthly at 06:30 MYT on the 12th — headline audit publishes ~T-12
-  # Refreshes the headline-recent.json static file with the latest audited data
-  - cron: '30 22 12 * *'
+  - cron: '30 22 12 * *'    # 06:30 MYT on 12th
   # Allow manual trigger
   workflow_dispatch:
+    inputs:
+      force:
+        description: 'Force commit even if no data changes detected'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
 
 permissions:
   contents: write
@@ -22,45 +33,86 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+          cache: 'pip'
 
-      - name: Install dependencies
+      - name: Install Python dependencies
         run: pip install pandas pyarrow requests --quiet
+
+      - name: Download DOSM metadata first (for logging)
+        run: |
+          echo "=== Fetching live DOSM metadata ==="
+          curl -sL --max-time 15 \
+            "https://raw.githubusercontent.com/data-gov-my/datagovmy-meta/main/data-catalogue/ridership_od_rapidrail_daily.json" \
+            | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'RapidRail: data_as_of={d.get(\"data_as_of\",\"N/A\")}, last_updated={d.get(\"last_updated\",\"N/A\")}')"
+          curl -sL --max-time 15 \
+            "https://raw.githubusercontent.com/data-gov-my/datagovmy-meta/main/data-catalogue/ridership_od_brt_daily.json" \
+            | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'BRT: data_as_of={d.get(\"data_as_of\",\"N/A\")}, last_updated={d.get(\"last_updated\",\"N/A\")}')"
+          curl -sL --max-time 15 \
+            "https://raw.githubusercontent.com/data-gov-my/datagovmy-meta/main/data-catalogue/ridership_ktmb_daily.json" \
+            | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'KTMB Daily: data_as_of={d.get(\"data_as_of\",\"N/A\")}')"
 
       - name: Run old parquet processor (Prasarana dashboard + KTMB dashboard)
         run: python scripts/process_parquet.py
         env:
           OUTPUT_DIR: public
+        continue-on-error: true
 
-      - name: Run DOSM OD Daily processor (new annual parquets + metadata)
+      - name: Run DOSM OD Daily processor (annual parquets + metadata)
         run: python mini-services/dosm-sync/process_od_parquet.py --download
         env:
           OUTPUT_DIR: public
           AUTO_DOWNLOAD: 'true'
+
+      - name: Log processed data summary
+        run: |
+          echo "=== Data files in public/ ==="
+          for f in public/prasarana-daily*.json public/ktmb-daily*.json public/*-stations.json public/*-routes.json public/dosm-*.json; do
+            if [ -f "$f" ]; then
+              size=$(wc -c < "$f")
+              echo "  $f: ${size} bytes"
+            fi
+          done
+          echo ""
+          echo "=== DOSM OD Daily data_as_of ==="
+          if [ -f public/dosm-od-daily-totals.json ]; then
+            python3 -c "
+            import json
+            with open('public/dosm-od-daily-totals.json') as f:
+              d = json.load(f)
+            print(f'  Static file: data_as_of={d.get(\"data_as_of\",\"N/A\")}, rows={d.get(\"row_count\",\"N/A\")}')
+          " || echo "  (parse error)"
+          else
+            echo "  (file not found)"
+          fi
 
       - name: Check for changes
         id: diff
         run: |
           if git diff --quiet public/prasarana-daily*.json public/ktmb-daily*.json public/*-stations.json public/*-routes.json public/dosm-*.json 2>/dev/null; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
-            echo "No data changes detected."
+            echo "✅ No data changes detected — data is already up to date."
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
-            echo "Data files changed:"
+            echo "📋 Data files changed:"
             git diff --stat public/
           fi
 
       - name: Commit and push
-        if: steps.diff.outputs.changed == 'true'
+        if: steps.diff.outputs.changed == 'true' || github.event.inputs.force == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add public/prasarana-daily*.json public/ktmb-daily*.json public/*-stations.json public/*-routes.json public/dosm-*.json
-          git commit -m "data: refresh OD parquet data $(date -u +%Y-%m-%d)"
+          # Also add any new files that might have been created
+          git add public/ -A
+          git commit -m "data: refresh OD parquet data $(date -u +%Y-%m-%d)" || echo "Nothing to commit"
           git push
 
   refresh-monthly:
@@ -72,6 +124,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -88,7 +142,7 @@ jobs:
         run: |
           if git diff --quiet public/headline-recent.json 2>/dev/null; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
-            echo "No headline changes detected."
+            echo "✅ No headline changes detected."
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
             git diff --stat public/
