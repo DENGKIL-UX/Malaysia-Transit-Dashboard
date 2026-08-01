@@ -10,8 +10,8 @@ import {
   subWeeks,
   subMonths,
   subYears,
-  eachDayOfInterval,
-  getDaysInMonth,
+  differenceInCalendarDays,
+  addDays,
 } from 'date-fns';
 
 /* ------------------------------------------------------------------ */
@@ -26,14 +26,16 @@ export interface PeriodResult {
   days: number;
   pctChange: number;
   trend: Trend;
-  /** Human-readable current-period label, e.g. "Jul 2026 (3 days)" */
+  /** Human-readable current-period label, e.g. "Aug 1–3 2026 (3 days)" */
   currentLabel: string;
-  /** Human-readable previous-period label, e.g. "Jun 2026" */
+  /** Human-readable previous-period label, e.g. "Jul 1–3 2026" */
   previousLabel: string;
   /** Previous period total for display */
   previousValue: number;
   /** Accent colour key consumed by the component */
   accent: 'amber' | 'teal' | 'emerald';
+  /** True when current window has 0 days with data */
+  pending?: boolean;
 }
 
 /* ------------------------------------------------------------------ */
@@ -177,95 +179,131 @@ function buildComparisons(rows: RawRow[], now: Date): PeriodResult[] {
 }
 
 /**
- * Month-over-Month: This Month (partial) vs Last Month (full)
+ * Month-over-Month: current month day 1–today vs the SAME dates of the previous month (both N days).
+ * Labels e.g. "Aug 1–3 2026 (3 days)" vs "Jul 1–3 2026".
  */
 function buildMoM(rows: RawRow[], now: Date): PeriodResult {
   const thisMonthStart = startOfMonth(now);
   const thisMonthEnd = now;
+  const daysCount = differenceInCalendarDays(thisMonthEnd, thisMonthStart) + 1;
+
   const lastMonthStart = startOfMonth(subMonths(now, 1));
-  const lastMonthEnd = endOfMonth(subMonths(now, 1));
+  const lastMonthEnd = addDays(lastMonthStart, daysCount - 1);
+  const clampedLastMonthEnd = lastMonthEnd > endOfMonth(subMonths(now, 1))
+    ? endOfMonth(subMonths(now, 1))
+    : lastMonthEnd;
 
-  const currentValue = sumRowsInRange(rows, thisMonthStart, thisMonthEnd);
   const currentDays = countRowsInRange(rows, thisMonthStart, thisMonthEnd);
-  const previousValue = sumRowsInRange(rows, lastMonthStart, lastMonthEnd);
-  const previousDays = countRowsInRange(rows, lastMonthStart, lastMonthEnd);
+  const pending = currentDays === 0;
 
-  const pctChange = calcPctChange(currentValue, previousValue);
+  const currentValue = pending ? 0 : sumRowsInRange(rows, thisMonthStart, thisMonthEnd);
+  const previousValue = sumRowsInRange(rows, lastMonthStart, clampedLastMonthEnd);
+
+  const pctChange = pending ? 0 : calcPctChange(currentValue, previousValue);
+
+  const currentLabel = daysCount === 1
+    ? `${format(thisMonthStart, 'MMM d yyyy')} (1 day)`
+    : `${format(thisMonthStart, 'MMM')} 1–${format(thisMonthEnd, 'd yyyy')} (${daysCount} days)`;
+
+  const previousLabel = daysCount === 1
+    ? format(lastMonthStart, 'MMM d yyyy')
+    : `${format(lastMonthStart, 'MMM')} 1–${format(clampedLastMonthEnd, 'd yyyy')}`;
 
   return {
     label: 'Month-over-Month',
     value: currentValue,
-    days: currentDays,
+    days: daysCount,
     pctChange,
     trend: toTrend(pctChange),
-    currentLabel: `${format(thisMonthStart, 'MMM yyyy')} (${currentDays} day${currentDays !== 1 ? 's' : ''})`,
-    previousLabel: format(lastMonthStart, 'MMM yyyy'),
+    currentLabel,
+    previousLabel,
     previousValue,
     accent: 'amber',
+    pending,
   };
 }
 
 /**
- * Week-over-Week: This Week (Mon-Sun) vs Last Week (Mon-Sun)
+ * Week-over-Week: this week Mon–today vs last week Mon–same-weekday (both N days).
+ * Labels e.g. "Mon 27 Jul – Sat 1 Aug (6 days)" vs "Mon 20 – Sat 25 Jul 2026".
  */
 function buildWoW(rows: RawRow[], now: Date): PeriodResult {
   const thisWeekStart = startOfWeek(now, { weekStartsOn: 1 });
-  const thisWeekEnd = endOfWeek(now, { weekStartsOn: 1 });
-  const lastWeekStart = startOfWeek(subWeeks(now, 1), { weekStartsOn: 1 });
-  const lastWeekEnd = endOfWeek(subWeeks(now, 1), { weekStartsOn: 1 });
+  const thisWeekEnd = now;
+  const daysCount = differenceInCalendarDays(thisWeekEnd, thisWeekStart) + 1;
 
-  const currentValue = sumRowsInRange(rows, thisWeekStart, thisWeekEnd);
+  const lastWeekStart = subWeeks(thisWeekStart, 1);
+  const lastWeekEnd = addDays(lastWeekStart, daysCount - 1);
+
   const currentDays = countRowsInRange(rows, thisWeekStart, thisWeekEnd);
-  const previousValue = sumRowsInRange(rows, lastWeekStart, lastWeekEnd);
-  const previousDays = countRowsInRange(rows, lastWeekStart, lastWeekEnd);
+  const pending = currentDays === 0;
 
-  const pctChange = calcPctChange(currentValue, previousValue);
+  const currentValue = pending ? 0 : sumRowsInRange(rows, thisWeekStart, thisWeekEnd);
+  const previousValue = sumRowsInRange(rows, lastWeekStart, lastWeekEnd);
+
+  const pctChange = pending ? 0 : calcPctChange(currentValue, previousValue);
+
+  const currentLabel = `${format(thisWeekStart, 'EEE d MMM')} – ${format(thisWeekEnd, 'EEE d MMM yyyy')} (${daysCount} day${daysCount !== 1 ? 's' : ''})`;
+
+  const sameMonth = lastWeekStart.getMonth() === lastWeekEnd.getMonth();
+  const previousLabel = sameMonth
+    ? `${format(lastWeekStart, 'EEE d')} – ${format(lastWeekEnd, 'EEE d MMM yyyy')}`
+    : `${format(lastWeekStart, 'EEE d MMM')} – ${format(lastWeekEnd, 'EEE d MMM yyyy')}`;
 
   return {
     label: 'Week-over-Week',
     value: currentValue,
-    days: currentDays,
+    days: daysCount,
     pctChange,
     trend: toTrend(pctChange),
-    currentLabel: `${format(thisWeekStart, 'd MMM')} – ${format(thisWeekEnd, 'd MMM yyyy')} (${currentDays} day${currentDays !== 1 ? 's' : ''})`,
-    previousLabel: `${format(lastWeekStart, 'd MMM')} – ${format(lastWeekEnd, 'd MMM yyyy')}`,
+    currentLabel,
+    previousLabel,
     previousValue,
     accent: 'teal',
+    pending,
   };
 }
 
 /**
- * Year-over-Year: This Month (partial, annualized) vs Same Month Last Year (full)
- *
- * Annualization: daily avg of this month so far × total days in this month
+ * Year-over-Year: current month day 1–today vs same dates of the same month LAST YEAR (actual values, drop projected annualization).
  */
 function buildYoY(rows: RawRow[], now: Date): PeriodResult {
   const thisMonthStart = startOfMonth(now);
   const thisMonthEnd = now;
+  const daysCount = differenceInCalendarDays(thisMonthEnd, thisMonthStart) + 1;
+
   const sameMonthLastYearStart = startOfMonth(subYears(now, 1));
-  const sameMonthLastYearEnd = endOfMonth(subYears(now, 1));
+  const sameMonthLastYearEnd = addDays(sameMonthLastYearStart, daysCount - 1);
+  const clampedLastYearEnd = sameMonthLastYearEnd > endOfMonth(subYears(now, 1))
+    ? endOfMonth(subYears(now, 1))
+    : sameMonthLastYearEnd;
 
-  const rawThisMonth = sumRowsInRange(rows, thisMonthStart, thisMonthEnd);
   const currentDays = countRowsInRange(rows, thisMonthStart, thisMonthEnd);
-  const previousValue = sumRowsInRange(rows, sameMonthLastYearStart, sameMonthLastYearEnd);
-  const previousDays = countRowsInRange(rows, sameMonthLastYearStart, sameMonthLastYearEnd);
+  const pending = currentDays === 0;
 
-  // Annualize: project partial month to full month
-  const daysInMonth = getDaysInMonth(now);
-  const projectedValue =
-    currentDays > 0 ? Math.round((rawThisMonth / currentDays) * daysInMonth) : 0;
+  const currentValue = pending ? 0 : sumRowsInRange(rows, thisMonthStart, thisMonthEnd);
+  const previousValue = sumRowsInRange(rows, sameMonthLastYearStart, clampedLastYearEnd);
 
-  const pctChange = calcPctChange(projectedValue, previousValue);
+  const pctChange = pending ? 0 : calcPctChange(currentValue, previousValue);
+
+  const currentLabel = daysCount === 1
+    ? `${format(thisMonthStart, 'MMM d yyyy')} (1 day)`
+    : `${format(thisMonthStart, 'MMM')} 1–${format(thisMonthEnd, 'd yyyy')} (${daysCount} days)`;
+
+  const previousLabel = daysCount === 1
+    ? format(sameMonthLastYearStart, 'MMM d yyyy')
+    : `${format(sameMonthLastYearStart, 'MMM')} 1–${format(clampedLastYearEnd, 'd yyyy')}`;
 
   return {
     label: 'Year-over-Year',
-    value: projectedValue,
-    days: daysInMonth,
+    value: currentValue,
+    days: daysCount,
     pctChange,
     trend: toTrend(pctChange),
-    currentLabel: `${format(thisMonthStart, 'MMM yyyy')} (projected, ${daysInMonth} days)`,
-    previousLabel: format(sameMonthLastYearStart, 'MMM yyyy'),
+    currentLabel,
+    previousLabel,
     previousValue,
     accent: 'emerald',
+    pending,
   };
 }
