@@ -64,8 +64,15 @@ export function TransitBreakdown() {
   }
   const latest = completeIdx >= 0 ? data[completeIdx] : data[data.length - 1];
   const prev = completeIdx >= 1 ? data[completeIdx - 1] : undefined;
-  const latestPrasarana = prasaranaData.length > 0 ? prasaranaData[prasaranaData.length - 1] : null;
-  const prevPrasarana = prasaranaData.length > 1 ? prasaranaData[prasaranaData.length - 2] : null;
+
+  // BRT anchor: freshest day BRT actually published — the KTMB-only tail
+  // days (bus_rkl null → mapped 0) must not stand in as "zero ridership"
+  let brtIdx = -1;
+  for (let i = prasaranaData.length - 1; i >= 0; i--) {
+    if ((prasaranaData[i].brt ?? 0) > 0) { brtIdx = i; break; }
+  }
+  const latestPrasarana = brtIdx >= 0 ? prasaranaData[brtIdx] : null;
+  const prevPrasarana = brtIdx > 0 ? prasaranaData[brtIdx - 1] : null;
 
   const delta = (curr: number | null, last: number | null) =>
     last ? ((((curr ?? 0) - last) / last) * 100).toFixed(1) : '0.0';
