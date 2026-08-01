@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import Script from 'next/script';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from '@/components/theme-provider';
@@ -72,19 +73,28 @@ export default function RootLayout({
 
         {/* Defensive polyfill: Bun's bundler on CF Pages may inject __name() calls
             into client chunks. This no-op shim prevents "__name is not defined" errors. */}
-        <script
+        <Script
+          id="name-shim"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `window.__name=window.__name||((t,v)=>t);`,
           }}
         />
         {/* Register minimal service worker — Chrome requires SW with fetch handler for A2HS install prompt */}
-        <script
+        <Script
+          id="sw-register"
+          strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
+                var registerSw = function() {
                   navigator.serviceWorker.register('/sw.js').catch(function() {});
-                });
+                };
+                if (document.readyState === 'complete') {
+                  registerSw();
+                } else {
+                  window.addEventListener('load', registerSw);
+                }
               }
             `,
           }}

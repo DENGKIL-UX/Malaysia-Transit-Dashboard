@@ -172,9 +172,18 @@ function exponentialSmoothingForecast(
   const variance = residuals.reduce((s, r) => s + (r - meanResidual) ** 2, 0) / residuals.length;
   const stddev = Math.sqrt(variance);
 
-  // Forecast: last smoothed value repeated (level model)
+  // Forecast: level + damped trend. Repeating the last level (pure level
+  // model) makes 3-day projections identical, which reads as a bug. Instead
+  // continue the recent regression slope at 50% strength — conservative
+  // enough to avoid over-projecting a spike, informative enough to show
+  // direction. // ponytail: fixed 0.5 damping, upgrade to Holt's linear method if accuracy matters
   const lastLevel = smoothedValues[smoothedValues.length - 1];
-  const forecast = Array.from({ length: forecastDays }, () => Math.round(lastLevel));
+  const { slope } = linearRegression(values.slice(-14));
+  const dampedSlope = slope * 0.5;
+  const forecast = Array.from(
+    { length: forecastDays },
+    (_, i) => Math.max(0, Math.round(lastLevel + dampedSlope * (i + 1)))
+  );
 
   return { forecast, stddev: Math.round(stddev) };
 }

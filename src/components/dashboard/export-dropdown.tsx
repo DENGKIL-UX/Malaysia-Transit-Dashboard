@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
-import { Download, FileSpreadsheet, ImageIcon } from 'lucide-react';
+import { Download, FileSpreadsheet, FileJson, ImageIcon } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -166,18 +166,33 @@ async function svgToPNG(
   });
 }
 
-function useCSVExport() {
+function useDataExport() {
   const { data } = useRidership();
+
+  const latestDate = data[data.length - 1]?.date ?? 'data';
 
   const exportCSV = useCallback(() => {
     if (!data.length) return;
     const csv = buildCSV(data);
-    const filename = `rapidstats_${data[data.length - 1]?.date ?? 'data'}.csv`;
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    downloadBlob(blob, filename);
-  }, [data]);
+    downloadBlob(blob, `rapidstats_${latestDate}.csv`);
+  }, [data, latestDate]);
 
-  return { exportCSV };
+  const exportJSON = useCallback(() => {
+    if (!data.length) return;
+    const payload = {
+      source: 'RapidStats MY — data.gov.my (CC-BY 4.0)',
+      exported_at: new Date().toISOString(),
+      count: data.length,
+      data,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: 'application/json;charset=utf-8;',
+    });
+    downloadBlob(blob, `rapidstats_${latestDate}.json`);
+  }, [data, latestDate]);
+
+  return { exportCSV, exportJSON };
 }
 
 function usePNGExport() {
@@ -229,7 +244,7 @@ function usePNGExport() {
 }
 
 export function ExportDropdown() {
-  const { exportCSV } = useCSVExport();
+  const { exportCSV, exportJSON } = useDataExport();
   const { exportPNG } = usePNGExport();
 
   return (
@@ -255,6 +270,16 @@ export function ExportDropdown() {
           <div>
             <p className="text-xs font-medium text-[var(--text-secondary)]">CSV (raw data)</p>
             <p className="text-[10px] text-[var(--text-faint)]">Spreadsheet-compatible format</p>
+          </div>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onSelect={exportJSON}
+          className="flex items-center gap-3 py-2.5 cursor-pointer"
+        >
+          <FileJson className="w-4 h-4 text-amber-400" />
+          <div>
+            <p className="text-xs font-medium text-[var(--text-secondary)]">JSON (full data)</p>
+            <p className="text-[10px] text-[var(--text-faint)]">Machine-readable format</p>
           </div>
         </DropdownMenuItem>
         <DropdownMenuItem

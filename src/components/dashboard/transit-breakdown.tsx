@@ -11,25 +11,27 @@ interface LineData {
   key: keyof RidershipDay;
   color: string;
   bgColor: string;
+  /** Hex equivalent of `color` — used for SVG sparkline strokes. */
+  hex: string;
 }
 
 const lines: LineData[] = [
-  { label: 'MRT Kajang Line', key: 'mrtKajang', color: 'text-amber-400', bgColor: 'bg-amber-400' },
-  { label: 'MRT Putrajaya Line', key: 'mrtPutrajaya', color: 'text-sky-400', bgColor: 'bg-sky-400' },
-  { label: 'LRT Kelana Jaya', key: 'lrtKelanaJaya', color: 'text-violet-400', bgColor: 'bg-violet-400' },
-  { label: 'LRT Ampang', key: 'lrtAmpang', color: 'text-rose-400', bgColor: 'bg-rose-400' },
-  { label: 'Monorail', key: 'monorail', color: 'text-emerald-400', bgColor: 'bg-emerald-400' },
-  { label: 'KTM Komuter', key: 'komuter', color: 'text-teal-400', bgColor: 'bg-teal-400' },
-  { label: 'ETS', key: 'ets', color: 'text-cyan-400', bgColor: 'bg-cyan-400' },
-  { label: 'KTM Intercity', key: 'intercity', color: 'text-lime-400', bgColor: 'bg-lime-400' },
-  { label: 'KTM Komuter Utara', key: 'komuterUtara', color: 'text-pink-400', bgColor: 'bg-pink-400' },
-  { label: 'Shuttle Tebrau', key: 'tebrau', color: 'text-yellow-400', bgColor: 'bg-yellow-400' },
-  { label: 'Rapid Bus (KL)', key: 'busKl', color: 'text-orange-400', bgColor: 'bg-orange-400' },
-  { label: 'Rapid Bus (Kuantan)', key: 'busKuantan', color: 'text-fuchsia-400', bgColor: 'bg-fuchsia-400' },
-  { label: 'Rapid Bus (Penang)', key: 'busRpn', color: 'text-stone-400', bgColor: 'bg-stone-400' },
+  { label: 'MRT Kajang Line', key: 'mrtKajang', color: 'text-amber-400', bgColor: 'bg-amber-400', hex: '#fbbf24' },
+  { label: 'MRT Putrajaya Line', key: 'mrtPutrajaya', color: 'text-sky-400', bgColor: 'bg-sky-400', hex: '#38bdf8' },
+  { label: 'LRT Kelana Jaya', key: 'lrtKelanaJaya', color: 'text-violet-400', bgColor: 'bg-violet-400', hex: '#a78bfa' },
+  { label: 'LRT Ampang', key: 'lrtAmpang', color: 'text-rose-400', bgColor: 'bg-rose-400', hex: '#fb7185' },
+  { label: 'Monorail', key: 'monorail', color: 'text-emerald-400', bgColor: 'bg-emerald-400', hex: '#34d399' },
+  { label: 'KTM Komuter', key: 'komuter', color: 'text-teal-400', bgColor: 'bg-teal-400', hex: '#2dd4bf' },
+  { label: 'ETS', key: 'ets', color: 'text-cyan-400', bgColor: 'bg-cyan-400', hex: '#22d3ee' },
+  { label: 'KTM Intercity', key: 'intercity', color: 'text-lime-400', bgColor: 'bg-lime-400', hex: '#a3e635' },
+  { label: 'KTM Komuter Utara', key: 'komuterUtara', color: 'text-pink-400', bgColor: 'bg-pink-400', hex: '#f472b6' },
+  { label: 'Shuttle Tebrau', key: 'tebrau', color: 'text-yellow-400', bgColor: 'bg-yellow-400', hex: '#facc15' },
+  { label: 'Rapid Bus (KL)', key: 'busKl', color: 'text-orange-400', bgColor: 'bg-orange-400', hex: '#fb923c' },
+  { label: 'Rapid Bus (Kuantan)', key: 'busKuantan', color: 'text-fuchsia-400', bgColor: 'bg-fuchsia-400', hex: '#e879f9' },
+  { label: 'Rapid Bus (Penang)', key: 'busRpn', color: 'text-stone-400', bgColor: 'bg-stone-400', hex: '#a8a29e' },
 ];
 
-const BRT_LINE = { label: 'BRT Sunway', color: 'text-orange-300', bgColor: 'bg-orange-300' };
+const BRT_LINE = { label: 'BRT Sunway', color: 'text-orange-300', bgColor: 'bg-orange-300', hex: '#fdba74' };
 
 // Services that determine a "fully published" day. Pipelines publish on
 // different cadences (KTMB ~T+1, Rapid Rail OD ~T+1…3, headline monthly),
@@ -48,6 +50,67 @@ function TrendIcon({ value }: { value: string }) {
   if (num > 0) return <TrendingUp className="w-3 h-3 text-emerald-400" />;
   if (num < 0) return <TrendingDown className="w-3 h-3 text-red-400" />;
   return <Minus className="w-3 h-3 text-[var(--text-faint)]" />;
+}
+
+/**
+ * Compact 7-day trend sparkline — pure SVG, mirrors the KPI card sparkline
+ * language (cubic-bezier smoothing + gradient fill + end dot).
+ */
+function LineSparkline({ data, color, id }: { data: number[]; color: string; id: string }) {
+  if (data.length < 2) return null;
+
+  const W = 72;
+  const H = 20;
+  const PAD_X = 2;
+  const PAD_Y = 3;
+  const plotW = W - PAD_X * 2;
+  const plotH = H - PAD_Y * 2;
+
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+
+  const points: [number, number][] = data.map((v, i) => [
+    PAD_X + (i / (data.length - 1)) * plotW,
+    PAD_Y + plotH - ((v - min) / range) * plotH,
+  ]);
+
+  let d = `M ${points[0][0]} ${points[0][1]}`;
+  for (let i = 0; i < points.length - 1; i++) {
+    const [x1, y1] = points[i];
+    const [x2, y2] = points[i + 1];
+    const cpx = (x1 + x2) / 2;
+    d += ` C ${cpx} ${y1}, ${cpx} ${y2}, ${x2} ${y2}`;
+  }
+  const [lastX, lastY] = points[points.length - 1];
+  const fillPath = `${d} L ${lastX} ${H} L ${points[0][0]} ${H} Z`;
+
+  return (
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      className="w-[72px] h-5 shrink-0"
+      preserveAspectRatio="none"
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.18" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={fillPath} fill={`url(#${id})`} />
+      <path
+        d={d}
+        fill="none"
+        stroke={color}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx={lastX} cy={lastY} r="2" fill={color} />
+      <circle cx={lastX} cy={lastY} r="0.9" fill="var(--surface-card, #0a120a)" />
+    </svg>
+  );
 }
 
 export function TransitBreakdown() {
@@ -81,6 +144,17 @@ export function TransitBreakdown() {
     ? lines.reduce((s, l) => s + (latest[l.key] ?? 0), 0) + (latestPrasarana?.brt ?? 0)
     : 0;
   const maxVal = totalValue;
+
+  // 7-day series per line for inline sparklines (oldest → newest)
+  const sparkSeries = (key: keyof RidershipDay) =>
+    data
+      .slice(-7)
+      .map((d) => d[key])
+      .filter((v): v is number => v !== null);
+  const brtSparkSeries = prasaranaData
+    .slice(-7)
+    .map((d) => d.brt)
+    .filter((v) => v > 0);
 
   if (loading) {
     return (
@@ -116,7 +190,7 @@ export function TransitBreakdown() {
               Line Breakdown
             </h3>
             <p className="text-[10px] text-[var(--text-faint)] mt-0.5">
-              Latest day — {latest?.date}
+              Latest day — {latest?.date} · 7-day trend curves
             </p>
           </div>
           {highlightedLine && (
@@ -166,17 +240,17 @@ export function TransitBreakdown() {
               }}
             >
               <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 min-w-0">
                   <span
                     className={cn(
-                      'w-1.5 h-1.5 rounded-full transition-all duration-200',
+                      'w-1.5 h-1.5 rounded-full transition-all duration-200 shrink-0',
                       line.bgColor,
                       isHighlighted && 'scale-[1.8] ring-2 ring-offset-1 ring-offset-[var(--surface-card)]',
                       isHighlighted && line.bgColor.replace('bg-', 'ring-')
                     )}
                   />
                   <span className={cn(
-                    'text-xs font-medium transition-colors',
+                    'text-xs font-medium transition-colors truncate',
                     isHighlighted
                       ? 'text-[var(--text-primary)]'
                       : 'text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]'
@@ -184,7 +258,16 @@ export function TransitBreakdown() {
                     {line.label}
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
+                  {raw !== null && (
+                    <span className="hidden md:block opacity-60 group-hover:opacity-100 transition-opacity" title="7-day trend">
+                      <LineSparkline
+                        data={sparkSeries(line.key)}
+                        color={line.hex}
+                        id={`spark-${line.key}`}
+                      />
+                    </span>
+                  )}
                   <span className={cn(
                     'text-xs font-semibold tabular-nums',
                     raw === null ? 'text-[var(--text-faint)] italic font-normal' : 'text-[var(--text-primary)]'
@@ -270,7 +353,10 @@ export function TransitBreakdown() {
                   </span>
                   <span className="text-[8px] px-1 py-0.5 rounded bg-sky-400/15 text-sky-300/70 font-medium">T-1</span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="hidden md:block opacity-60 group-hover:opacity-100 transition-opacity" title="7-day trend">
+                    <LineSparkline data={brtSparkSeries} color={BRT_LINE.hex} id="spark-brt" />
+                  </span>
                   <span className="text-xs font-semibold text-[var(--text-primary)] tabular-nums">
                     {latestPrasarana.brt.toLocaleString()}
                   </span>
