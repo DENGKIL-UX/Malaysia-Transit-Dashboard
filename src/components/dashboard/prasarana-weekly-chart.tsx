@@ -166,38 +166,61 @@ export function PrasaranaWeeklyChart() {
 
       if (isSameWeek(dt, activeMonday, { weekStartsOn: 1 })) {
         currentMap.set(dow, entry);
-        currentTotals.push(d.total);
-        brtCurrent.push(d.brt);
       } else if (isSameWeek(dt, prevMonday, { weekStartsOn: 1 })) {
         prevMap.set(dow, entry);
         prevTotals.push(d.total);
       }
     }
 
-    const bars = DAY_NAMES.map((day, i) => {
+    // Anchor the week to the freshest day with real data so weekly totals aren't understated by trailing 0s
+    let lastValidDay = -1;
+    for (let i = 0; i < 7; i++) {
+      const cur = currentMap.get(i);
+      if (cur && (cur.mrt_pjy > 0 || cur.lrt_kj > 0 || cur.lrt_ampang > 0 || cur.monorail > 0 || cur.brt > 0)) {
+        lastValidDay = i;
+      }
+    }
+    const effectiveLastDay = lastValidDay >= 0 ? lastValidDay : 6;
+
+    const bars = [];
+    for (let i = 0; i <= effectiveLastDay; i++) {
+      const day = DAY_NAMES[i];
       const cur = currentMap.get(i);
       const dt = new Date(activeMonday.getTime() + i * 864e5);
       const dateStr = format(dt, 'dd MMM');
 
-      return {
+      const mrt_pjy = cur?.mrt_pjy ?? 0;
+      const lrt_kj = cur?.lrt_kj ?? 0;
+      const lrt_ampang = cur?.lrt_ampang ?? 0;
+      const monorail = cur?.monorail ?? 0;
+      const brt = cur?.brt ?? 0;
+      const total = mrt_pjy + lrt_kj + lrt_ampang + monorail + brt;
+
+      if (cur) {
+        currentTotals.push(total);
+        brtCurrent.push(brt);
+      }
+
+      bars.push({
         day,
         dayLabel: `${DAY_FULL[i]}, ${dateStr}`,
         weekLabel: `${format(activeMonday, 'dd MMM')} – ${format(currentSunday, 'dd MMM yyyy')}`,
-        mrt_pjy: cur?.mrt_pjy ?? 0,
-        lrt_kj: cur?.lrt_kj ?? 0,
-        lrt_ampang: cur?.lrt_ampang ?? 0,
-        monorail: cur?.monorail ?? 0,
-        brt: cur?.brt ?? 0,
-        total: cur ? (cur.mrt_pjy + cur.lrt_kj + cur.lrt_ampang + cur.monorail + cur.brt) : 0,
+        mrt_pjy,
+        lrt_kj,
+        lrt_ampang,
+        monorail,
+        brt,
+        total,
         hasData: !!cur,
-      };
-    });
+      });
+    }
 
     const wTotal = currentTotals.reduce((a, b) => a + b, 0);
     const pTotal = prevTotals.reduce((a, b) => a + b, 0);
     const avg = currentTotals.length > 0 ? Math.round(wTotal / currentTotals.length) : 0;
     const delta = pTotal > 0 ? ((wTotal - pTotal) / pTotal) * 100 : 0;
     const brtTotal = brtCurrent.reduce((a, b) => a + b, 0);
+    const freshestDateDt = new Date(activeMonday.getTime() + effectiveLastDay * 864e5);
 
     return {
       chartData: bars,
@@ -206,7 +229,7 @@ export function PrasaranaWeeklyChart() {
       dailyAvg: avg,
       weekDelta: delta,
       brtWeekTotal: brtTotal,
-      weekLabel: `${format(activeMonday, 'dd MMM')} – ${format(currentSunday, 'dd MMM yyyy')}`,
+      weekLabel: `${format(activeMonday, 'dd MMM')} – ${format(freshestDateDt, 'dd MMM yyyy')}`,
       prevWeekLabel: `${format(prevMonday, 'dd MMM')} – ${format(prevSunday, 'dd MMM yyyy')}`,
     };
   }, [activeMonday, data]);

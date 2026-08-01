@@ -65,7 +65,6 @@ function PctBadge({
         isUp && 'bg-emerald-400/10 text-emerald-400',
         isDown && 'bg-red-400/10 text-red-400',
         !isUp && !isDown && 'bg-[var(--border-subtle)] text-[var(--text-muted)]',
-        // Override with accent colour for the number
       )}
     >
       {isUp ? '+' : ''}
@@ -137,8 +136,6 @@ function ComparisonCard({
   comparison: PeriodResult;
   delay: string;
 }) {
-  const styles = ACCENT_STYLES[comparison.accent];
-
   return (
     <div
       className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] backdrop-blur-md shadow-lg p-4 animate-fade-in-up"
@@ -149,7 +146,7 @@ function ComparisonCard({
         <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--text-faint)]">
           {comparison.label}
         </span>
-        <TrendIcon trend={comparison.trend} accent={comparison.accent} />
+        {!comparison.pending && <TrendIcon trend={comparison.trend} accent={comparison.accent} />}
       </div>
 
       {/* Current period */}
@@ -157,9 +154,15 @@ function ComparisonCard({
         <p className="text-[10px] text-[var(--text-faint)] mb-0.5 leading-tight">
           {comparison.currentLabel}
         </p>
-        <p className="text-lg font-semibold text-[var(--text-primary)] tabular-nums tracking-wide">
-          {comparison.value.toLocaleString()}
-        </p>
+        {comparison.pending ? (
+          <p className="text-sm font-medium text-[var(--text-muted)] italic py-1">
+            — awaiting first publish
+          </p>
+        ) : (
+          <p className="text-lg font-semibold text-[var(--text-primary)] tabular-nums tracking-wide">
+            {comparison.value.toLocaleString()}
+          </p>
+        )}
       </div>
 
       {/* Previous period */}
@@ -172,19 +175,22 @@ function ComparisonCard({
         </p>
       </div>
 
-      {/* % change badge */}
-      <PctBadge
-        pct={comparison.pctChange}
-        trend={comparison.trend}
-        accent={comparison.accent}
-      />
+      {/* % change badge & Proportion bar (only if not pending) */}
+      {!comparison.pending && (
+        <>
+          <PctBadge
+            pct={comparison.pctChange}
+            trend={comparison.trend}
+            accent={comparison.accent}
+          />
 
-      {/* Proportion bar */}
-      <ProportionBar
-        current={comparison.value}
-        previous={comparison.previousValue}
-        accent={comparison.accent}
-      />
+          <ProportionBar
+            current={comparison.value}
+            previous={comparison.previousValue}
+            accent={comparison.accent}
+          />
+        </>
+      )}
     </div>
   );
 }
