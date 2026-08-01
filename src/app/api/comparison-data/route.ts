@@ -360,12 +360,26 @@ export async function GET(request: NextRequest) {
       a.date.localeCompare(b.date)
     );
 
+    // 6a. Normalization: map discontinued audit zeros → null for bus_rkn
+    function normalizeDiscontinuedSeries(rows: HeadlineRow[]): HeadlineRow[] {
+      const lastReal = rows.findLastIndex(r => (r.bus_rkn ?? 0) > 0);
+      const cutoff = lastReal >= 0 ? rows[lastReal].date : null;
+      if (!cutoff) return rows;
+      return rows.map(r => {
+        if (r.bus_rkn === 0 && r.date > cutoff) {
+          return { ...r, bus_rkn: null };
+        }
+        return r;
+      });
+    }
+    const normalized = normalizeDiscontinuedSeries(merged);
+
     // 7. Cache the result
-    cachedResponse = { data: merged, timestamp: Date.now() };
+    cachedResponse = { data: normalized, timestamp: Date.now() };
 
     // 8. Filter and return
-    const filtered = filterData(merged, startDate, endDate, datesParam);
-    return NextResponse.json(buildResponse(filtered, merged, newHeadlineMax), {
+    const filtered = filterData(normalized, startDate, endDate, datesParam);
+    return NextResponse.json(buildResponse(filtered, normalized, newHeadlineMax), {
       headers: noCache
         ? { 'Cache-Control': 'no-cache' }
         : { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=1800' },

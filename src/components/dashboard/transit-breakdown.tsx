@@ -268,10 +268,13 @@ export function TransitBreakdown() {
                       />
                     </span>
                   )}
-                  <span className={cn(
-                    'text-xs font-semibold tabular-nums',
-                    raw === null ? 'text-[var(--text-faint)] italic font-normal' : 'text-[var(--text-primary)]'
-                  )}>
+                  <span
+                    className={cn(
+                      'text-xs font-semibold tabular-nums',
+                      raw === null ? 'text-[var(--text-faint)] italic font-normal' : 'text-[var(--text-primary)]'
+                    )}
+                    title={raw === null ? 'Not published by data.gov.my for this date' : undefined}
+                  >
                     {raw === null ? '—' : value.toLocaleString()}
                   </span>
                   <span className="text-[9px] text-[var(--text-ghost)] tabular-nums min-w-[32px] text-right">
