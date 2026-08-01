@@ -19,16 +19,16 @@
 export interface ParsedRidershipRow {
   date: string;
   mrtKajang: number | null;
-  mrtPutrajaya: number;
-  lrtKelanaJaya: number;
-  lrtAmpang: number;
-  monorail: number;
-  komuter: number;
-  ets: number;
-  intercity: number;
-  komuterUtara: number;
-  tebrau: number;
-  busKl: number;
+  mrtPutrajaya: number | null;
+  lrtKelanaJaya: number | null;
+  lrtAmpang: number | null;
+  monorail: number | null;
+  komuter: number | null;
+  ets: number | null;
+  intercity: number | null;
+  komuterUtara: number | null;
+  tebrau: number | null;
+  busKl: number | null;
   busKuantan: number | null;
   busRpn: number | null;
   /** Sum of all non-null service values (10 rail + bus where available). */
@@ -64,16 +64,16 @@ export function parseRidershipRow(
   r: Record<string, unknown>
 ): ParsedRidershipRow {
   const mrtKajang = parseField(r, 'rail_mrt_kajang');
-  const mrtPutrajaya = parseField(r, 'rail_mrt_pjy') ?? 0;
-  const lrtKelanaJaya = parseField(r, 'rail_lrt_kj') ?? 0;
-  const lrtAmpang = parseField(r, 'rail_lrt_ampang') ?? 0;
-  const monorail = parseField(r, 'rail_monorail') ?? 0;
-  const komuter = parseField(r, 'rail_komuter') ?? 0;
-  const ets = parseField(r, 'rail_ets') ?? 0;
-  const intercity = parseField(r, 'rail_intercity') ?? 0;
-  const komuterUtara = parseField(r, 'rail_komuter_utara') ?? 0;
-  const tebrau = parseField(r, 'rail_tebrau') ?? 0;
-  const busKl = parseField(r, 'bus_rkl') ?? 0;
+  const mrtPutrajaya = parseField(r, 'rail_mrt_pjy');
+  const lrtKelanaJaya = parseField(r, 'rail_lrt_kj');
+  const lrtAmpang = parseField(r, 'rail_lrt_ampang');
+  const monorail = parseField(r, 'rail_monorail');
+  const komuter = parseField(r, 'rail_komuter');
+  const ets = parseField(r, 'rail_ets');
+  const intercity = parseField(r, 'rail_intercity');
+  const komuterUtara = parseField(r, 'rail_komuter_utara');
+  const tebrau = parseField(r, 'rail_tebrau');
+  const busKl = parseField(r, 'bus_rkl');
   const busKuantan = parseField(r, 'bus_rkn');
   const busRpn = parseField(r, 'bus_rpn');
 
