@@ -13,19 +13,19 @@ function isValidDate(s: string): boolean {
 
 interface HeadlineRow {
   date: string;
-  bus_rkl: number;
+  bus_rkl: number | null;
   bus_rkn: number | null;
   bus_rpn: number | null;
-  rail_lrt_ampang: number;
+  rail_lrt_ampang: number | null;
   rail_mrt_kajang: number | null;
-  rail_lrt_kj: number;
-  rail_monorail: number;
-  rail_mrt_pjy: number;
-  rail_ets: number;
-  rail_intercity: number;
-  rail_komuter_utara: number;
-  rail_tebrau: number;
-  rail_komuter: number;
+  rail_lrt_kj: number | null;
+  rail_monorail: number | null;
+  rail_mrt_pjy: number | null;
+  rail_ets: number | null;
+  rail_intercity: number | null;
+  rail_komuter_utara: number | null;
+  rail_tebrau: number | null;
+  rail_komuter: number | null;
 }
 
 interface KtmbDailyRow {
@@ -331,23 +331,27 @@ export async function GET(request: NextRequest) {
     const extension: HeadlineRow[] = [];
     for (const date of extensionDates) {
       const pras = prasaranaDaily.get(date);
-      const ktmb = ktmbDaily.get(date) ?? {};
+      const ktmb = ktmbDaily.get(date);
 
+      // NULL SEMANTICS: when a pipeline has not published a date yet
+      // (e.g., OD lags KTMB by 1-2 days over weekends/holidays), use null
+      // — NOT 0. Zero claims "nobody rode the train", which is false data.
+      // null means "not published yet" and the UI renders it as a gap.
       extension.push({
         date,
-        bus_rkl: pras?.bus_rkl ?? 0,
+        bus_rkl: pras ? pras.bus_rkl : null,
         bus_rkn: null,    // No OD source for RapidKuantan bus
         bus_rpn: null,    // No OD source for RapidPenang bus
-        rail_lrt_ampang: pras?.rail_lrt_ampang ?? 0,
+        rail_lrt_ampang: pras ? pras.rail_lrt_ampang : null,
         rail_mrt_kajang: pras?.rail_mrt_kajang ?? null, // SBK not in OD parquet
-        rail_lrt_kj: pras?.rail_lrt_kj ?? 0,
-        rail_monorail: pras?.rail_monorail ?? 0,
-        rail_mrt_pjy: pras?.rail_mrt_pjy ?? 0,
-        rail_ets: ktmb['rail_ets'] ?? 0,
-        rail_intercity: ktmb['rail_intercity'] ?? 0,
-        rail_komuter_utara: ktmb['rail_komuter_utara'] ?? 0,
-        rail_tebrau: ktmb['rail_tebrau'] ?? 0,
-        rail_komuter: ktmb['rail_komuter'] ?? 0,
+        rail_lrt_kj: pras ? pras.rail_lrt_kj : null,
+        rail_monorail: pras ? pras.rail_monorail : null,
+        rail_mrt_pjy: pras ? pras.rail_mrt_pjy : null,
+        rail_ets: ktmb?.['rail_ets'] ?? null,
+        rail_intercity: ktmb?.['rail_intercity'] ?? null,
+        rail_komuter_utara: ktmb?.['rail_komuter_utara'] ?? null,
+        rail_tebrau: ktmb?.['rail_tebrau'] ?? null,
+        rail_komuter: ktmb?.['rail_komuter'] ?? null,
       });
     }
 
@@ -415,11 +419,11 @@ function buildResponse(filtered: HeadlineRow[], full: HeadlineRow[], headlineBou
 
   const ktmbEnd = full.findLastIndex(
     (d) =>
-      d.rail_ets > 0 ||
-      d.rail_komuter > 0 ||
-      d.rail_intercity > 0 ||
-      d.rail_komuter_utara > 0 ||
-      d.rail_tebrau > 0
+      (d.rail_ets ?? 0) > 0 ||
+      (d.rail_komuter ?? 0) > 0 ||
+      (d.rail_intercity ?? 0) > 0 ||
+      (d.rail_komuter_utara ?? 0) > 0 ||
+      (d.rail_tebrau ?? 0) > 0
   );
   const ktmbMax = ktmbEnd >= 0 ? full[ktmbEnd].date : null;
 

@@ -31,6 +31,18 @@ const lines: LineData[] = [
 
 const BRT_LINE = { label: 'BRT Sunway', color: 'text-orange-300', bgColor: 'bg-orange-300' };
 
+// Services that determine a "fully published" day. Pipelines publish on
+// different cadences (KTMB ~T+1, Rapid Rail OD ~T+1…3, headline monthly),
+// so the furthest-right row of merged data can be KTMB-only. Using it
+// directly renders rail lines as 0 — fake data. Instead, the breakdown
+// anchors to the freshest day where every core service is present.
+// MRT Kajang / bus_rkn / bus_rpn are excluded: they are absent by design
+// outside the monthly headline audit window.
+const CORE_KEYS: (keyof RidershipDay)[] = [
+  'mrtPutrajaya', 'lrtKelanaJaya', 'lrtAmpang', 'monorail',
+  'komuter', 'ets', 'intercity', 'komuterUtara', 'tebrau',
+];
+
 function TrendIcon({ value }: { value: string }) {
   const num = parseFloat(value);
   if (num > 0) return <TrendingUp className="w-3 h-3 text-emerald-400" />;
@@ -43,13 +55,20 @@ export function TransitBreakdown() {
   const { data: prasaranaData, loading: prasaranaLoading } = usePrasaranaDaily();
   const highlightedLine = useAppStore((s) => s.highlightedLine);
   const setHighlightedLine = useAppStore((s) => s.setHighlightedLine);
-  const latest = data[data.length - 1];
-  const prev = data[data.length - 2];
+
+  // Freshest day with ALL core services published (avoid zero-painted
+  // days where only one pipeline has landed — see CORE_KEYS above)
+  let completeIdx = -1;
+  for (let i = data.length - 1; i >= 0; i--) {
+    if (CORE_KEYS.every((k) => data[i][k] !== null)) { completeIdx = i; break; }
+  }
+  const latest = completeIdx >= 0 ? data[completeIdx] : data[data.length - 1];
+  const prev = completeIdx >= 1 ? data[completeIdx - 1] : undefined;
   const latestPrasarana = prasaranaData.length > 0 ? prasaranaData[prasaranaData.length - 1] : null;
   const prevPrasarana = prasaranaData.length > 1 ? prasaranaData[prasaranaData.length - 2] : null;
 
-  const delta = (curr: number, last: number) =>
-    last ? (((curr - last) / last) * 100).toFixed(1) : '0.0';
+  const delta = (curr: number | null, last: number | null) =>
+    last ? ((((curr ?? 0) - last) / last) * 100).toFixed(1) : '0.0';
 
   const totalValue = latest
     ? lines.reduce((s, l) => s + (latest[l.key] ?? 0), 0) + (latestPrasarana?.brt ?? 0)
@@ -109,9 +128,10 @@ export function TransitBreakdown() {
       {/* Scrollable line list */}
       <div className="space-y-3 overflow-y-auto flex-1 min-h-0 max-h-[320px] pr-1 custom-scrollbar">
         {lines.map((line, lineIdx) => {
-          const value = latest?.[line.key] ?? 0;
+          const raw = (latest?.[line.key] ?? null) as number | null;
+          const value = raw ?? 0;
           const pct = maxVal > 0 ? (value / maxVal) * 100 : 0;
-          const d = latest && prev ? delta(latest[line.key], prev[line.key]) : '0.0';
+          const d = latest && prev ? delta(latest[line.key] as number | null, prev[line.key] as number | null) : '0.0';
 
           const isHighlighted = highlightedLine === line.key;
           const isDimmed = highlightedLine !== null && !isHighlighted;
@@ -158,12 +178,16 @@ export function TransitBreakdown() {
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-[var(--text-primary)] tabular-nums">
-                    {value.toLocaleString()}
+                  <span className={cn(
+                    'text-xs font-semibold tabular-nums',
+                    raw === null ? 'text-[var(--text-faint)] italic font-normal' : 'text-[var(--text-primary)]'
+                  )}>
+                    {raw === null ? '—' : value.toLocaleString()}
                   </span>
                   <span className="text-[9px] text-[var(--text-ghost)] tabular-nums min-w-[32px] text-right">
-                    {totalValue > 0 ? ((value / totalValue) * 100).toFixed(1) : '0.0'}%
+                    {raw !== null && totalValue > 0 ? `${((value / totalValue) * 100).toFixed(1)}%` : ''}
                   </span>
+                  {raw !== null && (
                   <div className="flex items-center gap-0.5">
                     <TrendIcon value={d} />
                     <span
@@ -177,6 +201,7 @@ export function TransitBreakdown() {
                       {Math.abs(parseFloat(d)).toFixed(1)}%
                     </span>
                   </div>
+                  )}
                 </div>
               </div>
               <div className="h-1 bg-[var(--surface-card)] rounded-full overflow-hidden">
