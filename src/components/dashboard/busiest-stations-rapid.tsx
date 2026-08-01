@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useCallback } from 'react';
 import { usePrasaranaStations } from '@/hooks/use-prasarana-stations';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 
 const WINDOW_SIZE = 14;
@@ -53,6 +53,7 @@ function Skeleton() {
 export function BusiestStationsRapidRail() {
   const { data, loading, error } = usePrasaranaStations();
   const [windowOffset, setWindowOffset] = useState(0);
+  const [query, setQuery] = useState('');
 
   // Compute 14-day windows from station_series dates (newest first)
   const windows = useMemo(() => {
@@ -107,6 +108,21 @@ export function BusiestStationsRapidRail() {
       .sort((a, b) => b.passengers - a.passengers);
   }, [data, activeWindow]);
 
+  // Name/line search filter — keeps original rank for medal styling
+  const filteredStations = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return windowedStations.map((station, i) => ({ station, rank: i }));
+    return windowedStations
+      .map((station, i) => ({ station, rank: i }))
+      .filter(({ station }) => {
+        const lineLabel = LINE_LABELS[station.line] ?? '';
+        return (
+          station.name.toLowerCase().includes(q) ||
+          lineLabel.toLowerCase().includes(q)
+        );
+      });
+  }, [windowedStations, query]);
+
   const stats = useMemo(() => {
     if (!data || windowedStations.length === 0) return null;
     const topStation = windowedStations[0];
@@ -153,6 +169,27 @@ export function BusiestStationsRapidRail() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {/* Station search */}
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-faint)] pointer-events-none" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search station…"
+              aria-label="Search stations"
+              className="w-36 sm:w-44 pl-8 pr-7 py-1.5 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] text-[11px] text-[var(--text-primary)] placeholder:text-[var(--text-faint)] focus:outline-none focus:ring-1 focus:ring-[#85AB8B]/50 focus:border-[#85AB8B]/40 transition-all"
+            />
+            {query && (
+              <button
+                onClick={() => setQuery('')}
+                aria-label="Clear station search"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 rounded text-[var(--text-faint)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
           {/* Pagination */}
           {windows.length > 1 && (
             <div className="flex items-center rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] overflow-hidden">
@@ -229,8 +266,26 @@ export function BusiestStationsRapidRail() {
       </div>
 
       {/* Station ranking list */}
+      {query.trim() && (
+        <p className="text-[10px] text-[var(--text-muted)] mb-2 flex items-center gap-1.5">
+          <span className="inline-block w-1 h-1 rounded-full bg-[#85AB8B]" />
+          {filteredStations.length} of {windowedStations.length} stations match
+          “{query.trim()}”
+        </p>
+      )}
       <div className="space-y-0.5 max-h-[380px] overflow-y-auto pr-1 custom-scrollbar">
-        {windowedStations.map((station, i) => {
+        {filteredStations.length === 0 && (
+          <div className="py-8 text-center">
+            <p className="text-xs text-[var(--text-faint)]">No stations match your search</p>
+            <button
+              onClick={() => setQuery('')}
+              className="mt-2 text-[10px] font-medium text-[#85AB8B] hover:underline"
+            >
+              Clear search
+            </button>
+          </div>
+        )}
+        {filteredStations.map(({ station, rank: i }) => {
           const maxPassengers = windowedStations[0].passengers;
           const pct = maxPassengers > 0 ? Math.round((station.passengers / maxPassengers) * 100) : 0;
           const lineStyle = LINE_COLORS[station.line] ?? { bg: 'bg-gray-400/10', text: 'text-gray-400', dot: 'bg-gray-400' };

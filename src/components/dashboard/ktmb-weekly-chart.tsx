@@ -12,7 +12,7 @@ import {
   Legend,
 } from 'recharts';
 import { format, startOfWeek, subWeeks, endOfWeek, isSameWeek, parseISO } from 'date-fns';
-import { TrendingUp, TrendingDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { TrendingUp, TrendingDown, ChevronLeft, ChevronRight, BarChart3, CloudOff, Database } from 'lucide-react';
 import { useKtmbDaily } from '@/hooks/use-ktmb-daily';
 
 const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -86,7 +86,7 @@ function StackedTooltip({ active, payload, label }: { active?: boolean; payload?
 }
 
 export function KtmbWeeklyChart() {
-  const { data, loading, error } = useKtmbDaily(8);
+  const { data, loading, error, source } = useKtmbDaily(8);
   const [weekOffset, setWeekOffset] = useState(0); // 0 = current week, 1 = last week, etc.
 
   // Compute all available week boundaries from the data
@@ -206,9 +206,23 @@ export function KtmbWeeklyChart() {
   if (error || !chartData.length) {
     return (
       <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] backdrop-blur-md flex items-center justify-center h-[440px]">
-        <div className="text-center">
-          <p className="text-[var(--text-faint)] text-sm">No KTMB daily data available</p>
-          {error && <p className="text-red-400/60 text-[10px] mt-1">{error}</p>}
+        <div className="text-center px-6">
+          <div className="mx-auto w-12 h-12 rounded-2xl bg-red-400/10 border border-red-400/20 flex items-center justify-center mb-3">
+            <BarChart3 className="w-5 h-5 text-red-400/70" />
+          </div>
+          <p className="text-sm font-medium text-[var(--text-secondary)]">
+            No KTMB daily data available
+          </p>
+          {error && (
+            <p className="text-red-400/60 text-[10px] mt-1.5 font-mono">
+              {error}
+            </p>
+          )}
+          <p className="text-[10px] text-[var(--text-faint)] mt-3 max-w-[300px] mx-auto leading-relaxed">
+            Live API and static fallback both unavailable. Data usually lands
+            T-1 to T-3 (calendar dependent). Retry automatically on the next
+            page load.
+          </p>
         </div>
       </div>
     );
@@ -228,6 +242,12 @@ export function KtmbWeeklyChart() {
           <p className="text-[10px] text-[var(--text-faint)] mt-0.5">
             Stacked Mon – Sun · {weekLabel}
           </p>
+          {source === 'static' && (
+            <p className="flex items-center gap-1 text-[9px] text-sky-400/80 mt-1">
+              <Database className="w-2.5 h-2.5" />
+              Live API unreachable — showing last batch from GitHub Actions
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-2">
           {/* Pagination */}
@@ -254,11 +274,23 @@ export function KtmbWeeklyChart() {
               <ChevronRight className="w-3.5 h-3.5 text-[var(--text-muted)]" />
             </button>
           </div>
-          {/* Status badge */}
-          <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-amber-400/10 border border-amber-400/20">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-            <span className="text-[9px] text-amber-400 font-medium">T-1 to T-3 (calendar dependent)</span>
-          </div>
+          {/* Status badge — source-aware: live API vs static fallback */}
+          {source === 'static' ? (
+            <div
+              className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-sky-400/10 border border-sky-400/20"
+              title="Live API unreachable — showing last GitHub Actions batch"
+            >
+              <CloudOff className="w-3 h-3 text-sky-400" />
+              <span className="text-[9px] text-sky-400 font-medium">
+                static fallback
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-amber-400/10 border border-amber-400/20">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+              <span className="text-[9px] text-amber-400 font-medium">T-1 to T-3 (calendar dependent)</span>
+            </div>
+          )}
         </div>
       </div>
 
