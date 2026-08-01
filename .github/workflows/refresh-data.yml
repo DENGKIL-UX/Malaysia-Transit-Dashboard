@@ -8,8 +8,8 @@ on:
     - cron: '15 22 * * *'   # 06:15 MYT
     - cron: '15 04 * * *'   # 12:15 MYT
     - cron: '15 10 * * *'   # 18:15 MYT
-  # Monthly at 06:30 MYT on the 12th — headline audit publishes ~T-12
-  - cron:   '30 22 12 * *'    # 06:30 MYT on 12th
+    # Monthly at 06:30 MYT on the 12th — headline audit publishes ~T-12
+    - cron: '30 22 12 * *'  # 06:30 MYT on 12th
   # Allow manual trigger
   workflow_dispatch:
     inputs:
