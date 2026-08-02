@@ -28,10 +28,6 @@ import { DataIntegrityBanner } from '@/components/dashboard/data-integrity-banne
 import { DataStatusBar } from '@/components/dashboard/data-status-bar';
 import { KtmbWeeklyChart } from '@/components/dashboard/ktmb-weekly-chart';
 import { PrasaranaWeeklyChart } from '@/components/dashboard/prasarana-weekly-chart';
-import { BusiestStationsRapidRail } from '@/components/dashboard/busiest-stations-rapid';
-import { BusiestStationsKTMB } from '@/components/dashboard/busiest-stations-ktmb';
-import { TopRoutesRapidRail, TopRoutesKTMB } from '@/components/dashboard/top-routes';
-import { DayTypeAnalytics } from '@/components/dashboard/day-type-analytics';
 import { FeatureCardsSection } from '@/components/dashboard/feature-cards';
 import { EnvironmentAlertsPanel } from '@/components/dashboard/environment-alerts';
 import { WeatherForecastWidget } from '@/components/dashboard/weather-forecast';
@@ -43,9 +39,7 @@ import { ScrollToTop } from '@/components/dashboard/scroll-to-top';
 import { ScrollProgress } from '@/components/dashboard/scroll-progress';
 import { QuickInsights } from '@/components/dashboard/quick-insights';
 import { PeriodComparison } from '@/components/dashboard/period-comparison';
-import { SeasonalityHeatmap } from '@/components/dashboard/seasonality-heatmap';
-import { ModeShareTrend } from '@/components/dashboard/mode-share-trend';
-import { GrowthRankings } from '@/components/dashboard/growth-rankings';
+import { LayeredAnalytics } from '@/components/dashboard/layered-analytics/layered-analytics';
 import { LandingPage } from '@/components/dashboard/landing-page';
 import { useRidership } from '@/hooks/use-ridership';
 import { useAppStore } from '@/lib/store';
@@ -747,84 +741,30 @@ function DashboardView() {
                 <PrasaranaWeeklyChart />
               </div>
 
-              {/* Day-Type Analytics + Weather Forecast side by side */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 mb-6 items-start">
-                <div className="lg:col-span-7 xl:col-span-8">
-                  <div className="flex items-center gap-3 mb-5 animate-fade-in-up">
-                    <div className="w-1 h-6 rounded-full bg-sky-400/40" />
-                    <div>
-                      <div className="w-8 h-0.5 bg-sky-400/40 mb-2 rounded-full" />
-                      <h2 className="text-base font-semibold text-[var(--text-primary)]">Day-Type Analysis</h2>
-                      <p className="text-[10px] text-[var(--text-faint)] mt-0.5">Weekday vs weekend patterns · Holiday impact detection</p>
-                    </div>
-                  </div>
-                  <DayTypeAnalytics />
-                </div>
-                <div className="lg:col-span-5 xl:col-span-4">
-                  <WeatherForecastWidget />
-                </div>
-              </div>
-
-              {/* Demand Analytics — Decision Layer */}
+              {/* Weather & Environment — full width (day-type moved into Layered Analytics below) */}
               <div className="mb-6">
                 <div className="flex items-center gap-3 mb-5 animate-fade-in-up">
-                  <div className="w-1 h-6 rounded-full bg-amber-400/40" />
+                  <div className="w-1 h-6 rounded-full bg-sky-400/40" />
                   <div>
-                    <div className="w-8 h-0.5 bg-amber-400/40 mb-2 rounded-full" />
-                    <h2 className="text-base font-semibold text-[var(--text-primary)]">Demand Analytics</h2>
-                    <p className="text-[10px] text-[var(--text-faint)] mt-0.5">Seasonality patterns · Mode share evolution · Growth rankings</p>
+                    <div className="w-8 h-0.5 bg-sky-400/40 mb-2 rounded-full" />
+                    <h2 className="text-base font-semibold text-[var(--text-primary)]">Weather & Environment</h2>
+                    <p className="text-[10px] text-[var(--text-faint)] mt-0.5">7-day forecast · KL / Selangor · via data.gov.my</p>
                   </div>
                 </div>
+                <WeatherForecastWidget />
+              </div>
 
-                {/* Seasonality + Growth side by side */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 mb-5">
-                  <div className="lg:col-span-7 xl:col-span-8">
-                    <SeasonalityHeatmap ridership={analyticsData} loading={analyticsLoading} />
+              {/* Layered Analytics — consolidated, collapsible layers (de-clutters the page) */}
+              <div className="mb-6">
+                <div className="flex items-center gap-3 mb-5 animate-fade-in-up">
+                  <div className="w-1 h-6 rounded-full bg-[#85AB8B]/40" />
+                  <div>
+                    <div className="w-8 h-0.5 bg-[#85AB8B]/40 mb-2 rounded-full" />
+                    <h2 className="text-base font-semibold text-[var(--text-primary)]">Layered Analytics</h2>
+                    <p className="text-[10px] text-[var(--text-faint)] mt-0.5">Temporal · Seasonality · Mode share · Stations · Routes — expand any layer</p>
                   </div>
-                  <div className="lg:col-span-5 xl:col-span-4">
-                    <GrowthRankings ridership={analyticsData} loading={analyticsLoading} />
-                  </div>
                 </div>
-
-                {/* Mode Share Trend — full width */}
-                <ModeShareTrend ridership={analyticsData} loading={analyticsLoading} />
-              </div>
-            </div>
-          </div>
-
-          {/* ═══ Station Analytics — full-bleed wider section for wide desktops ═══ */}
-          <div className="px-4 sm:px-6 md:px-10 pb-8">
-            <div className="max-w-[1800px] mx-auto">
-              {/* Station Analytics Section Header */}
-              <div className="flex items-center gap-3 mb-5 mt-4 animate-fade-in-up">
-                <div className="w-1 h-6 rounded-full bg-amber-400/40" />
-                <div>
-                  <div className="w-8 h-0.5 bg-amber-400/40 mb-2 rounded-full" />
-                  <h2 className="text-base font-semibold text-[var(--text-primary)]">
-                    Station Analytics
-                  </h2>
-                  <p className="text-[10px] text-[var(--text-faint)] mt-0.5">
-                    Busiest stations & routes · From parquet origin-destination data
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 mb-6 items-start">
-                <div className="lg:col-span-7 xl:col-span-8">
-                  <BusiestStationsRapidRail />
-                </div>
-                <div className="lg:col-span-5 xl:col-span-4">
-                  <BusiestStationsKTMB />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 mb-6 items-start">
-                <div className="lg:col-span-7 xl:col-span-8">
-                  <TopRoutesRapidRail />
-                </div>
-                <div className="lg:col-span-5 xl:col-span-4">
-                  <TopRoutesKTMB />
-                </div>
+                <LayeredAnalytics ridership={analyticsData} loading={analyticsLoading} />
               </div>
             </div>
           </div>
