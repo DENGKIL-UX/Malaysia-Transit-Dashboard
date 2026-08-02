@@ -5,7 +5,7 @@
  * dashboard's analytical views into a single, de-cluttered section.
  *
  * Why this exists:
- *   The dashboard previously rendered six analytics blocks as separate,
+ *   The dashboard previously rendered its analytics blocks as separate,
  * always-visible sections (Day-Type, Seasonality, Growth, Mode-Share, Busiest
  * Stations, Top Routes). On long pages this created visual noise and pushed the
  * station / route analytics far down. Grouping them into collapsible "layers"
@@ -33,6 +33,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import {
+  Activity,
   CalendarClock,
   Flame,
   PieChart,
@@ -41,6 +42,7 @@ import {
 } from 'lucide-react';
 
 import type { EnrichedDay } from '@/hooks/use-analytics';
+import { CovidRecoveryIndex } from '@/components/dashboard/covid-recovery-index';
 import { DayTypeAnalytics } from '@/components/dashboard/day-type-analytics';
 import { SeasonalityHeatmap } from '@/components/dashboard/seasonality-heatmap';
 import { GrowthRankings } from '@/components/dashboard/growth-rankings';
@@ -54,6 +56,8 @@ interface LayeredAnalyticsProps {
   ridership: EnrichedDay[];
   /** Pass-through loading flag for the demand-layer components. */
   loading: boolean;
+  /** Last audited headline date; keeps longitudinal claims off provisional OD rows. */
+  headlineThrough?: string | null;
   /** className applied to the outer wrapper. */
   className?: string;
 }
@@ -72,6 +76,16 @@ interface LayerDef {
 // ─── Layer definitions ───────────────────────────────────────────────
 // Order = visual top-to-bottom. First entry is open by default.
 const LAYERS: LayerDef[] = [
+  {
+    value: 'recovery',
+    title: 'COVID-19 Recovery',
+    subtitle: 'Coverage-safe 30-day index · four continuous lines · 2019 = 100',
+    badge: '2019 = 100',
+    icon: Activity,
+    iconWrap: 'bg-emerald-400/10 border-emerald-400/20',
+    iconText: 'text-emerald-400',
+    badgeCls: 'bg-emerald-400/10 text-emerald-400 border-emerald-400/20',
+  },
   {
     value: 'temporal',
     title: 'Temporal Patterns',
@@ -128,12 +142,22 @@ function LayerContent({
   layer,
   ridership,
   loading,
+  headlineThrough,
 }: {
   layer: LayerDef;
   ridership: EnrichedDay[];
   loading: boolean;
+  headlineThrough?: string | null;
 }) {
   switch (layer.value) {
+    case 'recovery':
+      return (
+        <CovidRecoveryIndex
+          ridership={ridership}
+          loading={loading}
+          headlineThrough={headlineThrough}
+        />
+      );
     case 'temporal':
       return <DayTypeAnalytics />;
     case 'seasonality':
@@ -179,12 +203,13 @@ function LayerContent({
 export function LayeredAnalytics({
   ridership,
   loading,
+  headlineThrough,
   className,
 }: LayeredAnalyticsProps) {
   return (
     <Accordion
       type="multiple"
-      defaultValue={['temporal']}
+      defaultValue={['recovery']}
       className={className}
     >
       {LAYERS.map((layer) => {
@@ -231,7 +256,12 @@ export function LayeredAnalytics({
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-4 sm:px-6 pb-5">
-              <LayerContent layer={layer} ridership={ridership} loading={loading} />
+              <LayerContent
+                layer={layer}
+                ridership={ridership}
+                loading={loading}
+                headlineThrough={headlineThrough}
+              />
             </AccordionContent>
           </AccordionItem>
         );
