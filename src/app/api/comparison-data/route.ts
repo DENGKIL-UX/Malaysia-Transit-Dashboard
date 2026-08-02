@@ -84,9 +84,33 @@ const KTMB_SERVICE_MAP: Record<string, keyof HeadlineRow> = {
 
 const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes (data updates daily, keep fresh)
 
-let cachedResponse: { data: HeadlineRow[]; timestamp: number } | null = null;
+let cachedResponse: {
+  data: HeadlineRow[];
+  timestamp: number;
+  headlineBoundaryDate: string | null;
+} | null = null;
 
 // ─── Data fetchers ────────────────────────────────────────────────────
+
+async function fetchStaticHeadline(url: string): Promise<HeadlineRow[]> {
+  try {
+    const response = await fetch(url, { signal: AbortSignal.timeout(10000) });
+    if (!response.ok) return [];
+
+    const payload: unknown = await response.json();
+    if (!Array.isArray(payload)) return [];
+
+    return payload.filter(
+      (row): row is HeadlineRow =>
+        typeof row === 'object' &&
+        row !== null &&
+        typeof (row as { date?: unknown }).date === 'string'
+    );
+  } catch (error) {
+    console.warn(`Static headline fetch failed (${url}):`, error);
+    return [];
+  }
+}
 
 /**
  * Fetch Prasarana/Rapid Rail per-line daily totals.
@@ -226,7 +250,7 @@ async function fetchKtmbDaily(
  * Returns ridership data for the date comparison feature.
  *
  * Three-tier data merge:
- *   1. Local headline-daily.json — All 14 services, 2019 → 2026-04-30 (audited monthly)
+ *   1. Local headline-daily.json + headline-recent.json — All services, 2019 → latest audit
  *   2. Prasarana per-line JSON — Rapid Rail + BRT daily totals from OD parquet (pre-audit, updated ~daily)
  *   3. data.gov.my KTMB Daily API — 5 KTMB services (updated daily)
  *
@@ -261,36 +285,40 @@ export async function GET(request: NextRequest) {
         endDate,
         datesParam
       );
-      // For cached responses, we don't have the exact headlineBoundaryDate.
-      // Use the data to find the last row where MRT Kajang is non-null (headline-sourced).
-      const cachedHeadlineBoundary = cachedResponse.data.findLastIndex(
-        (d) => d.rail_mrt_kajang != null && d.rail_mrt_kajang > 0
+      return NextResponse.json(
+        buildResponse(filtered, cachedResponse.data, cachedResponse.headlineBoundaryDate),
+        {
+          headers: noCache
+            ? { 'Cache-Control': 'no-cache' }
+            : { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=1800' },
+        }
       );
-      const cachedBoundaryDate = cachedHeadlineBoundary >= 0
-        ? cachedResponse.data[cachedHeadlineBoundary].date
-        : null;
-      return NextResponse.json(buildResponse(filtered, cachedResponse.data, cachedBoundaryDate), {
-        headers: noCache
-          ? { 'Cache-Control': 'no-cache' }
-          : { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=1800' },
-      });
     }
 
-    // 1. Load base headline data from local JSON
-    // Uses headline-recent.json (2024+, ~241KB) instead of full file (~736KB)
-    // to reduce CPU time from JSON.parse on cold cache miss.
+    // 1. Load the complete historical baseline plus the smaller monthly-refreshed file.
+    // headline-daily supplies the complete 2019+ history; headline-recent overrides
+    // overlapping dates with the latest audited revisions and extends its range.
     const baseUrl = new URL(request.url).origin;
-    const res = await fetch(`${baseUrl}/headline-recent.json`, { signal: AbortSignal.timeout(10000) });
-    if (!res.ok) {
+    const [historicalRows, recentRows] = await Promise.all([
+      fetchStaticHeadline(`${baseUrl}/headline-daily.json`),
+      fetchStaticHeadline(`${baseUrl}/headline-recent.json`),
+    ]);
+
+    if (!historicalRows.length && !recentRows.length) {
       return NextResponse.json(
         { error: 'Failed to load headline data' },
         { status: 500, headers: { 'Cache-Control': 'no-cache' } }
       );
     }
 
-    const data: HeadlineRow[] = await res.json();
+    const staticByDate = new Map<string, HeadlineRow>();
+    for (const row of historicalRows) staticByDate.set(row.date, row);
+    for (const row of recentRows) staticByDate.set(row.date, row);
+    const data = Array.from(staticByDate.values()).sort((a, b) =>
+      a.date.localeCompare(b.date)
+    );
 
-    // 2. Determine the last date in headline data
+    // 2. Determine the last date in audited headline data.
     const headlineMaxDate = data[data.length - 1]?.date ?? '2026-04-30';
     const today = new Date().toISOString().split('T')[0];
 
@@ -318,6 +346,7 @@ export async function GET(request: NextRequest) {
     // Only add dates that neither the static file nor the live API cover.
     // ponytail: Without this guard, extension rows would duplicate/override
     // the richer headline live data for overlapping date ranges.
+    data.sort((a, b) => a.date.localeCompare(b.date));
     const newHeadlineMax = data[data.length - 1]?.date ?? headlineMaxDate;
     const headlineDates = new Set(data.map((r) => r.date));
     const extensionDates = new Set<string>();
@@ -343,7 +372,7 @@ export async function GET(request: NextRequest) {
         bus_rkn: null,    // No OD source for RapidKuantan bus
         bus_rpn: null,    // No OD source for RapidPenang bus
         rail_lrt_ampang: pras ? pras.rail_lrt_ampang : null,
-        rail_mrt_kajang: pras?.rail_mrt_kajang ?? null, // SBK not in OD parquet
+        rail_mrt_kajang: pras?.rail_mrt_kajang ?? null, // Present in DOSM annual OD; null in legacy fallback
         rail_lrt_kj: pras ? pras.rail_lrt_kj : null,
         rail_monorail: pras ? pras.rail_monorail : null,
         rail_mrt_pjy: pras ? pras.rail_mrt_pjy : null,
@@ -375,7 +404,11 @@ export async function GET(request: NextRequest) {
     const normalized = normalizeDiscontinuedSeries(merged);
 
     // 7. Cache the result
-    cachedResponse = { data: normalized, timestamp: Date.now() };
+    cachedResponse = {
+      data: normalized,
+      timestamp: Date.now(),
+      headlineBoundaryDate: newHeadlineMax,
+    };
 
     // 8. Filter and return
     const filtered = filterData(normalized, startDate, endDate, datesParam);
@@ -420,8 +453,8 @@ function buildResponse(filtered: HeadlineRow[], full: HeadlineRow[], headlineBou
   // making it impossible to distinguish headline-sourced rows from extension rows.
   const headlineMax = headlineBoundaryDate;
 
-  // Prasarana: find last row with any Rapid Rail OD data (excludes KTMB).
-  // MRT Kajang is excluded since it's never in OD — we check the other 4 lines.
+  // Prasarana: find the last row with Rapid Rail OD data (excludes KTMB).
+  // Check the four fields shared by both the annual OD and legacy fallback files.
   const prasaranaEnd = full.findLastIndex(
     (d) =>
       (d.rail_lrt_kj ?? 0) > 0 ||

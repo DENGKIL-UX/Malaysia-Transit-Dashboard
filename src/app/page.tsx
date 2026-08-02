@@ -761,10 +761,14 @@ function DashboardView() {
                   <div>
                     <div className="w-8 h-0.5 bg-[#85AB8B]/40 mb-2 rounded-full" />
                     <h2 className="text-base font-semibold text-[var(--text-primary)]">Layered Analytics</h2>
-                    <p className="text-[10px] text-[var(--text-faint)] mt-0.5">Temporal · Seasonality · Mode share · Stations · Routes — expand any layer</p>
+                    <p className="text-[10px] text-[var(--text-faint)] mt-0.5">Recovery · Temporal · Seasonality · Mode share · Stations · Routes — expand any layer</p>
                   </div>
                 </div>
-                <LayeredAnalytics ridership={analyticsData} loading={analyticsLoading} />
+                <LayeredAnalytics
+                  ridership={analyticsData}
+                  loading={analyticsLoading}
+                  headlineThrough={dataRange?.headlineThrough}
+                />
               </div>
             </div>
           </div>

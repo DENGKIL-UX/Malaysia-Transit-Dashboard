@@ -63,6 +63,7 @@ The dashboard features real-time anomaly detection, period comparison tools, sea
 - **Data Status Bar** showing freshest date, source badges, and 3-pipeline freshness indicators
 
 ### Analytics
+- **COVID-19 Recovery Index** — coverage-safe 30-day trend against a 2019 baseline using the four continuously reported Rapid Rail lines, with MCO milestones
 - **Period Comparison** — side-by-side bar chart for any two dates with holiday markers and data availability
 - **Day-Type Analytics** — week-over-week KTMB breakdown with reference lines and week navigation
 - **Seasonality Heatmap** — month &times; day-type matrix (weekday / Friday / weekend / holiday) with average ridership and deviation tooltips
@@ -147,7 +148,7 @@ All data is sourced from **public, free, API-key-free** endpoints.
 | File | Refresh Cycle | Content |
 |------|--------------|---------|
 | `headline-recent.json` | Monthly | All 14 services, 2024+ (audited) |
-| `headline-daily.json` | Monthly | Daily headline subset |
+| `headline-daily.json` | Monthly | Full audited daily history from 2019 |
 | `ktmb-daily.json` | Daily | 5 KTMB rail services daily totals |
 | `prasarana-daily.json` | Daily | 5 Rapid Rail + BRT daily totals |
 | `prasarana-daily-totals.json` | Daily | Per-line Prasarana breakdown |
