@@ -11,7 +11,7 @@ import {
   CartesianGrid,
   Brush,
 } from 'recharts';
-import { useRidership } from '@/hooks/use-ridership';
+import { useRidership, type RidershipDay } from '@/hooks/use-ridership';
 import { useAppStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import { TrainFront, Train, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, X } from 'lucide-react';
@@ -164,10 +164,30 @@ const RAIL_LINES = [
 
 const WINDOW_DAYS = 30;
 
+const RAPID_RAIL_KEYS = RAIL_LINES
+  .filter((line) => line.group === 'rapid')
+  .map((line) => line.key);
+const KTMB_KEYS = RAIL_LINES
+  .filter((line) => line.group === 'ktmb')
+  .map((line) => line.key);
+
+function hasPublishedValues(
+  day: RidershipDay,
+  keys: readonly (typeof RAIL_LINES)[number]['key'][]
+) {
+  return keys.every((key) => day[key] != null && Number.isFinite(day[key]));
+}
+
 export function RidershipChart() {
   const { data: allData, loading } = useRidership(90);
   const highlightedLine = useAppStore((s) => s.highlightedLine);
   const setHighlightedLine = useAppStore((s) => s.setHighlightedLine);
+  // `busKl` is selectable elsewhere in the dashboard but is not a series in
+  // this rail-only chart. Treat non-rail selections as no chart highlight;
+  // otherwise every rail series is dimmed and the chart appears line-less.
+  const activeRailHighlight = RAIL_LINES.some(
+    (line) => line.key === highlightedLine
+  ) ? highlightedLine : null;
   const [pageOffset, setPageOffset] = useState(0); // 0 = latest 30 days, 1 = previous, etc.
   const [zoomed, setZoomed] = useState(false); // controls brush visibility
   const [brushRange, setBrushRange] = useState<{
@@ -175,11 +195,42 @@ export function RidershipChart() {
     endIndex: number | undefined;
   }>({ startIndex: undefined, endIndex: undefined });
 
-  // Compute all available 30-day windows from the data
-  const { windows, maxPages } = useMemo(() => {
-    if (!allData.length) return { windows: [] as string[][], maxPages: 0 };
+  /*
+   * A stacked network total is only meaningful when both source pipelines have
+   * published that date.  The merged API intentionally includes newer,
+   * KTMB-only rows while Rapid Rail is pending. Plotting those rows in the same
+   * stack produces a sharp partial-total collapse and makes the five Rapid Rail
+   * lines appear to be broken. Anchor this all-network chart to common coverage;
+   * the operator-specific weekly charts still expose each source's freshest data.
+   */
+  const { plotData, commonThrough, rapidThrough, ktmbThrough } = useMemo(() => {
+    const complete = allData.filter(
+      (day) =>
+        hasPublishedValues(day, RAPID_RAIL_KEYS) &&
+        hasPublishedValues(day, KTMB_KEYS)
+    );
+    const rapidLatest = allData.findLast((day) =>
+      hasPublishedValues(day, RAPID_RAIL_KEYS)
+    )?.date ?? null;
+    const ktmbLatest = allData.findLast((day) =>
+      hasPublishedValues(day, KTMB_KEYS)
+    )?.date ?? null;
 
-    const dates = allData.map((d) => d.date);
+    return {
+      // Defensive fallback: do not blank the chart if an upstream schema change
+      // temporarily prevents a complete-coverage row from being identified.
+      plotData: complete.length > 0 ? complete : allData,
+      commonThrough: complete.at(-1)?.date ?? null,
+      rapidThrough: rapidLatest,
+      ktmbThrough: ktmbLatest,
+    };
+  }, [allData]);
+
+  // Compute all available 30-day windows from common-coverage data.
+  const { windows, maxPages } = useMemo(() => {
+    if (!plotData.length) return { windows: [] as string[][], maxPages: 0 };
+
+    const dates = plotData.map((d) => d.date);
     const latestDate = dates[dates.length - 1];
 
     // Build non-overlapping 30-day windows counting back from latest
@@ -198,7 +249,7 @@ export function RidershipChart() {
     }
 
     return { windows: result, maxPages: Math.max(0, result.length - 1) };
-  }, [allData]);
+  }, [plotData]);
 
   // Clamp offset
   const safeOffset = Math.min(pageOffset, maxPages);
@@ -206,10 +257,10 @@ export function RidershipChart() {
 
   // Slice data for the active window
   const chartData = useMemo(() => {
-    if (!activeWindow || !allData.length) return [];
+    if (!activeWindow || !plotData.length) return [];
     const [start, end] = activeWindow;
-    return allData.filter((d) => d.date >= start && d.date <= end);
-  }, [activeWindow, allData]);
+    return plotData.filter((d) => d.date >= start && d.date <= end);
+  }, [activeWindow, plotData]);
 
   // Compute averages for the active window
   const stats = useMemo(() => {
@@ -305,7 +356,7 @@ export function RidershipChart() {
   const activeStats = visibleStats ?? { avg: stats.avgTotalRail, days: stats.dayCount };
   const subtitleLabel = zoomed && visibleStats
     ? `${fmtDate(visibleStats.startDate)} – ${fmtDate(visibleStats.endDate)} · Zoomed`
-    : `${windowLabel} · Stacked by service`;
+    : `${windowLabel} · Complete-network coverage · Stacked by service`;
 
   return (
     <div
@@ -320,8 +371,8 @@ export function RidershipChart() {
             <h3 className="text-sm font-semibold text-[var(--text-primary)]">
               30-Day Rail Ridership
             </h3>
-            {highlightedLine && (() => {
-              const line = RAIL_LINES.find((l) => l.key === highlightedLine);
+            {activeRailHighlight && (() => {
+              const line = RAIL_LINES.find((l) => l.key === activeRailHighlight);
               return line ? (
                 <span className="flex items-center gap-1.5 text-[10px] font-medium px-2 py-0.5 rounded-md border text-[var(--text-secondary)]" style={{ borderColor: line.color, backgroundColor: `${line.color}15` }}>
                   <span className="w-1.5 h-1.5 rounded-sm" style={{ backgroundColor: line.color }} />
@@ -412,7 +463,7 @@ export function RidershipChart() {
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pr-3 border-r border-[var(--border-faint)]">
           <span className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider font-medium">Rapid Rail</span>
           {RAIL_LINES.filter((l) => l.group === 'rapid').map((line) => {
-            const dimmed = highlightedLine !== null && highlightedLine !== line.key;
+            const dimmed = activeRailHighlight !== null && activeRailHighlight !== line.key;
             return (
               <div key={line.key} className={cn('flex items-center gap-1.5 transition-opacity duration-200', dimmed && 'opacity-25')}>
                 <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: line.color }} />
@@ -427,7 +478,7 @@ export function RidershipChart() {
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <span className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider font-medium">KTMB</span>
           {RAIL_LINES.filter((l) => l.group === 'ktmb').map((line) => {
-            const dimmed = highlightedLine !== null && highlightedLine !== line.key;
+            const dimmed = activeRailHighlight !== null && activeRailHighlight !== line.key;
             return (
               <div key={line.key} className={cn('flex items-center gap-1.5 transition-opacity duration-200', dimmed && 'opacity-25')}>
                 <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: line.color }} />
@@ -481,8 +532,8 @@ export function RidershipChart() {
             <Tooltip content={<CustomTooltip />} />
             {/* Stacked areas: each rail line stacks on top of previous */}
             {RAIL_LINES.map((line) => {
-              const isHighlighted = highlightedLine === line.key;
-              const isDimmed = highlightedLine !== null && !isHighlighted;
+              const isHighlighted = activeRailHighlight === line.key;
+              const isDimmed = activeRailHighlight !== null && !isHighlighted;
 
               return (
                 <Area
@@ -538,19 +589,23 @@ export function RidershipChart() {
       )}
 
       {/* Footer */}
-      <div className="flex items-center justify-between mt-4 pt-3 border-t border-[var(--border-faint)]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mt-4 pt-3 border-t border-[var(--border-faint)]">
         <span className="text-[10px] text-[var(--text-faint)] uppercase tracking-widest">
           Source: data.gov.my · CC-BY 4.0
         </span>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <span className="text-[10px] text-[var(--text-faint)]">
-            {stats.dayCount} days
-            {chartData.some((d) => d.kajangMissing) ? (
-              <span className="text-amber-400/70"> · MRT Kajang gap after headline audit</span>
-            ) : (
-              ' · Stacked areas sum to total rail'
-            )}
+            {stats.dayCount} complete days
+            {commonThrough && ` · Common coverage through ${fmtDate(commonThrough)}`}
           </span>
+          {rapidThrough && ktmbThrough && rapidThrough !== ktmbThrough && (
+            <span
+              className="text-[9px] text-amber-400/70"
+              title="Newer operator-only dates are shown in the weekly charts instead of being mixed into this all-network stack"
+            >
+              Rapid Rail {fmtDate(rapidThrough)} · KTMB {fmtDate(ktmbThrough)}
+            </span>
+          )}
           {windows.length > 1 && (
             <span className="text-[9px] text-[var(--text-faint)] uppercase tracking-widest">
               {windows.length} windows available
