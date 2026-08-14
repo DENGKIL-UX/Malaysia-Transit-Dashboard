@@ -12,7 +12,7 @@ import {
   Legend,
 } from 'recharts';
 import { format, startOfWeek, subWeeks, endOfWeek, isSameWeek, parseISO } from 'date-fns';
-import { usePrasaranaDaily } from '@/hooks/use-prasarana-daily';
+import { usePrasaranaDaily, type PrasaranaDay } from '@/hooks/use-prasarana-daily';
 import { TrendingUp, TrendingDown, Bus, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -27,6 +27,16 @@ const LINES = [
 ] as const;
 
 const SKELETON_HEIGHTS = [55, 80, 42, 88, 72, 50, 85, 48, 70, 60, 82, 52, 68, 38];
+
+function hasRidership(day: PrasaranaDay) {
+  return (
+    day.mrt_pjy > 0 ||
+    day.lrt_kj > 0 ||
+    day.lrt_ampang > 0 ||
+    day.monorail > 0 ||
+    day.brt > 0
+  );
+}
 
 function ChartSkeleton() {
   return (
@@ -88,20 +98,18 @@ export function PrasaranaWeeklyChart() {
   const { data, loading, error } = usePrasaranaDaily();
   const [weekOffset, setWeekOffset] = useState(0);
 
-  // Compute all available week boundaries from the data
-  const { weeks, currentWeekIndex } = useMemo(() => {
-    if (!data.length) return { weeks: [] as Date[], currentWeekIndex: 0 };
-
-    const latestDate = data[data.length - 1].date;
-    const latest = parseISO(latestDate);
-    const currentMonday = startOfWeek(latest, { weekStartsOn: 1 });
+  // Only expose weeks which contain a real Prasarana publication.  The merged
+  // API may be newer because KTMB has published, but a KTMB-only date must not
+  // create a blank Prasarana "current week".
+  const weeks = useMemo(() => {
+    if (!data.length) return [] as Date[];
 
     const weekMondays: Date[] = [];
     const seen = new Set<string>();
 
-    for (const d of data) {
-      const dt = parseISO(d.date);
-      const monday = startOfWeek(dt, { weekStartsOn: 1 });
+    for (const day of data) {
+      if (!hasRidership(day)) continue;
+      const monday = startOfWeek(parseISO(day.date), { weekStartsOn: 1 });
       const key = format(monday, 'yyyy-MM-dd');
       if (!seen.has(key)) {
         seen.add(key);
@@ -109,17 +117,16 @@ export function PrasaranaWeeklyChart() {
       }
     }
 
-    weekMondays.sort((a, b) => b.getTime() - a.getTime());
-
-    const currentKey = format(currentMonday, 'yyyy-MM-dd');
-    const idx = weekMondays.findIndex((w) => format(w, 'yyyy-MM-dd') === currentKey);
-
-    return { weeks: weekMondays, currentWeekIndex: idx >= 0 ? idx : 0 };
+    return weekMondays.sort((a, b) => b.getTime() - a.getTime());
   }, [data]);
 
   // Clamp offset to available weeks
   const safeOffset = Math.min(weekOffset, Math.max(0, weeks.length - 1));
   const activeMonday = weeks[safeOffset] ?? weeks[0];
+  const latestPublishedDate = useMemo(
+    () => data.findLast(hasRidership)?.date ?? null,
+    [data]
+  );
 
   const canGoPrev = safeOffset < weeks.length - 1;
   const canGoNext = safeOffset > 0;
@@ -180,9 +187,29 @@ export function PrasaranaWeeklyChart() {
         lastValidDay = i;
       }
     }
-    const effectiveLastDay = lastValidDay >= 0 ? lastValidDay : 6;
+    // `weeks` only contains weeks with published values, so this should always
+    // be non-negative. Keep the empty result defensive in case an upstream row
+    // changes shape between the week-index and chart-data calculations.
+    if (lastValidDay < 0) {
+      return {
+        chartData: [], weekTotal: 0, prevWeekTotal: 0, dailyAvg: 0,
+        weekDelta: 0, brtWeekTotal: 0, weekLabel: '', prevWeekLabel: '',
+      };
+    }
+    const effectiveLastDay = lastValidDay;
 
-    const bars = [];
+    const bars: Array<{
+      day: string;
+      dayLabel: string;
+      weekLabel: string;
+      mrt_pjy: number;
+      lrt_kj: number;
+      lrt_ampang: number;
+      monorail: number;
+      brt: number;
+      total: number;
+      hasData: boolean;
+    }> = [];
     for (let i = 0; i <= effectiveLastDay; i++) {
       const day = DAY_NAMES[i];
       const cur = currentMap.get(i);
@@ -274,7 +301,7 @@ export function PrasaranaWeeklyChart() {
             </button>
             <div className="flex items-center px-2.5 min-w-[120px] justify-center">
               <span className="text-[10px] font-medium text-[var(--text-secondary)] tabular-nums">
-                {safeOffset === 0 ? 'This Week' : `${weeks.length - safeOffset} / ${weeks.length}`}
+                {safeOffset === 0 ? 'Latest Published' : `${weeks.length - safeOffset} / ${weeks.length}`}
               </span>
             </div>
             <button
@@ -286,10 +313,17 @@ export function PrasaranaWeeklyChart() {
               <ChevronRight className="w-3.5 h-3.5 text-[var(--text-muted)]" />
             </button>
           </div>
-          {/* Status badge */}
-          <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-amber-400/10 border border-amber-400/20">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-            <span className="text-[9px] text-amber-400 font-medium">T-1 to T-3 (calendar dependent)</span>
+          {/* Status badge — report the source boundary, not an assumed SLA. */}
+          <div
+            className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-amber-400/10 border border-amber-400/20"
+            title="Latest date containing published Rapid Rail or BRT ridership"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+            <span className="text-[9px] text-amber-400 font-medium">
+              {latestPublishedDate
+                ? `Data through ${format(parseISO(latestPublishedDate), 'dd MMM yyyy')}`
+                : 'Publication pending'}
+            </span>
           </div>
         </div>
       </div>

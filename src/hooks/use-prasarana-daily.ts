@@ -59,23 +59,47 @@ export function usePrasaranaDaily() {
         };
 
         if (json.data && json.data.length > 0) {
-          const mapped: PrasaranaDay[] = json.data.map((r) => ({
-            date: r.date,
-            lrt_ampang: (r.rail_lrt_ampang ?? 0) + (r.rail_mrt_kajang ?? 0),
-            lrt_kj: r.rail_lrt_kj ?? 0,
-            mrt_pjy: r.rail_mrt_pjy ?? 0,
-            monorail: r.rail_monorail ?? 0,
-            brt: r.bus_rkl ?? 0,
-            total:
-              (r.rail_lrt_ampang ?? 0) +
-              (r.rail_mrt_kajang ?? 0) +
-              (r.rail_lrt_kj ?? 0) +
-              (r.rail_mrt_pjy ?? 0) +
-              (r.rail_monorail ?? 0) +
-              (r.bus_rkl ?? 0),
-          }));
-          setData(mapped);
-          return;
+          /*
+           * comparison-data is a union of independently published pipelines.
+           * Its newest rows can therefore contain KTMB values while every
+           * Prasarana field is null.  Converting those source-level nulls to
+           * zero made the hook invent an empty "latest" Prasarana week, so the
+           * weekly chart had axes and legends but no bars.
+           *
+           * Keep only rows on which the Prasarana pipeline actually published
+           * at least one value.  Once a source row is known to exist, a missing
+           * individual value can safely use the chart's existing zero fallback.
+           */
+          const hasPrasaranaData = (r: (typeof json.data)[number]) =>
+            r.rail_lrt_ampang != null ||
+            r.rail_mrt_kajang != null ||
+            r.rail_lrt_kj != null ||
+            r.rail_monorail != null ||
+            r.rail_mrt_pjy != null ||
+            r.bus_rkl != null;
+
+          const mapped: PrasaranaDay[] = json.data
+            .filter(hasPrasaranaData)
+            .map((r) => ({
+              date: r.date,
+              lrt_ampang: (r.rail_lrt_ampang ?? 0) + (r.rail_mrt_kajang ?? 0),
+              lrt_kj: r.rail_lrt_kj ?? 0,
+              mrt_pjy: r.rail_mrt_pjy ?? 0,
+              monorail: r.rail_monorail ?? 0,
+              brt: r.bus_rkl ?? 0,
+              total:
+                (r.rail_lrt_ampang ?? 0) +
+                (r.rail_mrt_kajang ?? 0) +
+                (r.rail_lrt_kj ?? 0) +
+                (r.rail_mrt_pjy ?? 0) +
+                (r.rail_monorail ?? 0) +
+                (r.bus_rkl ?? 0),
+            }));
+
+          if (mapped.length > 0) {
+            setData(mapped);
+            return;
+          }
         }
       }
 
