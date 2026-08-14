@@ -58,6 +58,29 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* ── EARLIEST synchronous shim ─────────────────────────────────────────
+            Some client chunks call esbuild's `__name()` keepNames helper without
+            bundling the helper itself, which throws "Uncaught ReferenceError:
+            __name is not defined" and kills hydration/charts. This must run
+            SYNCHRONOUSLY, before any other inline script or async chunk, so it is
+            a raw <script> in <head> — NOT next/script, whose `beforeInteractive`
+            strategy is deferred to the `self.__next_s` queue (executed too late).
+            Keep first in <head> so nothing can run before it. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function () {
+              if (typeof __name !== 'function') {
+                var define = Object.defineProperty;
+                globalThis.__name = function (target, value) {
+                  try { define(target, 'name', { value: value, configurable: true }); }
+                  catch (_) { /* ignore non-extensible targets */ }
+                  return target;
+                };
+              }
+            })();`,
+          }}
+        />
+
         {/* iOS Safari — Add to Home Screen */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -71,15 +94,6 @@ export default function RootLayout({
         {/* Theme color fallback for browsers that don't support viewport export */}
         <meta name="theme-color" content="#070e07" />
 
-        {/* Defensive polyfill: Bun's bundler on CF Pages may inject __name() calls
-            into client chunks. This no-op shim prevents "__name is not defined" errors. */}
-        <Script
-          id="name-shim"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `window.__name=window.__name||((t,v)=>t);`,
-          }}
-        />
         {/* Register minimal service worker — Chrome requires SW with fetch handler for A2HS install prompt */}
         <Script
           id="sw-register"
